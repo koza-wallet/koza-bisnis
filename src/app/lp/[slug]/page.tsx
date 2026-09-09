@@ -4,6 +4,7 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { destinationOptions } from "@/lib/mock-data";
+import { PixelTracker, trackPixelInitiateCheckout, trackPixelPurchase } from "@/components/pixel-tracker";
 import { 
   Sparkles, 
   ShieldCheck, 
@@ -144,6 +145,15 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
 
   const theme = getThemeClasses();
 
+
+  const handleInitiateCheckout = () => {
+    trackPixelInitiateCheckout({
+      title: lp?.title || "",
+      value: itemsTotal,
+      quantity,
+    });
+  };
+
   const handleOrderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName || !customerPhone || !customerAddress) {
@@ -193,6 +203,14 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     if (res.success && res.order) {
       setOrderSuccess(res.order);
 
+      // Track conversion event for Meta & TikTok Pixel
+      trackPixelPurchase({
+        title: lp.title,
+        value: grandTotal,
+        quantity,
+        orderNumber,
+      });
+
       // If WhatsApp checkout, open WhatsApp directly
       if (paymentMethod === "WHATSAPP") {
         const text = encodeURIComponent(
@@ -215,7 +233,9 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
   };
 
   return (
-    <div className={`min-h-screen ${theme.wrapper} font-sans selection:bg-emerald-500 selection:text-white pb-24 md:pb-12`}>
+    <>
+      <PixelTracker metaPixelId={lp.pixels?.metaPixelId} tiktokPixelId={lp.pixels?.tiktokPixelId} />
+      <div className={`min-h-screen ${theme.wrapper} font-sans selection:bg-emerald-500 selection:text-white pb-24 md:pb-12`}>
       {/* Top Banner Urgency */}
       <div className="sticky top-0 z-40 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 px-4 py-2 text-white shadow-md">
         <div className="mx-auto flex max-w-4xl items-center justify-between text-xs font-bold">
@@ -283,6 +303,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
 
               <a
                 href="#order-form"
+                onClick={handleInitiateCheckout}
                 className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm shadow-xl active:scale-95 transition-all ${theme.primaryButton}`}
               >
                 <span>{lp.hero.ctaText}</span>
@@ -738,6 +759,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
           </div>
           <a
             href="#order-form"
+            onClick={handleInitiateCheckout}
             className={`flex-1 text-center py-2.5 px-4 rounded-xl text-xs font-black shadow-lg ${theme.primaryButton}`}
           >
             Beli Sekarang ({lp.pricing.discountPercent}% OFF)
@@ -745,5 +767,6 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
     </div>
+    </>
   );
 }

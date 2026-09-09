@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { formatRupiah, formatDate } from "@/lib/utils";
@@ -27,9 +27,13 @@ export default function DashboardOverviewPage() {
   const { store, products, orders, financialMetrics } = useStore();
   const [copied, setCopied] = useState(false);
 
-  const storeUrl = typeof window !== "undefined" 
-    ? `${window.location.origin}/toko/${store.slug}`
-    : `https://www.kozabisnis.com/toko/${store.slug}`;
+  const [storeUrl, setStoreUrl] = useState(`https://www.kozabisnis.com/toko/${store.slug}`);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setStoreUrl(`${window.location.origin}/toko/${store.slug}`);
+    }
+  }, [store.slug]);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(storeUrl);
