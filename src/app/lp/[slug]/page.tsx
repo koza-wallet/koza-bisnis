@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { destinationOptions } from "@/lib/mock-data";
 import { PixelTracker, trackPixelInitiateCheckout, trackPixelPurchase } from "@/components/pixel-tracker";
+import { BlockRenderer } from "@/components/builder/block-renderer";
 import { 
   Sparkles, 
   ShieldCheck, 
@@ -235,8 +236,73 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <PixelTracker metaPixelId={lp.pixels?.metaPixelId} tiktokPixelId={lp.pixels?.tiktokPixelId} />
-      <div className={`min-h-screen ${theme.wrapper} font-sans selection:bg-emerald-500 selection:text-white pb-24 md:pb-12`}>
-      {/* Top Banner Urgency */}
+      
+      {lp.builderMode === "MANUAL_BERDU" || lp.builderMode === "MANUAL" || (lp.blocks && lp.blocks.length > 0) ? (
+        <div
+          className="min-h-screen selection:bg-emerald-500 selection:text-white pb-16"
+          style={{
+            backgroundColor: lp.design?.backgroundColor || "#020617",
+            color: lp.design?.textColor || "#f8fafc",
+            fontFamily: lp.design?.fontFamily || "Outfit",
+          }}
+        >
+          {lp.blocks?.map((block) => (
+            <BlockRenderer
+              key={block.id}
+              block={block}
+              design={lp.design}
+              isPreview={false}
+              storeName={store.name}
+              storePhone={store.whatsappNumber}
+              onCheckoutSubmit={(orderData) => {
+                const orderNumber = "KZ-" + Math.floor(100000 + Math.random() * 900000);
+                const unitCost = 50000;
+                const totalCostPrice = unitCost * (orderData.quantity || 1);
+                const netProfit = (orderData.itemsTotal || 0) - totalCostPrice;
+
+                createOrder({
+                  orderNumber,
+                  storeId: lp.storeId,
+                  customerName: orderData.customerName,
+                  customerPhone: orderData.customerPhone,
+                  customerAddress: orderData.customerAddress,
+                  destinationCity: orderData.destination,
+                  destinationDistrict: "",
+                  courierName: orderData.courier,
+                  courierService: "Reguler",
+                  shippingCost: orderData.shippingCost,
+                  itemsTotal: orderData.itemsTotal,
+                  grandTotal: orderData.grandTotal,
+                  totalCostPrice,
+                  netProfit,
+                  status: orderData.paymentMethod === "QRIS_TOKO" ? "MENUNGGU_BAYAR" : "DIPROSES",
+                  paymentMethod: orderData.paymentMethod,
+                  items: [
+                    {
+                      productId: lp.productId || "prod-lp",
+                      productName: lp.title,
+                      quantity: orderData.quantity || 1,
+                      unitPrice: orderData.promoPrice || 149000,
+                      unitCost,
+                      weightGrams: 300,
+                      subtotal: orderData.itemsTotal,
+                    },
+                  ],
+                });
+
+                trackPixelPurchase({
+                  title: lp.title,
+                  value: orderData.grandTotal,
+                  quantity: orderData.quantity || 1,
+                  orderNumber,
+                });
+              }}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className={`min-h-screen ${theme.wrapper} font-sans selection:bg-emerald-500 selection:text-white pb-24 md:pb-12`}>
+        {/* Top Banner Urgency */}
       <div className="sticky top-0 z-40 bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 px-4 py-2 text-white shadow-md">
         <div className="mx-auto flex max-w-4xl items-center justify-between text-xs font-bold">
           <div className="flex items-center gap-1.5">
@@ -767,6 +833,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
     </div>
+    )}
     </>
   );
 }

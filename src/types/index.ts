@@ -105,6 +105,14 @@ export interface LandingPage {
   title: string;
   theme: LandingPageTheme;
   tone: LandingPageTone;
+  // Mode pembuatan halaman: AI otomatis, manual modular blok, atau dari template
+  builderMode?: "AI" | "MANUAL" | "MANUAL_BERDU" | "TEMPLATE";
+  // Daftar blok seksi modular jika dibuat menggunakan manual builder / template
+  blocks?: import("./builder").BuilderBlock[];
+  // Desain kustom jika menggunakan modular builder
+  design?: import("./builder").BuilderPageDesign;
+  // Pengaturan SEO
+  seo?: import("./builder").BuilderPageSEO;
   hero: {
     badge: string;
     headline: string;
@@ -166,3 +174,6 @@ export interface LandingPage {
   isPublished: boolean;
   createdAt: string;
 }
+
+export * from "./builder";
+

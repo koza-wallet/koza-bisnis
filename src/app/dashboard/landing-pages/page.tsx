@@ -55,15 +55,15 @@ export default function LandingPagesDashboard() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight text-white">
-              AI Landing Page Generator
+              Landing Page Studio
             </h1>
-            <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-300 border border-amber-500/30">
+            <span className="flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-500/20 to-teal-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
               <Sparkles className="h-3 w-3" />
-              15 Detik Jadi
+              AI & Builder Berdu
             </span>
           </div>
           <p className="text-sm text-slate-400 mt-1">
-            Buat halaman jualan konversi tinggi untuk iklan TikTok/Meta Ads & Bio Link dalam hitungan detik.
+            Buat halaman jualan konversi tinggi dengan AI otomatis 15 detik, kanvas kosong, atau pustaka template siap pakai.
           </p>
         </div>
 
@@ -72,7 +72,7 @@ export default function LandingPagesDashboard() {
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 transition-all active:scale-95"
         >
           <Plus className="h-4 w-4" />
-          <span>Bikin Landing Page AI</span>
+          <span>Buat Landing Page Baru</span>
         </Link>
       </div>
 
@@ -232,9 +232,17 @@ export default function LandingPagesDashboard() {
 
                   <div className="flex items-center gap-1">
                     <Link
+                      href={`/dashboard/landing-pages/${lp.id}/builder`}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-xs font-semibold transition-colors"
+                      title="Buka Editor Visual Ala Berdu"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>Builder</span>
+                    </Link>
+                    <Link
                       href={`/dashboard/landing-pages/${lp.id}/edit`}
                       className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
-                      title="Edit Landing Page"
+                      title="Edit Cepat"
                     >
                       <Edit3 className="h-4 w-4" />
                     </Link>
