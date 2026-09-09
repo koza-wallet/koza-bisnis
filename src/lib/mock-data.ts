@@ -1,4 +1,4 @@
-import { Store, Product, Order, OperationalExpense, QuotaPackage } from '@/types';
+import { Store, Product, Order, OperationalExpense, QuotaPackage, LandingPage } from '@/types';
 
 export const initialStore: Store = {
   id: 'store-1',
@@ -247,4 +247,140 @@ export const destinationOptions = [
   { city: 'Kota Semarang', district: 'Banyumanik', baseRate: 16000 },
   { city: 'Kota Medan', district: 'Medan Baru', baseRate: 28000 },
   { city: 'Kota Makassar', district: 'Panakkukang', baseRate: 34000 },
+];
+
+export const initialLandingPages: LandingPage[] = [
+  {
+    id: "lp-1",
+    storeId: "store-1",
+    productId: "prod-1",
+    slug: "gamis-silk-premium-promo",
+    title: "Promo Gamis Silk Premium Floral",
+    theme: "EMERALD",
+    tone: "URGENT",
+    hero: {
+      badge: "🔥 FLASH SALE HARI INI • DISKON 36%",
+      headline: "Tampil Anggun & Berkelas dengan Gamis Silk Premium Floral Edition",
+      subheadline: "Material sutra premium super adem, jatuh anggun, dan tidak menerawang. Telah dipercaya 2.400+ muslimah di seluruh Indonesia.",
+      ctaText: "KLAIM DISKON 36% SEKARANG",
+      heroImageUrl: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=800&auto=format&fit=crop&q=80",
+      countdownHours: 8
+    },
+    problemSection: {
+      title: "Pernahkah Anda Mengalami Hal Ini?",
+      subtitle: "Banyak wanita mengeluhkan masalah serupa saat membeli gamis online:",
+      painPoints: [
+        {
+          title: "Bahan Panas & Gerah?",
+          description: "Sering beli gamis tapi bahannya kaku, bikin keringetan, dan tidak nyaman dipakai seharian di cuaca tropis."
+        },
+        {
+          title: "Menerawang & Kurang Santun?",
+          description: "Bahan tipis yang terawang bikin was-was dan harus repot pakai furing atau inner tambahan."
+        },
+        {
+          title: "Jahitan Kasar & Gampang Robek?",
+          description: "Baru sekali cuci jahitan sudah lepas atau benang brudul karena kualitas konveksi murahan."
+        }
+      ]
+    },
+    solutionSection: {
+      title: "Solusi Nyata: Gamis Silk Premium",
+      description: "Didesain khusus dengan standar butik premium untuk kenyamanan maksimal Anda tanpa kompromi.",
+      highlights: [
+        "100% Sutra Silk Halus & Super Adem",
+        "Cutting A-Line Anggun Menyamarkan Lekuk Tubuh",
+        "Wudhu Friendly dengan Kancing Mutiara Eksklusif",
+        "Anti Kusut & Mudah Disetrika"
+      ]
+    },
+    features: [
+      {
+        title: "Material Sutra Premium",
+        description: "Tekstur kain lembut berkarakter jatuh mewah, tidak panas saat dipakai dari pagi sampai malam.",
+        icon: "Sparkles"
+      },
+      {
+        title: "Pengiriman Super Kilat",
+        description: "Pesanan sebelum 15.00 langsung dikirim hari ini dengan kurir pilihan (SiCepat / J&T / JNE) ber-resi resmi.",
+        icon: "Truck"
+      },
+      {
+        title: "Garansi 100% Tukar Baru",
+        description: "Salah ukuran atau ada cacat saat diterima? Kami ganti baru tanpa ribet dan tanpa biaya tambahan.",
+        icon: "Award"
+      },
+      {
+        title: "Garansi 100% Original",
+        description: "Diproduksi langsung oleh pengrajin butik terpercaya di Bandung dengan standar kontrol kualitas tinggi.",
+        icon: "ShieldCheck"
+      }
+    ],
+    testimonials: [
+      {
+        name: "Siti Rahmawati",
+        role: "Pembeli Terverifikasi • Jakarta",
+        review: "Kaget banget pas barang dateng, bahannya lembuttt banget dan beneran gak nerawang! Dipake ke kondangan banyak yang muji. Rekomen parah!",
+        rating: 5,
+        avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+        verified: true
+      },
+      {
+        name: "Dewi Anggraini",
+        role: "Pembeli Terverifikasi • Surabaya",
+        review: "Pengiriman cepat 2 hari nyampe Surabaya. Packing rapi wangi, ukurannya pas banget. Bakal koleksi warna lainnya!",
+        rating: 5,
+        avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+        verified: true
+      },
+      {
+        name: "Rina Marlina",
+        role: "Pembeli Terverifikasi • Bandung",
+        review: "Jahitannya sekelas butik mall yang harganya 400 ribuan keatas. Worth it parah cuma seratus ribuan di KoZa!",
+        rating: 5,
+        avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+        verified: true
+      }
+    ],
+    guarantee: {
+      title: "Garansi Kepuasan 100% Tanpa Risiko",
+      description: "Kami mengutamakan kepuasan Anda. Jika produk yang Anda terima cacat atau tidak sesuai foto, kami siap ganti baru atau uang kembali utuh!"
+    },
+    faq: [
+      {
+        question: "Apakah bahannya menerawang?",
+        answer: "Sama sekali tidak. Silk Premium kami memiliki gramasi benang yang rapat sehingga tidak tembus pandang namun tetap ringan dan adem."
+      },
+      {
+        question: "Bagaimana cara pembayaran?",
+        answer: "Bisa bayar langsung via QRIS instan otomatis atau checkout WhatsApp langsung terhubung ke admin kami."
+      },
+      {
+        question: "Berapa lama estimasi pengiriman?",
+        answer: "Untuk Pulau Jawa 1-3 hari kerja. Luar Pulau Jawa 3-5 hari kerja menggunakan SiCepat / J&T / JNE."
+      },
+      {
+        question: "Bisa tukar kalau ukuran kebesaran/kekecilan?",
+        answer: "Bisa! Cukup hubungi WhatsApp admin kami maksimal 2x24 jam setelah paket diterima."
+      }
+    ],
+    pricing: {
+      normalPrice: 225000,
+      promoPrice: 145000,
+      discountPercent: 36,
+      scarcityText: "🔥 Stok Terbatas: Sisa 12 Pcs Hari Ini",
+      bonusGift: "Bonus Bros Jilbab Mutiara Eksklusif Senilai Rp 25.000"
+    },
+    pixels: {
+      metaPixelId: "",
+      tiktokPixelId: ""
+    },
+    analytics: {
+      viewsCount: 384,
+      ordersCount: 26,
+      conversionRate: 6.8
+    },
+    isPublished: true,
+    createdAt: "2026-09-05T10:00:00.000Z"
+  }
 ];

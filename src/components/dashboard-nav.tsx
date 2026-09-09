@@ -11,7 +11,7 @@ import {
   Zap, 
   ExternalLink,
   Store as StoreIcon,
-  ChevronRight
+  Sparkles
 } from "lucide-react";
 
 export function DashboardNav() {
@@ -25,6 +25,12 @@ export function DashboardNav() {
   const navItems = [
     { href: "/dashboard", label: "Ringkasan", icon: LayoutDashboard },
     { href: "/dashboard/produk", label: "Produk", icon: Package },
+    { 
+      href: "/dashboard/landing-pages", 
+      label: "AI Landing Page", 
+      icon: Sparkles, 
+      isAI: true 
+    },
     { 
       href: "/dashboard/pesanan", 
       label: "Pesanan", 
@@ -69,19 +75,24 @@ export function DashboardNav() {
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all relative ${
                   isActive
-                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                    ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-sm"
                     : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className={`h-4 w-4 ${item.isAI ? "text-amber-400 animate-pulse" : ""}`} />
                 <span>{item.label}</span>
+                {item.isAI && (
+                  <span className="rounded bg-gradient-to-r from-amber-500/20 to-orange-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-300 border border-amber-500/30">
+                    AI ⚡
+                  </span>
+                )}
                 {item.badge !== undefined && (
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[11px] font-bold text-slate-950">
                     {item.badge}
@@ -109,7 +120,7 @@ export function DashboardNav() {
             className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-500 transition-all active:scale-95"
           >
             <StoreIcon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Buka Toko Publik</span>
+            <span className="hidden sm:inline">Buka Toko</span>
             <span className="sm:hidden">Toko</span>
             <ExternalLink className="h-3 w-3 opacity-70" />
           </Link>
@@ -118,30 +129,30 @@ export function DashboardNav() {
 
       {/* Mobile Bottom Navigation Bar */}
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-800 bg-slate-900/95 backdrop-blur-lg md:hidden">
-        <div className="grid grid-cols-5 py-1">
+        <div className="grid grid-cols-6 py-1">
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex flex-col items-center justify-center py-1.5 text-[10px] font-medium transition-colors relative ${
-                  isActive ? "text-emerald-400" : "text-slate-400 hover:text-slate-200"
+                className={`flex flex-col items-center justify-center py-1.5 text-[9px] font-medium transition-colors relative ${
+                  isActive ? "text-emerald-400 font-semibold" : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 <div className="relative">
-                  <Icon className="h-5 w-5" />
+                  <Icon className={`h-4 w-4 ${item.isAI ? "text-amber-400" : ""}`} />
                   {item.badge !== undefined && (
-                    <span className="absolute -right-2 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-slate-950">
+                    <span className="absolute -right-2 -top-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 text-[8px] font-bold text-slate-950">
                       {item.badge}
                     </span>
                   )}
-                  {item.quotaBadge !== undefined && (
-                    <span className="absolute -right-2 -top-1 flex h-2 w-2 rounded-full bg-emerald-400" />
+                  {item.isAI && (
+                    <span className="absolute -right-2 -top-1 flex h-2 w-2 rounded-full bg-amber-400" />
                   )}
                 </div>
-                <span className="mt-1">{item.label}</span>
+                <span className="mt-1 truncate max-w-[50px]">{item.label}</span>
               </Link>
             );
           })}

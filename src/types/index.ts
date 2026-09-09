@@ -93,3 +93,76 @@ export interface QuotaPackage {
   popular?: boolean;
   tier: 'NON_PRO' | 'PRO';
 }
+
+export type LandingPageTheme = "EMERALD" | "MIDNIGHT" | "ROSE" | "ELECTRIC";
+export type LandingPageTone = "URGENT" | "LUXURY" | "EMOTIONAL" | "SCIENTIFIC";
+
+export interface LandingPage {
+  id: string;
+  storeId: string;
+  productId?: string;
+  slug: string;
+  title: string;
+  theme: LandingPageTheme;
+  tone: LandingPageTone;
+  hero: {
+    badge: string;
+    headline: string;
+    subheadline: string;
+    ctaText: string;
+    heroImageUrl: string;
+    countdownHours: number;
+  };
+  problemSection: {
+    title: string;
+    subtitle: string;
+    painPoints: {
+      title: string;
+      description: string;
+    }[];
+  };
+  solutionSection: {
+    title: string;
+    description: string;
+    highlights: string[];
+  };
+  features: {
+    title: string;
+    description: string;
+    icon: string;
+  }[];
+  testimonials: {
+    name: string;
+    role: string;
+    review: string;
+    rating: number;
+    avatarUrl: string;
+    verified: boolean;
+  }[];
+  guarantee: {
+    title: string;
+    description: string;
+  };
+  faq: {
+    question: string;
+    answer: string;
+  }[];
+  pricing: {
+    normalPrice: number;
+    promoPrice: number;
+    discountPercent: number;
+    scarcityText: string;
+    bonusGift?: string;
+  };
+  pixels?: {
+    metaPixelId?: string;
+    tiktokPixelId?: string;
+  };
+  analytics: {
+    viewsCount: number;
+    ordersCount: number;
+    conversionRate: number;
+  };
+  isPublished: boolean;
+  createdAt: string;
+}
