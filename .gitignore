@@ -43,3 +43,8 @@ next-env.d.ts
 # internal business & investor documents
 *Investor_Pitch_Forecast*
 *.pdf
+
+# internal development logs (dapur pembangunan)
+*Development_Log*
+*development_log*
+KoZa_Bisnis_Development_Log.md
