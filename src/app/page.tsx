@@ -24,6 +24,7 @@ import {
   ArrowUpRight,
   Menu,
   X,
+  MessageSquare,
 } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -520,6 +521,139 @@ export default function LandingPage() {
               <p className="text-xs text-slate-400 leading-relaxed">
                 Sistem otomatis mengurangkan harga modal setiap kali pesanan lunas. Laba bersih langsung tersaji.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2.5 Keunggulan & Fitur Unggulan — Anti-Slop Editorial */}
+      <section id="keunggulan" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto space-y-12">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Ekosistem Bisnis Mandiri</span>
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Semua yang Anda Butuhkan untuk Lepas dari Marketplace
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-400">
+            Satu sistem lengkap: bio link siap transaksi, cek ongkir kurir se-Indonesia, hingga pembukuan laba otomatis.
+          </p>
+        </div>
+
+        {/* 6 Feature Pillars Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {/* Feature 1: Bio Link Checkout */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-all group">
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+                <Store className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">
+                Etalase Bio Link Siap Checkout
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Bukan sekadar kumpulan link media sosial biasa. Pembeli dapat memilih produk, menentukan varian warna/ukuran, dan langsung menyelesaikan checkout tanpa perlu balas chat bolak-balik.
+              </p>
+            </div>
+            <div className="pt-2 text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+              <span>Buka 24 jam nonstop</span>
+              <span>• Tanpa admin begadang</span>
+            </div>
+          </div>
+
+          {/* Feature 2: 0% Komisi / Direct Settlement */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-all group">
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">
+                100% Uang Masuk Rekening Sendiri
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Uang pembayaran pembeli via QRIS atau Transfer Bank langsung cair detik itu juga ke rekening atau e-wallet Anda sendiri. Tidak ada potongan 15%–25% dan tanpa saldo ditahan 7 hari.
+              </p>
+            </div>
+            <div className="pt-2 text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+              <span>0% Potongan Komisi</span>
+              <span>• Hak 100% milik Anda</span>
+            </div>
+          </div>
+
+          {/* Feature 3: Ongkir Otomatis Multi-Kurir */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-all group">
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+                <Truck className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">
+                Tarif Ekspedisi Otomatis Se-Indonesia
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Terhubung ke tarif resmi J&T Express, JNE, SiCepat, dan Anteraja. Pembeli memilih kecamatan tujuan, ongkos kirim otomatis terkalkulasi akurat sesuai berat barang.
+              </p>
+            </div>
+            <div className="pt-2 text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+              <span>J&T, JNE, SiCepat</span>
+              <span>• Hingga pelosok kecamatan</span>
+            </div>
+          </div>
+
+          {/* Feature 4: Lacak Resi Publik */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-all group">
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">
+                Halaman Pelacakan Resmi (/lacak)
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Tingkatkan kepercayaan pelanggan dengan halaman pelacakan bermerek nama toko Anda. Pembeli dapat memantau pergerakan kurir secara live tanpa spam tanya resi di chat.
+              </p>
+            </div>
+            <div className="pt-2 text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+              <span>Live Timeline Ekspedisi</span>
+              <span>• Auto-Review Bintang 5</span>
+            </div>
+          </div>
+
+          {/* Feature 5: Buku Kas & HPP Otomatis */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-all group">
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">
+                Buku Kas & HPP Rahasia Otomatis
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Cukup masukkan harga modal (HPP). Setiap ada pesanan masuk, sistem otomatis menghitung omset kotor, biaya operasional, dan laba bersih riil tanpa rumus Excel rumit.
+              </p>
+            </div>
+            <div className="pt-2 text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+              <span>Kalkulasi Laba Riil</span>
+              <span>• HPP aman tidak bocor</span>
+            </div>
+          </div>
+
+          {/* Feature 6: WhatsApp Order Flow */}
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col justify-between space-y-4 hover:border-slate-700 transition-all group">
+            <div className="space-y-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
+                <MessageSquare className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-white">
+                Notifikasi WhatsApp Siap Kirim
+              </h3>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Rincian produk yang dipesan, alamat pengiriman, dan total pembayaran otomatis terformat rapi ke WhatsApp pembeli. Proses konfirmasi dan follow-up jadi jauh lebih cepat.
+              </p>
+            </div>
+            <div className="pt-2 text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+              <span>Template Rapi Otomatis</span>
+              <span>• Follow-up 1-Klik</span>
             </div>
           </div>
         </div>
