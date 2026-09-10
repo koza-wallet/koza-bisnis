@@ -57,9 +57,41 @@ export async function POST(req: NextRequest) {
       turn_count: number;
     } | null = null;
 
+    let isProStore = true; // Default true jika dev mode / db bypass
     let supabase = null;
     if (supabaseUrl && serviceRoleKey) {
       supabase = createClient(supabaseUrl, serviceRoleKey);
+
+      // Verifikasi status keanggotaan PRO toko
+      const { data: storeData } = await supabase
+        .from("stores")
+        .select("id, name, plan, plan_expiry_date")
+        .eq("id", storeId)
+        .maybeSingle();
+
+      if (storeData) {
+        const isPlanPro =
+          storeData.plan === "PRO_MONTHLY" || storeData.plan === "PRO_ANNUAL";
+        const isNotExpired =
+          !storeData.plan_expiry_date ||
+          new Date(storeData.plan_expiry_date).getTime() > Date.now();
+        isProStore = Boolean(isPlanPro && isNotExpired);
+      }
+
+      if (!isProStore) {
+        return NextResponse.json(
+          {
+            success: false,
+            processedByLLM: false,
+            botStatus: "PAUSED",
+            rejectionReason: "PRO_FEATURE_ONLY",
+            message:
+              "Fitur Asisten AI WhatsApp & Human Takeover hanya tersedia untuk toko dengan paket PRO Member (PRO Monthly / PRO Annual). Silakan upgrade paket Anda di Dashboard Topup.",
+          },
+          { status: 403 }
+        );
+      }
+
       const { data } = await supabase
         .from("chat_sessions")
         .select("bot_status, paused_until, turn_count")
@@ -83,6 +115,7 @@ export async function POST(req: NextRequest) {
       messageText,
       isFromMe,
       isGroup,
+      isProStore,
       currentBotStatus: existingSession?.bot_status || "ACTIVE",
       pausedUntil: existingSession?.paused_until || null,
       currentTurnCount: existingSession?.turn_count || 0,

@@ -53,6 +53,7 @@ export interface IncomingMessagePayload {
   messageText: string;
   isFromMe?: boolean;      // True jika dikirim dari HP seller sendiri
   isGroup?: boolean;       // True jika pesan berasal dari grup WhatsApp
+  isProStore?: boolean;    // True jika toko berlangganan paket PRO aktif
   currentBotStatus?: BotChatStatus;
   pausedUntil?: string | null;
   currentTurnCount?: number;
@@ -105,12 +106,25 @@ export function evaluateIncomingMessage(input: IncomingMessagePayload): CostGuar
     messageText,
     isFromMe = false,
     isGroup = false,
+    isProStore = true,
     currentBotStatus = "ACTIVE",
     pausedUntil,
     currentTurnCount = 0,
   } = input;
 
   const rawText = (messageText || "").trim();
+
+  // ----------------------------------------------------------------------------
+  // 0. GERBANG PRO MEMBER: HANYA TOKO BERLANGGANAN PRO YANG DAPAT MENGGUNAKAN BOT AI
+  // ----------------------------------------------------------------------------
+  if (isProStore === false) {
+    return {
+      shouldProcessLLM: false,
+      botStatus: "PAUSED",
+      sanitizedMessage: rawText,
+      rejectionReason: "PRO_FEATURE_ONLY",
+    };
+  }
 
   // ----------------------------------------------------------------------------
   // 1. BLOKIR PESAN GRUP & STATUS
