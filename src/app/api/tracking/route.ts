@@ -111,6 +111,14 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    let calculatedEta = order.estimated_delivery_date;
+    if (!calculatedEta && order.created_at) {
+      const orderDate = new Date(order.created_at);
+      const daysToAdd = (order.courier_name || "").toLowerCase().includes("kargo") ? 4 : 2;
+      orderDate.setDate(orderDate.getDate() + daysToAdd);
+      calculatedEta = orderDate.toISOString();
+    }
+
     const trackingData: PublicOrderTracking = {
       id: order.id,
       orderNumber: order.order_number,
@@ -129,6 +137,11 @@ export async function GET(req: NextRequest) {
       status: order.status,
       lastTrackingStatus: history[0]?.status || order.last_tracking_status || "PENDING",
       trackingHistory: history,
+      estimatedDeliveryDate: calculatedEta,
+      customerRating: order.customer_rating ? Number(order.customer_rating) : undefined,
+      customerReview: order.customer_review || undefined,
+      customerReviewTags: Array.isArray(order.customer_review_tags) ? order.customer_review_tags : [],
+      reviewSubmittedAt: order.review_submitted_at || undefined,
       items: Array.isArray(order.items) ? order.items : [],
       shippingCost: Number(order.shipping_cost) || 0,
       grandTotal: Number(order.grand_total) || 0,

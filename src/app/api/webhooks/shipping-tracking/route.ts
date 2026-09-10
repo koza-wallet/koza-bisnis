@@ -36,8 +36,23 @@ export async function POST(req: NextRequest) {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Cari pesanan berdasarkan tracking_number atau order_number
-    let query = supabase.from("orders").select("id, status, tracking_history, order_number");
+    // Cari pesanan beserta data toko terkait
+    let query = supabase
+      .from("orders")
+      .select(`
+        id, 
+        status, 
+        tracking_history, 
+        order_number, 
+        customer_name, 
+        customer_phone, 
+        courier_name, 
+        tracking_number, 
+        estimated_delivery_date, 
+        store_id, 
+        stores ( name, whatsapp_number )
+      `);
+
     if (orderNumber) {
       query = query.eq("order_number", orderNumber);
     } else {
@@ -72,9 +87,19 @@ export async function POST(req: NextRequest) {
     const existingHistory: TrackingEvent[] = Array.isArray(order.tracking_history) ? order.tracking_history : [];
     const updatedHistory = [newEvent, ...existingHistory];
 
+    // Hitung Estimasi Tiba (ETA) jika belum ada
+    let estimatedEta = order.estimated_delivery_date;
+    if (!estimatedEta) {
+      const etaDays = (order.courier_name || "").toLowerCase().includes("kargo") ? 4 : 2;
+      const etaDate = new Date();
+      etaDate.setDate(etaDate.getDate() + etaDays);
+      estimatedEta = etaDate.toISOString();
+    }
+
     const updatePayload: any = {
       tracking_history: updatedHistory,
       last_tracking_status: mappedStatus,
+      estimated_delivery_date: estimatedEta,
     };
 
     // Jika paket sudah sampai dan diterima, otomatis ubah status order menjadi SELESAI
@@ -84,10 +109,37 @@ export async function POST(req: NextRequest) {
 
     await supabase.from("orders").update(updatePayload).eq("id", order.id);
 
+    // =========================================================================
+    // PHASE 2: Live WhatsApp Notifications Generator
+    // =========================================================================
+    const storeData = (Array.isArray(order.stores) ? order.stores[0] : order.stores) as { name?: string; whatsapp_number?: string } | null;
+    const storeName = storeData?.name || "Toko Kami";
+    let notificationPayload: { recipientPhone: string; message: string; eventType: string } | null = null;
+
+    const trackingUrl = `https://www.kozabisnis.com/lacak/${order.order_number}`;
+
+    if (mappedStatus === "OUT_FOR_DELIVERY") {
+      notificationPayload = {
+        recipientPhone: order.customer_phone,
+        eventType: "OUT_FOR_DELIVERY",
+        message: `Halo Kak *${order.customer_name}*! Paket pesananmu *#${order.order_number}* dari *${storeName}* (Kurir: ${order.courier_name}, Resi: ${order.tracking_number || "-"}) sedang dibawa kurir dan dalam perjalanan menuju rumah Anda 🛵.\n\nMohon pastikan ada penerima di alamat tujuan ya kak.\nLacak perjalanan kurir secara live di:\n👉 ${trackingUrl}`,
+      };
+      console.log(`[WHATSAPP-NOTIFICATION] [OUT_FOR_DELIVERY] ke ${order.customer_phone}:`, notificationPayload.message);
+    } else if (mappedStatus === "DELIVERED") {
+      notificationPayload = {
+        recipientPhone: order.customer_phone,
+        eventType: "DELIVERED",
+        message: `Halo Kak *${order.customer_name}*! Paket pesananmu *#${order.order_number}* dari *${storeName}* telah tiba dan diterima dengan aman 📦✨.\n\nTerima kasih banyak sudah berbelanja di toko kami! Bagaimana kualitas produk yang kakak terima? Mohon luangkan waktu 10 detik untuk memberikan rating kepuasan di:\n👉 ${trackingUrl}?review=true`,
+      };
+      console.log(`[WHATSAPP-NOTIFICATION] [DELIVERED] ke ${order.customer_phone}:`, notificationPayload.message);
+    }
+
     return NextResponse.json({
       success: true,
       message: `Status tracking pesanan ${order.order_number} berhasil diperbarui.`,
       newStatus: mappedStatus,
+      estimatedDeliveryDate: estimatedEta,
+      notification: notificationPayload,
     });
   } catch (err: any) {
     console.error("Webhook shipping tracking error:", err);

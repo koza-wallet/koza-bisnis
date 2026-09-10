@@ -15,7 +15,8 @@ import {
   XCircle,
   Copy,
   Check,
-  ExternalLink
+  ExternalLink,
+  Star
 } from "lucide-react";
 
 export default function OrderManagementPage() {
@@ -64,7 +65,7 @@ export default function OrderManagementPage() {
     if (order.status === "DIKIRIM" && order.trackingNumber) {
       message = `Halo Kak ${order.customerName}! Paket pesanan #${order.orderNumber} telah kami kirimkan via ${order.courierName} dengan No. Resi: *${order.trackingNumber}*.\n\nPantau status dan pergerakan paket Anda secara langsung di tautan resmi ini:\n${trackingUrl}\n\nTerima kasih banyak sudah berbelanja di toko kami! 🙏`;
     } else if (order.status === "SELESAI") {
-      message = `Halo Kak ${order.customerName}, paket pesanan #${order.orderNumber} tercatat sudah tiba. Terima kasih banyak sudah berbelanja di toko kami! Semoga suka dengan produknya ya kak 🙏`;
+      message = `Halo Kak ${order.customerName}, paket pesanan #${order.orderNumber} tercatat sudah tiba dengan aman 📦✨! Terima kasih banyak sudah berbelanja di toko kami.\n\nBantu kami meningkatkan pelayanan dengan memberikan rating & ulasan bintang di:\n${trackingUrl}?review=true\n\nTerima kasih banyak ya kak 🙏`;
     }
 
     window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, "_blank");
@@ -182,6 +183,23 @@ export default function OrderManagementPage() {
                     <MessageSquare className="h-3.5 w-3.5" />
                     <span>Chat Pembeli di WhatsApp</span>
                   </button>
+
+                  {order.customerRating ? (
+                    <div className="mt-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-2 space-y-1">
+                      <div className="flex items-center gap-1 text-amber-400 font-bold text-[11px]">
+                        <Star className="h-3 w-3 fill-amber-400" />
+                        <span>{order.customerRating}/5 Bintang dari Pembeli</span>
+                      </div>
+                      {order.customerReview && (
+                        <p className="text-slate-300 italic text-[10px] line-clamp-2">"{order.customerReview}"</p>
+                      )}
+                    </div>
+                  ) : order.status === "SELESAI" ? (
+                    <div className="pt-1 text-[10px] text-slate-500 flex items-center gap-1">
+                      <Star className="h-3 w-3 text-slate-600" />
+                      <span>Belum ada ulasan pembeli</span>
+                    </div>
+                  ) : null}
                 </div>
 
                 {/* Shipping info */}

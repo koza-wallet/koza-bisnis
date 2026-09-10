@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { PublicOrderTracking } from "@/types";
 import { formatRupiah, formatDate } from "@/lib/utils";
@@ -20,16 +20,41 @@ import {
   ShieldCheck,
   Building2,
   Navigation,
+  Star,
+  Calendar,
+  Sparkles,
+  Send,
+  Heart,
+  ThumbsUp,
 } from "lucide-react";
+
+const REVIEW_PRESET_TAGS = [
+  "⚡ Pengiriman Cepat",
+  "📦 Packing Rapi & Aman",
+  "👍 Produk Sesuai Deskripsi",
+  "😊 Pelayanan Ramah",
+  "⭐ Kualitas Memuaskan",
+];
 
 export default function PublicOrderTrackingPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const orderNumber = params?.orderNumber as string;
+  const isAutoReviewPrompt = searchParams?.get("review") === "true";
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tracking, setTracking] = useState<PublicOrderTracking | null>(null);
   const [copiedResi, setCopiedResi] = useState(false);
+
+  // Review Form State (Phase 2)
+  const [rating, setRating] = useState<number>(5);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [reviewText, setReviewText] = useState<string>("");
+  const [selectedTags, setSelectedTags] = useState<string[]>(["⚡ Pengiriman Cepat", "👍 Produk Sesuai Deskripsi"]);
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orderNumber) return;
@@ -47,6 +72,14 @@ export default function PublicOrderTrackingPage() {
         }
 
         setTracking(json.data);
+
+        // Jika sudah pernah memberikan review sebelumnya
+        if (json.data.customerRating) {
+          setRating(json.data.customerRating);
+          setReviewText(json.data.customerReview || "");
+          setSelectedTags(json.data.customerReviewTags || []);
+          setReviewSuccess(true);
+        }
       } catch (err: any) {
         setError("Gagal memuat informasi pelacakan. Silakan coba beberapa saat lagi.");
       } finally {
@@ -61,6 +94,56 @@ export default function PublicOrderTrackingPage() {
     navigator.clipboard.writeText(resi);
     setCopiedResi(true);
     setTimeout(() => setCopiedResi(false), 2000);
+  };
+
+  const toggleTag = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter((t) => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!orderNumber) return;
+
+    try {
+      setSubmittingReview(true);
+      setReviewError(null);
+
+      const res = await fetch("/api/tracking/review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber,
+          rating,
+          review: reviewText,
+          tags: selectedTags,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        setReviewError(json.message || "Gagal menyimpan ulasan.");
+        return;
+      }
+
+      setReviewSuccess(true);
+      if (tracking) {
+        setTracking({
+          ...tracking,
+          customerRating: rating,
+          customerReview: reviewText,
+          customerReviewTags: selectedTags,
+        });
+      }
+    } catch (err: any) {
+      setReviewError("Terjadi kendala jaringan saat menyimpan ulasan.");
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const getStepIndex = (status: string) => {
@@ -109,6 +192,7 @@ export default function PublicOrderTrackingPage() {
   }
 
   const currentStep = getStepIndex(tracking.lastTrackingStatus || "");
+  const isDelivered = tracking.lastTrackingStatus === "DELIVERED" || tracking.status === "SELESAI";
   const cleanWA = tracking.storeWhatsappNumber.startsWith("0")
     ? "62" + tracking.storeWhatsappNumber.slice(1)
     : tracking.storeWhatsappNumber;
@@ -182,13 +266,13 @@ export default function PublicOrderTrackingPage() {
           {/* Status Banner */}
           <div className="rounded-xl bg-slate-950/70 p-4 border border-slate-800 flex items-start gap-3.5">
             <div className={`p-2.5 rounded-xl mt-0.5 ${
-              tracking.lastTrackingStatus === "DELIVERED"
+              isDelivered
                 ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                 : tracking.lastTrackingStatus === "OUT_FOR_DELIVERY"
                 ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
                 : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
             }`}>
-              {tracking.lastTrackingStatus === "DELIVERED" ? (
+              {isDelivered ? (
                 <CheckCircle2 className="h-6 w-6" />
               ) : tracking.lastTrackingStatus === "OUT_FOR_DELIVERY" ? (
                 <Truck className="h-6 w-6 animate-pulse" />
@@ -199,7 +283,7 @@ export default function PublicOrderTrackingPage() {
 
             <div className="space-y-1 flex-1">
               <div className="text-sm font-bold text-white">
-                {tracking.lastTrackingStatus === "DELIVERED"
+                {isDelivered
                   ? "Paket Telah Tiba & Diterima"
                   : tracking.lastTrackingStatus === "OUT_FOR_DELIVERY"
                   ? "Kurir Sedang Mengantar ke Rumah Anda"
@@ -208,10 +292,23 @@ export default function PublicOrderTrackingPage() {
                   : "Paket Telah Diserahkan ke Gerai Kurir"}
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                {tracking.trackingHistory[0]?.description || "Pesanan sedang dalam proses pengiriman oleh kurir."}
+                {tracking.trackingHistory[0]?.description || "Pesanan sedang dalam proses pengiriman oleh ekspedisi."}
               </p>
             </div>
           </div>
+
+          {/* PHASE 2: ESTIMATED TIME OF ARRIVAL (ETA) BANNER */}
+          {tracking.estimatedDeliveryDate && !isDelivered && (
+            <div className="flex items-center justify-between rounded-xl bg-indigo-950/40 border border-indigo-500/30 px-3.5 py-2.5 text-xs">
+              <div className="flex items-center gap-2 text-indigo-300 font-semibold">
+                <Calendar className="h-4 w-4 text-indigo-400" />
+                <span>Perkiraan Tiba di Tujuan:</span>
+              </div>
+              <div className="font-extrabold text-white font-mono bg-indigo-500/20 px-2.5 py-1 rounded-lg border border-indigo-500/30">
+                {formatDate(tracking.estimatedDeliveryDate)}
+              </div>
+            </div>
+          )}
 
           {/* Tracking Number Bar */}
           {tracking.trackingNumber && (
@@ -272,6 +369,174 @@ export default function PublicOrderTrackingPage() {
             </div>
           </div>
         </div>
+
+        {/* PHASE 2: CUSTOMER RATING & REVIEW CARD (SHOWN WHEN DELIVERED) */}
+        {isDelivered && (
+          <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 p-5 shadow-xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="h-7 w-7 rounded-lg bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Star className="h-4 w-4 fill-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-bold text-white">
+                    {reviewSuccess ? "Ulasan & Penilaian Anda" : "Beri Ulasan Kepuasan Pembeli"}
+                  </h3>
+                  <p className="text-[10px] text-slate-400">
+                    Bantu {tracking.storeName} memberikan pelayanan yang lebih baik
+                  </p>
+                </div>
+              </div>
+
+              {reviewSuccess && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                  <Check className="h-3 w-3" /> Terkirim
+                </span>
+              )}
+            </div>
+
+            {reviewSuccess ? (
+              /* Review Result View */
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-5 w-5 ${
+                        star <= (tracking.customerRating || rating)
+                          ? "text-amber-400 fill-amber-400"
+                          : "text-slate-700"
+                      }`}
+                    />
+                  ))}
+                  <span className="text-xs font-bold text-amber-400 ml-1">
+                    {tracking.customerRating || rating}/5 Bintang
+                  </span>
+                </div>
+
+                {tracking.customerReviewTags && tracking.customerReviewTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {tracking.customerReviewTags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="rounded-lg bg-slate-800 px-2.5 py-1 text-[11px] font-medium text-slate-300 border border-slate-700"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {tracking.customerReview && (
+                  <div className="rounded-xl bg-slate-950/60 p-3 border border-slate-800 text-xs text-slate-300 italic">
+                    "{tracking.customerReview}"
+                  </div>
+                )}
+
+                <div className="text-[11px] text-slate-400 flex items-center gap-1">
+                  <Heart className="h-3.5 w-3.5 text-rose-400 fill-rose-400" />
+                  <span>Terima kasih! Ulasan Anda telah diterima oleh toko {tracking.storeName}.</span>
+                </div>
+              </div>
+            ) : (
+              /* Review Form */
+              <form onSubmit={handleSubmitReview} className="space-y-3.5">
+                {/* Interactive Star Picker */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <span className="text-xs text-slate-300 font-semibold">Tingkat Kepuasan:</span>
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const isFilled = star <= (hoverRating || rating);
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          onMouseEnter={() => setHoverRating(star)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => setRating(star)}
+                          className="p-1 text-slate-600 hover:scale-115 transition-transform active:scale-95"
+                        >
+                          <Star
+                            className={`h-6 w-6 ${
+                              isFilled
+                                ? "text-amber-400 fill-amber-400"
+                                : "text-slate-700"
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                    <span className="text-xs font-bold text-amber-400 ml-1.5 min-w-[70px]">
+                      {rating === 5
+                        ? "Sangat Puas ⭐"
+                        : rating === 4
+                        ? "Puas 👍"
+                        : rating === 3
+                        ? "Cukup Baik"
+                        : rating === 2
+                        ? "Kurang Puas"
+                        : "Kecewa"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Preset Feedback Tags */}
+                <div className="space-y-1.5">
+                  <span className="text-[11px] text-slate-400 block font-medium">Pilih Pujian Cepat:</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {REVIEW_PRESET_TAGS.map((tag) => {
+                      const isSelected = selectedTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleTag(tag)}
+                          className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ${
+                            isSelected
+                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm"
+                              : "bg-slate-950/60 text-slate-400 hover:text-slate-200 border border-slate-800"
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Review Text Field */}
+                <div className="space-y-1">
+                  <textarea
+                    rows={2}
+                    value={reviewText}
+                    onChange={(e) => setReviewText(e.target.value)}
+                    placeholder="Tulis ulasan produk atau kesan Anda di sini (opsional)..."
+                    maxLength={500}
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950/70 p-2.5 text-xs text-slate-200 placeholder:text-slate-600 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+                  />
+                  <div className="flex justify-end text-[10px] text-slate-600">
+                    {reviewText.length}/500
+                  </div>
+                </div>
+
+                {reviewError && (
+                  <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2">
+                    {reviewError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submittingReview}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs py-2.5 shadow-lg shadow-amber-500/20 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  <span>{submittingReview ? "Mengirim Ulasan..." : "Kirim Ulasan & Penilaian"}</span>
+                </button>
+              </form>
+            )}
+          </div>
+        )}
 
         {/* Timeline Stepper */}
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-lg space-y-4">

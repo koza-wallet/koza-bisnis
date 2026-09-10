@@ -91,6 +91,11 @@ export interface Order {
   trackingNumber?: string;
   trackingHistory?: TrackingEvent[];
   lastTrackingStatus?: string;
+  estimatedDeliveryDate?: string;
+  customerRating?: number;
+  customerReview?: string;
+  customerReviewTags?: string[];
+  reviewSubmittedAt?: string;
   paymentMethod: 'WHATSAPP' | 'QRIS_TOKO';
   items: OrderItem[];
   createdAt: string;
@@ -114,6 +119,11 @@ export interface PublicOrderTracking {
   status: OrderStatus;
   lastTrackingStatus?: string;
   trackingHistory: TrackingEvent[];
+  estimatedDeliveryDate?: string;
+  customerRating?: number;
+  customerReview?: string;
+  customerReviewTags?: string[];
+  reviewSubmittedAt?: string;
   items: Array<{ productName: string; quantity: number; subtotal: number; weightGrams?: number }>;
   shippingCost: number;
   grandTotal: number;
