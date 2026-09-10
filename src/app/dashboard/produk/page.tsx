@@ -6,19 +6,23 @@ import { formatRupiah } from "@/lib/utils";
 import { 
   Plus, 
   Trash2, 
-  Edit3, 
   Package, 
   Sparkles, 
   Check, 
-  X,
-  AlertCircle,
-  Eye,
-  EyeOff
+  X, 
+  Eye, 
+  EyeOff,
+  Search,
+  Inbox,
+  ShieldCheck,
+  Layers
 } from "lucide-react";
 
 export default function ProductManagementPage() {
   const { products, addProduct, updateProduct, deleteProduct } = useStore();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
 
   // Form State
   const [name, setName] = useState("");
@@ -31,6 +35,16 @@ export default function ProductManagementPage() {
   const [stock, setStock] = useState("20");
   const [minOrderQuantity, setMinOrderQuantity] = useState("1");
   const [wholesaleTiers, setWholesaleTiers] = useState<Array<{ minQty: number; unitPrice: number }>>([]);
+
+  const categories = ["ALL", ...Array.from(new Set(products.map((p) => p.category)))];
+
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = !searchQuery || 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCat = selectedCategory === "ALL" || p.category === selectedCategory;
+    return matchesSearch && matchesCat;
+  });
 
   const addWholesaleTier = () => {
     setWholesaleTiers([...wholesaleTiers, { minQty: 10, unitPrice: 0 }]);
@@ -90,141 +104,231 @@ export default function ProductManagementPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6 pb-20 md:pb-8">
+      {/* 1. Header Title & CTA Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Package className="h-6 w-6 text-emerald-400" />
-            <span>Katalog Produk ({products.length})</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-400">
-            Kelola produk yang tampil di toko online Anda. Harga modal (HPP) aman dan hanya Anda yang bisa melihat.
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+              <Package className="h-5 w-5" />
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              Katalog Produk
+            </h1>
+            <span className="rounded-full bg-slate-800/80 px-2.5 py-0.5 text-xs font-mono font-semibold text-slate-300 border border-slate-700">
+              {products.length}
+            </span>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+            Kelola produk etalase toko. Harga modal HPP terenkripsi rahasia dan hanya terlihat di dashboard Anda.
           </p>
         </div>
 
         <button
+          type="button"
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-500 transition-all active:scale-95"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-lg shadow-emerald-600/20 transition-all active:scale-95 shrink-0"
         >
           <Plus className="h-4 w-4" />
           <span>Tambah Produk Baru</span>
         </button>
       </div>
 
-      {/* Product List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {products.map((product) => {
-          const profit = product.sellingPrice - product.costPrice;
-          const margin = (profit / product.sellingPrice) * 100;
+      {/* 2. Search & Category Filter Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Category Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          {categories.map((cat) => {
+            const isActive = selectedCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                  isActive
+                    ? "bg-emerald-600 text-white shadow-sm"
+                    : "bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-850"
+                }`}
+              >
+                {cat === "ALL" ? "Semua Kategori" : cat}
+              </button>
+            );
+          })}
+        </div>
 
-          return (
-            <div
-              key={product.id}
-              className={`rounded-2xl border bg-slate-900/60 overflow-hidden shadow-lg transition-all ${
-                product.isActive ? "border-slate-800" : "border-slate-800/40 opacity-60"
-              }`}
+        {/* Search Input */}
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cari nama produk..."
+            className="w-full rounded-xl border border-slate-800 bg-slate-900/80 pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none transition-colors"
+          />
+        </div>
+      </div>
+
+      {/* 3. Products Grid */}
+      {filteredProducts.length === 0 ? (
+        <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 py-16 px-4 text-center space-y-3">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+            <Inbox className="h-6 w-6" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-white">Tidak ada produk ditemukan</p>
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              {searchQuery || selectedCategory !== "ALL"
+                ? "Tidak ada produk yang cocok dengan kriteria filter pencarian Anda."
+                : "Toko Anda belum memiliki produk jualan. Tambahkan produk pertama Anda sekarang."}
+            </p>
+          </div>
+          {searchQuery || selectedCategory !== "ALL" ? (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("ALL");
+              }}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
             >
-              {/* Product Image & Badges */}
-              <div className="relative h-48 w-full bg-slate-800 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[75%]">
-                  <span className="rounded-full bg-slate-950/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold text-white border border-slate-700">
-                    {product.category}
-                  </span>
-                  <span className="rounded-full bg-slate-950/80 backdrop-blur-md px-2 py-0.5 text-[10px] font-medium text-slate-300 border border-slate-700">
-                    {product.weightGrams}g
-                  </span>
-                  {product.minOrderQuantity && product.minOrderQuantity > 1 && (
-                    <span className="rounded-full bg-amber-500/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-slate-950 border border-amber-400">
-                      MOQ: {product.minOrderQuantity}
-                    </span>
-                  )}
-                  {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
-                    <span className="rounded-full bg-indigo-500/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white border border-indigo-400">
-                      Grosir ({product.wholesaleTiers.length})
-                    </span>
-                  )}
-                </div>
+              Reset Filter Pencarian
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-all shadow-sm"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Tambah Produk Pertama</span>
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProducts.map((product) => {
+            const profit = product.sellingPrice - product.costPrice;
+            const margin = product.sellingPrice > 0 ? (profit / product.sellingPrice) * 100 : 0;
 
-                <div className="absolute top-3 right-3">
-                  <button
-                    onClick={() => updateProduct(product.id, { isActive: !product.isActive })}
-                    className={`rounded-full p-1.5 backdrop-blur-md transition-colors ${
-                      product.isActive ? "bg-emerald-500/80 text-white" : "bg-slate-800/80 text-slate-400"
-                    }`}
-                    title={product.isActive ? "Nonaktifkan Produk" : "Aktifkan Produk"}
-                  >
-                    {product.isActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Product Content */}
-              <div className="p-4 space-y-3">
+            return (
+              <div
+                key={product.id}
+                className={`group rounded-2xl border bg-slate-900/60 overflow-hidden shadow-lg transition-all hover:border-slate-700 backdrop-blur-md flex flex-col justify-between ${
+                  product.isActive ? "border-slate-800/80" : "border-slate-800/40 opacity-60"
+                }`}
+              >
                 <div>
-                  <h3 className="text-sm font-bold text-white line-clamp-1">
-                    {product.name}
-                  </h3>
-                  <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">
-                    {product.description || "Tidak ada deskripsi produk."}
-                  </p>
-                </div>
+                  {/* Product Image & Badges */}
+                  <div className="relative h-48 w-full bg-slate-800 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-60" />
 
-                {/* Price & Cost Breakdown Box (The KoZa Magic) */}
-                <div className="rounded-xl bg-slate-950/60 p-3 border border-slate-800/80 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-slate-400">Harga Jual Pembeli:</span>
-                    <span className="text-sm font-bold text-white">
-                      {formatRupiah(product.sellingPrice)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-400">Harga Modal (HPP):</span>
-                    <span className="font-mono text-slate-300">
-                      {formatRupiah(product.costPrice)}
-                    </span>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
-                    <span className="font-semibold text-emerald-400">Laba Bersih/pcs:</span>
-                    <span className="font-bold text-emerald-400">
-                      +{formatRupiah(profit)} ({margin.toFixed(0)}%)
-                    </span>
-                  </div>
-                </div>
-
-                {/* Wholesale Tiers Preview */}
-                {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
-                  <div className="rounded-xl bg-indigo-950/40 p-2.5 border border-indigo-500/30 space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-indigo-300">
-                      <span>Harga Grosir Bertingkat:</span>
-                      <span>{product.wholesaleTiers.length} Tingkat</span>
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[75%]">
+                      <span className="rounded-full bg-slate-950/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold text-white border border-slate-700">
+                        {product.category}
+                      </span>
+                      <span className="rounded-full bg-slate-950/80 backdrop-blur-md px-2 py-0.5 text-[10px] font-mono text-slate-300 border border-slate-700">
+                        {product.weightGrams}g
+                      </span>
+                      {product.minOrderQuantity && product.minOrderQuantity > 1 && (
+                        <span className="rounded-full bg-amber-500/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-mono font-bold text-slate-950 border border-amber-400">
+                          MOQ: {product.minOrderQuantity}
+                        </span>
+                      )}
+                      {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
+                        <span className="rounded-full bg-indigo-500/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white border border-indigo-400">
+                          Grosir ({product.wholesaleTiers.length})
+                        </span>
+                      )}
                     </div>
-                    <div className="grid grid-cols-2 gap-1 text-[10px]">
-                      {product.wholesaleTiers.map((t, idx) => (
-                        <div key={idx} className="flex justify-between bg-slate-950/60 px-2 py-1 rounded border border-slate-800/80 text-slate-300">
-                          <span>≥ {t.minQty} pcs:</span>
-                          <span className="font-bold text-emerald-400">{formatRupiah(t.unitPrice)}</span>
+
+                    <div className="absolute top-3 right-3">
+                      <button
+                        type="button"
+                        onClick={() => updateProduct(product.id, { isActive: !product.isActive })}
+                        className={`rounded-full p-1.5 backdrop-blur-md transition-colors ${
+                          product.isActive ? "bg-emerald-500/80 text-white" : "bg-slate-800/80 text-slate-400"
+                        }`}
+                        title={product.isActive ? "Nonaktifkan Produk" : "Aktifkan Produk"}
+                      >
+                        {product.isActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Product Content Details */}
+                  <div className="p-4 space-y-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-white line-clamp-1 group-hover:text-emerald-400 transition-colors">
+                        {product.name}
+                      </h3>
+                      <p className="text-xs text-slate-400 line-clamp-2 mt-0.5 leading-relaxed">
+                        {product.description || "Tidak ada deskripsi produk."}
+                      </p>
+                    </div>
+
+                    {/* Price & Cost Breakdown Box */}
+                    <div className="rounded-xl bg-slate-950/60 p-3 border border-slate-800/80 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400">Harga Jual:</span>
+                        <span className="font-mono font-bold text-white text-sm">
+                          {formatRupiah(product.sellingPrice)}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-400 flex items-center gap-1">
+                          <span>Modal (HPP):</span>
+                          <span className="text-[10px] text-amber-400/80">Rahasia</span>
+                        </span>
+                        <span className="font-mono text-slate-300">
+                          {formatRupiah(product.costPrice)}
+                        </span>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-xs">
+                        <span className="font-medium text-emerald-400">Laba/pcs:</span>
+                        <span className="font-mono font-bold text-emerald-400">
+                          +{formatRupiah(profit)} ({margin.toFixed(0)}%)
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Wholesale Tiers Preview */}
+                    {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
+                      <div className="rounded-xl bg-indigo-950/40 p-2.5 border border-indigo-500/25 space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-indigo-300">
+                          <span>Harga Grosir Bertingkat:</span>
+                          <span className="font-mono">{product.wholesaleTiers.length} Tier</span>
                         </div>
-                      ))}
-                    </div>
+                        <div className="grid grid-cols-2 gap-1 text-[10px]">
+                          {product.wholesaleTiers.map((t, idx) => (
+                            <div key={idx} className="flex justify-between bg-slate-950/60 px-2 py-1 rounded border border-slate-800/80 text-slate-300 font-mono">
+                              <span>≥ {t.minQty} pcs:</span>
+                              <span className="font-bold text-emerald-400">{formatRupiah(t.unitPrice)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
 
-                {/* Stock & Actions */}
-                <div className="flex items-center justify-between pt-1">
+                {/* Stock & Delete Action Footer */}
+                <div className="px-4 pb-4 pt-1 flex items-center justify-between border-t border-slate-850">
                   <div className="text-xs text-slate-400">
-                    Stok: <strong className="text-white">{product.stock} pcs</strong>
+                    Stok: <strong className="text-white font-mono">{product.stock} pcs</strong>
                   </div>
 
                   <button
+                    type="button"
                     onClick={() => {
                       if (confirm(`Yakin ingin menghapus produk "${product.name}"?`)) {
                         deleteProduct(product.id);
@@ -237,16 +341,17 @@ export default function ProductManagementPage() {
                   </button>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Add Product Modal */}
+      {/* 4. Add Product Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl relative my-8">
             <button
+              type="button"
               onClick={() => setIsModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white"
             >
@@ -259,7 +364,7 @@ export default function ProductManagementPage() {
                 <span>Tambah Produk Baru</span>
               </h2>
               <p className="text-xs text-slate-400">
-                Input harga jual ke pembeli dan harga modal kulakan untuk pencatatan laba otomatis.
+                Input harga jual ke pembeli dan modal kulakan HPP untuk pencatatan laba bersih otomatis.
               </p>
             </div>
 
@@ -309,12 +414,12 @@ export default function ProductManagementPage() {
                     placeholder="250"
                     value={weightGrams}
                     onChange={(e) => setWeightGrams(e.target.value)}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none font-mono"
                   />
                 </div>
               </div>
 
-              {/* Dual Price Calculation (The Killer Feature) */}
+              {/* Dual Price Calculation (The KoZa Margin Engine) */}
               <div className="rounded-xl bg-slate-950/80 p-4 border border-emerald-500/20 space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -327,7 +432,7 @@ export default function ProductManagementPage() {
                       placeholder="120000"
                       value={sellingPrice}
                       onChange={(e) => setSellingPrice(e.target.value)}
-                      className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none font-mono"
                     />
                   </div>
 
@@ -342,7 +447,7 @@ export default function ProductManagementPage() {
                       placeholder="70000"
                       value={costPrice}
                       onChange={(e) => setCostPrice(e.target.value)}
-                      className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none font-mono"
                     />
                   </div>
                 </div>
@@ -351,8 +456,8 @@ export default function ProductManagementPage() {
                 {sellingNum > 0 && costNum > 0 && (
                   <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
                     <span className="text-slate-400">Estimasi Laba per Pcs:</span>
-                    <span className="font-bold text-emerald-400">
-                      +{formatRupiah(profitPerItem)} ({profitMargin.toFixed(1)}% Laba)
+                    <span className="font-mono font-bold text-emerald-400">
+                      +{formatRupiah(profitPerItem)} ({profitMargin.toFixed(1)}% Margin)
                     </span>
                   </div>
                 )}
@@ -368,7 +473,7 @@ export default function ProductManagementPage() {
                     type="number"
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none font-mono"
                   />
                 </div>
 
@@ -381,7 +486,7 @@ export default function ProductManagementPage() {
                     placeholder="https://images.unsplash.com/..."
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none text-xs"
                   />
                 </div>
               </div>
@@ -400,8 +505,8 @@ export default function ProductManagementPage() {
                 />
               </div>
 
-              {/* Pengaturan Grosir & B2B (Opsional untuk Produsen/Distributor) */}
-              <div className="rounded-xl bg-slate-950/90 p-4 border border-indigo-500/30 space-y-3">
+              {/* Wholesale / B2B Section */}
+              <div className="rounded-xl bg-slate-950/90 p-4 border border-indigo-500/25 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
@@ -416,7 +521,7 @@ export default function ProductManagementPage() {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Minimal Pembelian (MOQ / Minimum Order Quantity)
+                    Minimal Pembelian (MOQ)
                   </label>
                   <div className="flex items-center gap-2">
                     <input
@@ -425,9 +530,9 @@ export default function ProductManagementPage() {
                       placeholder="1"
                       value={minOrderQuantity}
                       onChange={(e) => setMinOrderQuantity(e.target.value)}
-                      className="w-32 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                      className="w-28 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-sm text-white focus:border-indigo-500 focus:outline-none font-mono"
                     />
-                    <span className="text-xs text-slate-400">pcs (default 1 pcs untuk eceran)</span>
+                    <span className="text-xs text-slate-400">pcs (default 1 untuk eceran)</span>
                   </div>
                 </div>
 
@@ -449,7 +554,7 @@ export default function ProductManagementPage() {
 
                   {wholesaleTiers.length === 0 ? (
                     <p className="text-[11px] text-slate-500 italic">
-                      Belum ada tier harga grosir. Klik "+ Tambah Tier" untuk memberi harga khusus jika beli banyak.
+                      Belum ada tier grosir. Klik "+ Tambah Tier" untuk memberi harga khusus jika pembeli beli banyak.
                     </p>
                   ) : (
                     <div className="space-y-2">
@@ -462,7 +567,7 @@ export default function ProductManagementPage() {
                               min="2"
                               value={tier.minQty}
                               onChange={(e) => updateWholesaleTier(idx, "minQty", Number(e.target.value))}
-                              className="w-20 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white text-center focus:border-indigo-500 focus:outline-none"
+                              className="w-20 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white text-center focus:border-indigo-500 focus:outline-none font-mono"
                             />
                             <span>pcs:</span>
                           </div>
@@ -473,7 +578,7 @@ export default function ProductManagementPage() {
                               placeholder="Harga Satuan"
                               value={tier.unitPrice || ""}
                               onChange={(e) => updateWholesaleTier(idx, "unitPrice", Number(e.target.value))}
-                              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white focus:border-indigo-500 focus:outline-none"
+                              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white focus:border-indigo-500 focus:outline-none font-mono"
                             />
                           </div>
                           <button
@@ -495,13 +600,13 @@ export default function ProductManagementPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-400 hover:text-white"
+                  className="rounded-xl px-4 py-2 text-xs sm:text-sm font-semibold text-slate-400 hover:text-white"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-emerald-600 px-5 py-2 text-sm font-semibold text-white hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-600/20"
+                  className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-2 text-xs sm:text-sm font-semibold text-white transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
                 >
                   Simpan Produk
                 </button>
@@ -513,3 +618,4 @@ export default function ProductManagementPage() {
     </div>
   );
 }
+
