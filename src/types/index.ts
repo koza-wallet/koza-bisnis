@@ -45,7 +45,7 @@ export interface OrderItem {
   subtotal: number;
 }
 
-export type OrderStatus = 'MENUNGGU_BAYAR' | 'DIPROSES' | 'DIKIRIM' | 'SELESAI' | 'BATAL';
+export type OrderStatus = 'MENUNGGU_BAYAR' | 'TERKUNCI_KUOTA' | 'DIPROSES' | 'DIKIRIM' | 'SELESAI' | 'BATAL';
 
 export interface Order {
   id: string;

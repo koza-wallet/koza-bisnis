@@ -17,6 +17,7 @@ interface StoreContextType {
   deleteProduct: (id: string) => void;
   createOrder: (newOrder: Omit<Order, "id" | "createdAt">) => { success: boolean; order?: Order; error?: string };
   updateOrderStatus: (orderId: string, status: OrderStatus, trackingNumber?: string) => void;
+  processOrderWithQuota: (orderId: string) => Promise<{ success: boolean; message?: string; status?: OrderStatus }>;
   topupQuota: (packageCode: string) => void;
   upgradePlan: (plan: MembershipPlan) => void;
   addExpense: (expense: Omit<OperationalExpense, "id" | "date">) => void;
@@ -457,6 +458,72 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const processOrderWithQuota = async (
+    orderId: string
+  ): Promise<{ success: boolean; message?: string; status?: OrderStatus }> => {
+    if (!isSupabaseUser) {
+      if (store.quotaBalance <= 0) {
+        setOrders((prev) =>
+          prev.map((o) => (o.id === orderId ? { ...o, status: "TERKUNCI_KUOTA" as OrderStatus } : o))
+        );
+        return {
+          success: false,
+          message: "Kuota order toko habis. Silakan top up untuk memproses pesanan.",
+          status: "TERKUNCI_KUOTA",
+        };
+      }
+      setStore((prev) => ({ ...prev, quotaBalance: prev.quotaBalance - 1 }));
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: "DIPROSES" as OrderStatus } : o))
+      );
+      return {
+        success: true,
+        message: "Pesanan berhasil diverifikasi dan kuota berhasil dipotong.",
+        status: "DIPROSES",
+      };
+    }
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.rpc("process_order_with_quota", {
+        p_order_id: orderId,
+      });
+
+      if (error) {
+        return { success: false, message: error.message };
+      }
+
+      if (!data || data.success === false) {
+        if (data?.status === "TERKUNCI_KUOTA") {
+          setOrders((prev) =>
+            prev.map((o) => (o.id === orderId ? { ...o, status: "TERKUNCI_KUOTA" as OrderStatus } : o))
+          );
+        }
+        return {
+          success: false,
+          message: data?.message || data?.error || "Gagal memproses pesanan.",
+          status: data?.status as OrderStatus,
+        };
+      }
+
+      const newStatus = (data.status || "DIPROSES") as OrderStatus;
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
+      );
+      if (typeof data.remaining_quota === "number") {
+        setStore((prev) => ({ ...prev, quotaBalance: data.remaining_quota }));
+      }
+
+      return {
+        success: true,
+        message: data.message || "Pesanan berhasil diproses.",
+        status: newStatus,
+      };
+    } catch (err: any) {
+      return { success: false, message: err?.message || "Terjadi kesalahan sistem." };
+    }
+  };
+
   const topupQuota = (packageCode: string) => {
     const pkg = quotaPackages.find((p) => p.code === packageCode);
     if (!pkg) return;
@@ -636,6 +703,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         deleteProduct,
         createOrder,
         updateOrderStatus,
+        processOrderWithQuota,
         topupQuota,
         upgradePlan,
         addExpense,

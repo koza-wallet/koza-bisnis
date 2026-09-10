@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { formatRupiah, formatDate } from "@/lib/utils";
 import { OrderStatus } from "@/types";
@@ -18,10 +19,11 @@ import {
 } from "lucide-react";
 
 export default function OrderManagementPage() {
-  const { orders, updateOrderStatus } = useStore();
+  const { orders, updateOrderStatus, processOrderWithQuota } = useStore();
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [trackingInputs, setTrackingInputs] = useState<Record<string, string>>({});
   const [copiedResi, setCopiedResi] = useState<string | null>(null);
+  const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
 
   const filteredOrders = orders.filter((o) => {
     if (filterStatus === "ALL") return true;
@@ -70,6 +72,7 @@ export default function OrderManagementPage() {
         {[
           { key: "ALL", label: "Semua", count: orders.length },
           { key: "MENUNGGU_BAYAR", label: "Menunggu Bayar", count: orders.filter((o) => o.status === "MENUNGGU_BAYAR").length },
+          { key: "TERKUNCI_KUOTA", label: "Terkunci Kuota", count: orders.filter((o) => o.status === "TERKUNCI_KUOTA").length },
           { key: "DIPROSES", label: "Diproses", count: orders.filter((o) => o.status === "DIPROSES").length },
           { key: "DIKIRIM", label: "Dikirim", count: orders.filter((o) => o.status === "DIKIRIM").length },
           { key: "SELESAI", label: "Selesai", count: orders.filter((o) => o.status === "SELESAI").length },
@@ -137,6 +140,11 @@ export default function OrderManagementPage() {
                   {order.status === "MENUNGGU_BAYAR" && (
                     <span className="rounded-full bg-rose-500/15 border border-rose-500/20 px-2.5 py-0.5 text-xs font-semibold text-rose-400 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" /> Menunggu Bayar
+                    </span>
+                  )}
+                  {order.status === "TERKUNCI_KUOTA" && (
+                    <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-xs font-semibold text-amber-300 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> Terkunci Kuota
                     </span>
                   )}
                 </div>
@@ -254,11 +262,45 @@ export default function OrderManagementPage() {
                 <div className="flex items-center gap-2">
                   {order.status === "MENUNGGU_BAYAR" && (
                     <button
-                      onClick={() => updateOrderStatus(order.id, "DIPROSES")}
-                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors shadow-sm"
+                      disabled={processingOrderId === order.id}
+                      onClick={async () => {
+                        setProcessingOrderId(order.id);
+                        const res = await processOrderWithQuota(order.id);
+                        setProcessingOrderId(null);
+                        if (!res.success) {
+                          alert(res.message || "Gagal memproses pesanan.");
+                        }
+                      }}
+                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors shadow-sm disabled:opacity-50"
                     >
-                      Verifikasi Pembayaran
+                      {processingOrderId === order.id ? "Memproses..." : "Verifikasi Pembayaran"}
                     </button>
+                  )}
+
+                  {order.status === "TERKUNCI_KUOTA" && (
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href="/dashboard/topup"
+                        className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/30 transition-colors flex items-center gap-1.5 shadow-sm"
+                      >
+                        <span>Kuota Habis — Top-Up Kuota</span>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Link>
+                      <button
+                        disabled={processingOrderId === order.id}
+                        onClick={async () => {
+                          setProcessingOrderId(order.id);
+                          const res = await processOrderWithQuota(order.id);
+                          setProcessingOrderId(null);
+                          if (!res.success) {
+                            alert(res.message || "Gagal memproses pesanan.");
+                          }
+                        }}
+                        className="rounded-lg bg-emerald-600/80 hover:bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+                      >
+                        {processingOrderId === order.id ? "Memproses..." : "Coba Proses Ulang"}
+                      </button>
+                    </div>
                   )}
 
                   {order.status === "DIKIRIM" && (

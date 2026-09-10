@@ -151,10 +151,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Inisialisasi Supabase Client & Validasi Harga Server-Side (Audit P1)
+    // 3. Inisialisasi Supabase Client & Validasi Server Role Key (Audit Konsistensi Patch #6 & #8)
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      console.error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable");
+      return NextResponse.json(
+        { error: "Server configuration error: missing service role credentials" },
+        { status: 500 }
+      );
+    }
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
+      serviceRoleKey
     );
 
     // Ambil harga asli produk dari database untuk mencocokkan harga resmi
@@ -209,8 +218,29 @@ export async function POST(req: NextRequest) {
     const grandTotal = calculatedItemsTotal + validShippingCost;
     const orderNumber = generateOrderNumber();
 
-    const initialStatus =
-      paymentMethod === "QRIS_TOKO" ? "DIPROSES" : "MENUNGGU_BAYAR";
+    // 4. Penentuan Status Awal & Alokasi Kuota (Patch #8)
+    // Checkout tidak pernah memblokir pembeli.
+    // - WHATSAPP: Masuk MENUNGGU_BAYAR (kuota baru dipotong saat penjual verifikasi pembayaran di dashboard).
+    // - QRIS_TOKO: Coba potong kuota langsung. Jika kuota cukup -> DIPROSES; jika habis -> TERKUNCI_KUOTA.
+    let initialStatus = "MENUNGGU_BAYAR";
+
+    if (paymentMethod === "QRIS_TOKO") {
+      try {
+        const { data: quotaRes, error: quotaErr } = await supabase.rpc("consume_order_quota", {
+          p_store_id: storeId,
+        });
+        if (!quotaErr && quotaRes?.success === true) {
+          initialStatus = "DIPROSES";
+        } else {
+          initialStatus = "TERKUNCI_KUOTA";
+        }
+      } catch (quotaCatchErr) {
+        console.warn("consume_order_quota call failed for QRIS_TOKO:", quotaCatchErr);
+        initialStatus = "TERKUNCI_KUOTA";
+      }
+    } else {
+      initialStatus = "MENUNGGU_BAYAR";
+    }
 
     const { error: insertErr } = await supabase.from("orders").insert({
       order_number: orderNumber,
@@ -238,13 +268,6 @@ export async function POST(req: NextRequest) {
         { error: "Gagal menyimpan pesanan ke database. Silakan coba lagi." },
         { status: 500 }
       );
-    }
-
-    // 4. Konsumsi kuota order toko secara aman di database (Audit P1 / Patch #7)
-    try {
-      await supabase.rpc("consume_order_quota", { p_store_id: storeId });
-    } catch (quotaErr) {
-      console.warn("consume_order_quota error:", quotaErr);
     }
 
     // 5. Return respon sukses terstruktur
