@@ -58,10 +58,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Inisialisasi Supabase Client dengan Service Role Key untuk eksekusi RPC berprivilese
+    // 2. Inisialisasi Supabase Client dengan Service Role Key (Hard-fail jika tidak ada)
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!serviceRoleKey) {
+      console.error("SUPABASE_SERVICE_ROLE_KEY belum dikonfigurasi di environment server.");
+      return NextResponse.json(
+        { error: "Server misconfigured: SUPABASE_SERVICE_ROLE_KEY missing." },
+        { status: 500 }
+      );
+    }
+
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
+      serviceRoleKey
     );
 
     // 3. Evaluasi Status Pembayaran

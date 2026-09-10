@@ -172,9 +172,18 @@ export async function POST(req: NextRequest) {
         transactionStatus === "deny"
       ) {
         const failStatus = transactionStatus === "expire" ? "EXPIRED" : "FAILED";
+        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        if (!serviceRoleKey) {
+          console.error("SUPABASE_SERVICE_ROLE_KEY belum dikonfigurasi di environment server.");
+          return NextResponse.json(
+            { error: "Server misconfigured: SUPABASE_SERVICE_ROLE_KEY missing." },
+            { status: 500 }
+          );
+        }
+
         const supabaseAdmin = createServiceClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
-          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
+          serviceRoleKey
         );
         await supabaseAdmin.rpc("handle_midtrans_failure", {
           p_order_id: orderId,
@@ -189,9 +198,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (isSuccess) {
+      const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!serviceRoleKey) {
+        console.error("SUPABASE_SERVICE_ROLE_KEY belum dikonfigurasi di environment server.");
+        return NextResponse.json(
+          { error: "Server misconfigured: SUPABASE_SERVICE_ROLE_KEY missing." },
+          { status: 500 }
+        );
+      }
+
       const supabaseAdmin = createServiceClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
-        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
+        serviceRoleKey
       );
 
       const { data: rpcData, error: rpcErr } = await supabaseAdmin.rpc(

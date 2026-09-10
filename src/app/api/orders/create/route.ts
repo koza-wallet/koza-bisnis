@@ -240,7 +240,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 4. Return respon sukses terstruktur
+    // 4. Konsumsi kuota order toko secara aman di database (Audit P1 / Patch #7)
+    try {
+      await supabase.rpc("consume_order_quota", { p_store_id: storeId });
+    } catch (quotaErr) {
+      console.warn("consume_order_quota error:", quotaErr);
+    }
+
+    // 5. Return respon sukses terstruktur
     const completedOrder = {
       orderNumber,
       storeId,
