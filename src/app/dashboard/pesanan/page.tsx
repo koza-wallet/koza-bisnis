@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { formatRupiah, formatDate } from "@/lib/utils";
-import { OrderStatus } from "@/types";
+import { Order, OrderStatus } from "@/types";
 import { 
   ShoppingBag, 
   MessageSquare, 
@@ -46,12 +46,28 @@ export default function OrderManagementPage() {
     setTimeout(() => setCopiedResi(null), 2000);
   };
 
-  const openWhatsAppChat = (phone: string, orderNumber: string, customerName: string) => {
-    const cleanPhone = phone.startsWith("0") ? "62" + phone.slice(1) : phone;
-    const text = encodeURIComponent(
-      `Halo Kak ${customerName}, terima kasih sudah order di toko kami! Pesanan #${orderNumber} sedang kami siapkan ya kak 🙏`
-    );
-    window.open(`https://wa.me/${cleanPhone}?text=${text}`, "_blank");
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+
+  const handleCopyTrackingLink = (orderNumber: string) => {
+    const url = typeof window !== "undefined" ? `${window.location.origin}/lacak/${orderNumber}` : `https://kozabisnis.com/lacak/${orderNumber}`;
+    navigator.clipboard.writeText(url);
+    setCopiedLink(orderNumber);
+    setTimeout(() => setCopiedLink(null), 2000);
+  };
+
+  const openWhatsAppChat = (order: Order) => {
+    const cleanPhone = order.customerPhone.startsWith("0") ? "62" + order.customerPhone.slice(1) : order.customerPhone;
+    const trackingUrl = typeof window !== "undefined" ? `${window.location.origin}/lacak/${order.orderNumber}` : `https://kozabisnis.com/lacak/${order.orderNumber}`;
+
+    let message = `Halo Kak ${order.customerName}, terima kasih sudah order di toko kami! Pesanan #${order.orderNumber} sedang kami siapkan ya kak 🙏`;
+
+    if (order.status === "DIKIRIM" && order.trackingNumber) {
+      message = `Halo Kak ${order.customerName}! Paket pesanan #${order.orderNumber} telah kami kirimkan via ${order.courierName} dengan No. Resi: *${order.trackingNumber}*.\n\nPantau status dan pergerakan paket Anda secara langsung di tautan resmi ini:\n${trackingUrl}\n\nTerima kasih banyak sudah berbelanja di toko kami! 🙏`;
+    } else if (order.status === "SELESAI") {
+      message = `Halo Kak ${order.customerName}, paket pesanan #${order.orderNumber} tercatat sudah tiba. Terima kasih banyak sudah berbelanja di toko kami! Semoga suka dengan produknya ya kak 🙏`;
+    }
+
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   return (
@@ -160,7 +176,7 @@ export default function OrderManagementPage() {
                   <div className="text-sm font-bold text-white">{order.customerName}</div>
                   <div className="text-slate-400">{order.customerPhone}</div>
                   <button
-                    onClick={() => openWhatsAppChat(order.customerPhone, order.orderNumber, order.customerName)}
+                    onClick={() => openWhatsAppChat(order)}
                     className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-semibold pt-1"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
@@ -180,15 +196,34 @@ export default function OrderManagementPage() {
                     {order.customerAddress}, {order.destinationDistrict}, {order.destinationCity}
                   </div>
                   {order.trackingNumber && (
-                    <div className="flex items-center gap-1.5 pt-1 font-mono text-emerald-400">
-                      <span>No Resi: {order.trackingNumber}</span>
-                      <button
-                        onClick={() => handleCopyResi(order.trackingNumber!)}
-                        className="text-slate-400 hover:text-white"
-                        title="Salin Resi"
-                      >
-                        {copiedResi === order.trackingNumber ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                      </button>
+                    <div className="space-y-1 pt-1">
+                      <div className="flex items-center gap-1.5 font-mono text-emerald-400">
+                        <span>No Resi: {order.trackingNumber}</span>
+                        <button
+                          onClick={() => handleCopyResi(order.trackingNumber!)}
+                          className="text-slate-400 hover:text-white"
+                          title="Salin Resi"
+                        >
+                          {copiedResi === order.trackingNumber ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <Link
+                          href={`/lacak/${order.orderNumber}`}
+                          target="_blank"
+                          className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 font-medium"
+                        >
+                          <span>Lacak Paket</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                        <span className="text-slate-600">•</span>
+                        <button
+                          onClick={() => handleCopyTrackingLink(order.orderNumber)}
+                          className="text-[11px] text-slate-400 hover:text-slate-200 font-medium"
+                        >
+                          {copiedLink === order.orderNumber ? "Link Tersalin!" : "Salin Link Lacak"}
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -304,12 +339,22 @@ export default function OrderManagementPage() {
                   )}
 
                   {order.status === "DIKIRIM" && (
-                    <button
-                      onClick={() => updateOrderStatus(order.id, "SELESAI")}
-                      className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors shadow-sm"
-                    >
-                      Tandai Paket Selesai & Lunas
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/lacak/${order.orderNumber}`}
+                        target="_blank"
+                        className="rounded-lg bg-slate-800 border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700 transition-colors flex items-center gap-1.5"
+                      >
+                        <span>Lacak Kurir</span>
+                        <ExternalLink className="h-3 w-3 text-blue-400" />
+                      </Link>
+                      <button
+                        onClick={() => updateOrderStatus(order.id, "SELESAI")}
+                        className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors shadow-sm"
+                      >
+                        Tandai Paket Selesai & Lunas
+                      </button>
+                    </div>
                   )}
 
                   {order.status !== "BATAL" && order.status !== "SELESAI" && (

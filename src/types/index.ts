@@ -64,6 +64,13 @@ export interface OrderItem {
 
 export type OrderStatus = 'MENUNGGU_BAYAR' | 'TERKUNCI_KUOTA' | 'DIPROSES' | 'DIKIRIM' | 'SELESAI' | 'BATAL';
 
+export interface TrackingEvent {
+  date: string;
+  description: string;
+  location?: string;
+  status: 'PENDING' | 'PICKED_UP' | 'IN_TRANSIT' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'FAILED';
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
@@ -82,9 +89,36 @@ export interface Order {
   netProfit: number;      // itemsTotal - totalCostPrice
   status: OrderStatus;
   trackingNumber?: string;
+  trackingHistory?: TrackingEvent[];
+  lastTrackingStatus?: string;
   paymentMethod: 'WHATSAPP' | 'QRIS_TOKO';
   items: OrderItem[];
   createdAt: string;
+}
+
+export interface PublicOrderTracking {
+  id: string;
+  orderNumber: string;
+  storeId: string;
+  storeName: string;
+  storeLogoUrl?: string;
+  storeWhatsappNumber: string;
+  storeSlug: string;
+  customerName: string;
+  customerPhone: string;
+  destinationCity: string;
+  destinationDistrict?: string;
+  courierName: string;
+  courierService: string;
+  trackingNumber?: string;
+  status: OrderStatus;
+  lastTrackingStatus?: string;
+  trackingHistory: TrackingEvent[];
+  items: Array<{ productName: string; quantity: number; subtotal: number; weightGrams?: number }>;
+  shippingCost: number;
+  grandTotal: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface OperationalExpense {
