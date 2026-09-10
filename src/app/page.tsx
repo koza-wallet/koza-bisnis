@@ -131,88 +131,257 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-14 pb-20 px-4 sm:px-6 max-w-6xl mx-auto text-center space-y-8">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[450px] w-[600px] bg-emerald-500/10 blur-[140px] rounded-full pointer-events-none" />
+      {/* Hero Section — Anti-Slop Minimalist & Editorial Architecture */}
+      <section className="relative pt-6 sm:pt-14 pb-14 sm:pb-20 px-4 sm:px-6 max-w-6xl mx-auto space-y-5 sm:space-y-8">
+        {/* Subtle dot grid pattern background */}
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-35 [mask-image:radial-gradient(ellipse_50%_50%_at_50%_25%,#000_70%,transparent_100%)]" />
 
-        <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-gradient-to-r from-emerald-950/60 to-slate-900 px-4 py-1.5 text-xs font-semibold text-emerald-300 shadow-xl">
-          <Flame className="h-4 w-4 text-orange-400 animate-pulse" />
-          <span>Stop Terkena Potongan Admin Marketplace 8% – 12%!</span>
+        {/* Eyebrow Beacon */}
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/90 px-3 sm:px-3.5 py-1.5 text-xs text-slate-300 shadow-sm backdrop-blur max-w-full">
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="hidden sm:inline font-mono text-[11px] uppercase tracking-wider text-slate-400">Sistem Toko Mandiri</span>
+            <span className="hidden sm:inline h-3 w-px bg-slate-700/80" />
+            <span className="text-[11px] sm:text-xs text-slate-200 font-medium whitespace-nowrap">
+              0% Potongan Omset • Uang Langsung ke Rekening
+            </span>
+          </div>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white leading-[1.15] max-w-4xl mx-auto">
-          Bikin Toko Online Bio Link & <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-500 bg-clip-text text-transparent">Otomatis Catat Laba Bersih</span> dalam 30 Detik
-        </h1>
+        {/* Headline & Body Copy */}
+        <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
+          <h1 className="text-2xl sm:text-5xl lg:text-[54px] font-extrabold tracking-tight text-white leading-[1.18] sm:leading-[1.12]">
+            Toko bio link untuk penjual mandiri.{" "}
+            <span className="text-slate-400 font-semibold block sm:inline">
+              Terima pesanan langsung, simpan 100% omset.
+            </span>
+          </h1>
 
-        <p className="text-sm sm:text-base md:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          Katalog kilat untuk bio TikTok & Instagram Anda. Lengkap dengan kalkulator ongkir kurir otomatis (J&T, JNE, SiCepat), checkout WhatsApp/QRIS tanpa dipotong persenan, dan pembukuan laba bersih otomatis.
-        </p>
-
-        {/* Highlight Banner Diskon 75% */}
-        <div className="inline-flex items-center gap-3 bg-gradient-to-r from-emerald-950/80 via-slate-900 to-emerald-950/80 border border-emerald-500/40 px-5 py-2.5 rounded-2xl shadow-lg shadow-emerald-500/10 text-xs sm:text-sm">
-          <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-black text-[11px] uppercase tracking-wider">
-            HEMAT 75%
-          </span>
-          <span className="text-slate-200 font-medium">
-            Biaya transaksi Pro cuma <strong className="text-emerald-400 font-extrabold">Rp 250/order</strong> (dibanding Non-Pro Rp 1.000/order)!
-          </span>
+          <p className="text-xs sm:text-base text-slate-300 leading-relaxed max-w-2xl mx-auto px-1 sm:px-0">
+            Tinggalkan potongan komisi marketplace 8–12%. Terima pesanan dari TikTok & Instagram langsung ke rekening atau WhatsApp Anda — lengkap dengan tarif kurir otomatis se-Indonesia dan rekap laba bersih per produk.
+          </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-          {isLoggedIn ? (
-            <Link
-              href="/dashboard"
-              className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 px-7 py-4 text-sm font-extrabold text-slate-950 shadow-xl shadow-emerald-500/30 hover:brightness-110 transition-all active:scale-95"
-            >
-              <span>Buka Dashboard Penjual</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          ) : (
-            <>
+        {/* High-Converting CTAs */}
+        <div className="flex flex-col items-center justify-center gap-2.5 sm:gap-3 pt-1">
+          <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+            {isLoggedIn ? (
               <Link
-                href="/register"
-                className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 px-7 py-4 text-sm font-extrabold text-slate-950 shadow-xl shadow-emerald-500/30 hover:brightness-110 transition-all active:scale-95"
+                href="/dashboard"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold px-7 py-3 sm:py-3.5 text-sm transition-all active:scale-95 shadow-sm"
               >
-                <span>Daftar Toko Gratis (10 Order Uji Coba)</span>
+                <span>Buka Dashboard Penjual</span>
                 <ArrowRight className="h-4 w-4" />
               </Link>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold px-7 py-3 sm:py-3.5 text-sm transition-all active:scale-95 shadow-sm"
+                >
+                  <span>Buka Toko Gratis</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                {/* Desktop-only secondary Masuk button (on mobile, Masuk is already in the sticky header) */}
+                <Link
+                  href="/login"
+                  className="hidden sm:inline-flex w-auto items-center justify-center gap-2 rounded-xl border border-slate-700/80 bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold px-5 py-3.5 text-sm transition-all"
+                >
+                  <span>Masuk</span>
+                </Link>
+              </>
+            )}
 
-              <Link
-                href="/login"
-                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-6 py-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
-              >
-                <span>Sudah Punya Akun? Masuk</span>
-              </Link>
-            </>
-          )}
+            <Link
+              href="/toko/hijabcantik"
+              target="_blank"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800/90 bg-slate-900/60 hover:bg-slate-900 text-slate-300 hover:text-white font-medium px-5 py-2.5 sm:py-3.5 text-xs sm:text-sm transition-all"
+            >
+              <Store className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400" />
+              <span>Lihat Live Demo Toko</span>
+              <ExternalLink className="h-3 w-3 opacity-60" />
+            </Link>
+          </div>
 
-          <Link
-            href="/toko/hijabcantik"
-            target="_blank"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-6 py-4 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
-          >
-            <Store className="h-4 w-4 text-emerald-400" />
-            <span>Lihat Contoh Toko</span>
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 sm:gap-x-4 gap-y-1 text-[10px] sm:text-xs text-slate-300 pt-0.5">
+            <span className="flex items-center gap-1.5">
+              <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400 shrink-0" /> 10 order uji coba gratis
+            </span>
+            <span className="text-slate-600 hidden sm:inline">•</span>
+            <span className="flex items-center gap-1.5">
+              <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400 shrink-0" /> Tanpa kartu kredit
+            </span>
+            <span className="text-slate-600 hidden sm:inline">•</span>
+            <span className="flex items-center gap-1.5">
+              <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-400 shrink-0" /> Siap dalam 2 menit
+            </span>
+          </div>
         </div>
 
-        {/* Micro Value Proposition Badges */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-6 text-xs text-slate-400 max-w-3xl mx-auto">
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-800/80 bg-slate-900/40">
-            <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
-            <span>Uang 100% Langsung Cair</span>
+        {/* Centerpiece Showcase: Real Product Flow & Financial Ledger */}
+        <div className="mt-6 sm:mt-8 rounded-2xl border border-slate-800/90 bg-slate-900/40 p-3.5 sm:p-6 lg:p-7 shadow-2xl backdrop-blur-sm">
+          {/* Frame Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 pb-4 sm:pb-5 border-b border-slate-800/80">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1.5">
+                <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-slate-700" />
+                <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-slate-700" />
+                <span className="h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-slate-700" />
+              </div>
+              <span className="text-xs font-semibold text-slate-300 ml-1 sm:ml-2">Simulasi Nyata Transaksi Toko</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs font-medium text-emerald-400 w-fit">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              <span>Uang Penjualan 100% Langsung Masuk ke Rekening</span>
+            </div>
           </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-800/80 bg-slate-900/40">
-            <Truck className="h-4 w-4 text-emerald-400 shrink-0" />
-            <span>Ongkir Otomatis Se-Indonesia</span>
+
+          {/* Dual Perspective Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 pt-4 sm:pt-6 text-left">
+            {/* Left Perspective: Buyer Checkout Experience */}
+            <div className="rounded-xl border border-slate-800 bg-slate-950/90 p-3.5 sm:p-5 flex flex-col justify-between space-y-3.5 sm:space-y-4">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800/70">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-xs font-bold text-emerald-400">
+                      HC
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white leading-tight">hijabcantik.id</div>
+                      <div className="text-[11px] text-slate-300">Katalog Resmi Toko Bio Link</div>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-2 py-0.5 rounded">
+                    ONLINE
+                  </span>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900/80 border border-slate-800/70">
+                    <div className="text-xs">
+                      <div className="font-semibold text-slate-100">Pashmina Silk Premium (Espresso)</div>
+                      <div className="text-[11px] text-slate-300">1x varian Espresso • 180x75cm</div>
+                    </div>
+                    <div className="text-xs font-mono font-bold text-white">Rp 89.000</div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/50">
+                    <div className="flex items-center gap-2">
+                      <Truck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <div className="text-xs">
+                        <div className="text-slate-200 font-medium">J&T Express (Regular)</div>
+                        <div className="text-[11px] text-slate-300">Kec. Gambir, Jakarta Pusat (Otomatis)</div>
+                      </div>
+                    </div>
+                    <div className="text-xs font-mono text-slate-200 font-medium">Rp 9.000</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800/70 space-y-2">
+                <div className="flex justify-between items-baseline text-xs">
+                  <span className="text-slate-300 font-medium">Total Pembayaran Pembeli</span>
+                  <span className="text-sm font-bold text-white font-mono">Rp 98.000</span>
+                </div>
+                <div className="p-2 rounded-lg bg-emerald-950/30 border border-emerald-500/20 text-[11px] text-emerald-300 flex items-center gap-2">
+                  <QrCode className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Dibayar via QRIS Langsung ke Rekening Pemilik Toko</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Perspective: Real Financial Comparison per Order */}
+            <div className="rounded-xl border border-slate-800 bg-slate-950/90 p-3.5 sm:p-5 flex flex-col justify-between space-y-3.5 sm:space-y-4">
+              <div>
+                <div className="flex items-center justify-between pb-3 border-b border-slate-800/70">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                    Simulasi Untung Bersih per Paket
+                  </span>
+                  <span className="text-[11px] text-slate-300">Contoh 1 Paket Hijab</span>
+                </div>
+
+                <div className="mt-3 space-y-2">
+                  {/* Marketplace comparison */}
+                  <div className="p-2.5 rounded-lg bg-red-950/15 border border-red-900/30 space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-300">Marketplace Biasa (Potongan Fee ~10% + Layanan)</span>
+                      <span className="text-red-400 font-mono font-semibold">-Rp 10.800</span>
+                    </div>
+                    <div className="flex justify-between text-xs pt-1 border-t border-red-950/40">
+                      <span className="text-slate-200">Penjual Terima Bersih:</span>
+                      <span className="font-mono font-semibold text-slate-200">Rp 87.200 <span className="text-[10px] text-slate-400">(Uang ditahan 3-5 hari)</span></span>
+                    </div>
+                  </div>
+
+                  {/* KoZa comparison */}
+                  <div className="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-500/30 space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-slate-200 font-medium">KoZa Bisnis Pro (Biaya Flat Hanya Rp 250)</span>
+                      <span className="text-emerald-400 font-mono font-bold">-Rp 250</span>
+                    </div>
+                    <div className="flex justify-between text-xs pt-1 border-t border-emerald-900/30">
+                      <span className="text-emerald-300 font-semibold">Penjual Terima Bersih:</span>
+                      <span className="font-mono font-bold text-emerald-400">Rp 97.750 <span className="text-[10px] text-emerald-400 font-medium">(Langsung Masuk Rekening)</span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800/70">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-200 font-medium">Keuntungan Tambahan Anda:</span>
+                  <span className="text-xs font-mono font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                    +Rp 10.550 Lebih Banyak per Paket
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-800/80 bg-slate-900/40">
-            <Percent className="h-4 w-4 text-emerald-400 shrink-0" />
-            <span>Pro Hemat 75% Biaya Tx</span>
-          </div>
-          <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-slate-800/80 bg-slate-900/40">
-            <BarChart3 className="h-4 w-4 text-emerald-400 shrink-0" />
-            <span>Laba Bersih Otomatis</span>
+
+          {/* Architectural 4-Value Pillar Strip */}
+          <div className="mt-6 sm:mt-8 pt-5 sm:pt-6 border-t border-slate-800/80 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 text-left">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-100">
+                <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0" />
+                <span>0% Potongan Omset</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Uang pembeli 100% langsung masuk ke rekening bank atau QRIS pribadi tanpa potongan persenan.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-100">
+                <Truck className="h-4 w-4 text-emerald-400 shrink-0" />
+                <span>Ongkir Kurir Otomatis</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Tarif resmi J&T, JNE, dan SiCepat terhitung otomatis hingga tingkat kecamatan se-Indonesia.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-100">
+                <BarChart3 className="h-4 w-4 text-emerald-400 shrink-0" />
+                <span>Hitung Laba Otomatis</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Sistem otomatis mengurangkan harga modal setiap ada pesanan masuk, keuntungan bersih langsung tercatat.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-100">
+                <Zap className="h-4 w-4 text-emerald-400 shrink-0" />
+                <span>Checkout 3 Ketukan</span>
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Pembeli langsung pesan lewat link bio ke WhatsApp atau QRIS tanpa wajib bikin akun yang rumit.
+              </p>
+            </div>
           </div>
         </div>
       </section>
