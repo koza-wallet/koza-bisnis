@@ -293,20 +293,13 @@ function QuotaTopupContent() {
   };
 
   const handleVerifyOrder = useCallback(
-    async (
-      orderId: string,
-      extra?: {
-        transactionId?: string;
-        transactionStatus?: string;
-        statusCode?: string;
-      }
-    ) => {
+    async (orderId: string, transactionId?: string) => {
       setCheckingOrderId(orderId);
       try {
         const res = await fetch("/api/payment/verify-status", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId, ...extra }),
+          body: JSON.stringify({ orderId, transactionId }),
         });
         const data = await res.json();
         if (data.settled) {
@@ -327,19 +320,10 @@ function QuotaTopupContent() {
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
     const orderIdParam = searchParams.get("order_id");
-    const txStatusParam = searchParams.get("transaction_status");
-    const statusCodeParam = searchParams.get("status_code");
     const txIdParam = searchParams.get("transaction_id");
 
-    if (
-      orderIdParam &&
-      (paymentStatus === "success" || txStatusParam === "settlement")
-    ) {
-      handleVerifyOrder(orderIdParam, {
-        transactionId: txIdParam || undefined,
-        transactionStatus: txStatusParam || "settlement",
-        statusCode: statusCodeParam || "200",
-      });
+    if (orderIdParam && paymentStatus === "success") {
+      handleVerifyOrder(orderIdParam, txIdParam || undefined);
     }
   }, [searchParams, handleVerifyOrder]);
 

@@ -150,3 +150,30 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION public.handle_midtrans_failure TO anon, authenticated, service_role;
+
+-- 5. Fungsi Koreksi / Revert jika Transaksi Perlu Dibatalkan
+CREATE OR REPLACE FUNCTION public.revert_topup_transaction(
+    p_order_id TEXT
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_tx RECORD;
+BEGIN
+    SELECT * INTO v_tx FROM public.topup_transactions WHERE order_id = p_order_id FOR UPDATE;
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('success', false, 'message', 'Order not found');
+    END IF;
+
+    IF v_tx.status = 'SETTLED' THEN
+        UPDATE public.topup_transactions SET status = 'PENDING', updated_at = timezone('utc'::text, now()) WHERE id = v_tx.id;
+        UPDATE public.stores SET quota_balance = GREATEST(0, quota_balance - v_tx.quota_amount), updated_at = timezone('utc'::text, now()) WHERE id = v_tx.store_id;
+    END IF;
+
+    RETURN jsonb_build_object('success', true, 'message', 'Transaction reverted to PENDING and quota deducted');
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.revert_topup_transaction TO anon, authenticated, service_role;

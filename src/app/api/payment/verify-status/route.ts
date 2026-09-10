@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { orderId, transactionId, transactionStatus: callbackStatus, statusCode } = body;
+    const { orderId, transactionId } = body;
 
     if (!orderId) {
       return NextResponse.json(
@@ -130,12 +130,6 @@ export async function POST(req: NextRequest) {
           status: failStatus,
         });
       }
-    } else if (
-      (callbackStatus === "settlement" || callbackStatus === "capture") &&
-      (statusCode === "200" || statusCode === 200)
-    ) {
-      // Fallback callback redirect dari Midtrans Finish URL
-      isSuccess = true;
     }
 
     if (isSuccess) {
