@@ -26,6 +26,7 @@ interface StoreContextType {
   deleteLandingPage: (id: string) => void;
   getLandingPageBySlug: (slug: string) => LandingPage | undefined;
   recordLandingPageView: (slug: string) => void;
+  refreshStore: () => Promise<void>;
   financialMetrics: {
     totalOmset: number;
     totalHPP: number;
@@ -655,6 +656,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         deleteLandingPage,
         getLandingPageBySlug,
         recordLandingPageView,
+        refreshStore: loadDataFromSupabase,
         financialMetrics: {
           totalOmset,
           totalHPP,
