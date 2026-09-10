@@ -36,6 +36,7 @@ export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
 
   useEffect(() => {
     try {
@@ -812,7 +813,7 @@ export default function LandingPage() {
       </section>
 
       {/* 4. Pricing & Plans Section */}
-      <section id="harga" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto space-y-12">
+      <section id="harga" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto space-y-10">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
             <DollarSign className="h-3.5 w-3.5" />
@@ -822,31 +823,79 @@ export default function LandingPage() {
             Pilihan Paket Sesuai Skala Bisnis Anda
           </h2>
           <p className="text-xs sm:text-sm text-slate-400">
-            Pilih paket Basic hemat untuk mulai mandiri, atau upgrade ke Pro AI untuk memiliki 3 karyawan digital otonom 24/7.
+            Pilih paket sesuai kebutuhan untuk menikmati fitur toko mandiri 0% komisi & karyawan AI otonom 24/7.
           </p>
+
+          {/* Toggle Switcher Bulanan vs Tahunan (Style OrderOnline) */}
+          <div className="flex items-center justify-center pt-3">
+            <div className="inline-flex items-center p-1.5 rounded-full bg-slate-900 border border-slate-800 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setBillingCycle("monthly")}
+                className={`px-6 py-2 rounded-full text-xs sm:text-sm font-bold transition-all ${
+                  billingCycle === "monthly"
+                    ? "bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/25"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                Bulanan
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillingCycle("annual")}
+                className={`px-6 py-2 rounded-full text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 ${
+                  billingCycle === "annual"
+                    ? "bg-emerald-500 text-slate-950 font-black shadow-lg shadow-emerald-500/25"
+                    : "text-slate-400 hover:text-white"
+                }`}
+              >
+                <span>Tahunan</span>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-black transition-all ${
+                  billingCycle === "annual"
+                    ? "bg-slate-950 text-emerald-400"
+                    : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                }`}>
+                  Hemat 2 Bulan
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch pt-2">
-          {/* Card 1: Basic (Rp 75.000 / bulan) */}
+          {/* Card 1: Basic */}
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-7 flex flex-col justify-between space-y-6 shadow-xl hover:border-slate-700 transition-all">
             <div className="space-y-4">
               <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-bold text-slate-300 border border-slate-700">
-                Pilihan Hemat Pemula
+                {billingCycle === "monthly" ? "Pilihan Hemat Pemula" : "Pilihan Hemat Tahunan"}
               </span>
               <div>
                 <h3 className="text-xl font-bold text-white">Paket Basic</h3>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-white font-mono">Rp75.000</span>
-                  <span className="text-xs text-slate-400 font-semibold">/ bulan</span>
+                <div className="mt-2 flex items-baseline gap-2">
+                  {billingCycle === "annual" && (
+                    <span className="text-xs text-slate-500 line-through font-mono">Rp 900.000</span>
+                  )}
+                  <span className="text-3xl font-extrabold text-white font-mono">
+                    {billingCycle === "monthly" ? "Rp75.000" : "Rp750.000"}
+                  </span>
+                  <span className="text-xs text-slate-400 font-semibold">
+                    {billingCycle === "monthly" ? "/ bulan" : "/ tahun"}
+                  </span>
                 </div>
                 <div className="mt-1 text-xs text-emerald-400 font-semibold">
-                  0% Komisi Transaksi • Uang 100% Milik Anda
+                  {billingCycle === "monthly"
+                    ? "0% Komisi Transaksi • Uang 100% Milik Anda"
+                    : "Setara Rp 62.500/bln (Hemat Rp 150.000 • Bayar 10 Bulan Gratis 2 Bulan)"}
                 </div>
               </div>
 
               <div className="rounded-2xl bg-slate-950/80 p-4 border border-slate-800 text-center space-y-1">
-                <div className="text-2xl font-black text-white font-mono">10 Order</div>
-                <div className="text-xs text-slate-400 font-medium">Gratis Kuota Uji Coba Pertama</div>
+                <div className="text-2xl font-black text-white font-mono">
+                  {billingCycle === "monthly" ? "10 Order" : "1.200 Order"}
+                </div>
+                <div className="text-xs text-slate-400 font-medium">
+                  {billingCycle === "monthly" ? "Gratis Kuota Uji Coba Pertama" : "Kuota Starter Setahun Penuh"}
+                </div>
               </div>
 
               <ul className="space-y-2.5 text-xs text-slate-300">
@@ -882,18 +931,22 @@ export default function LandingPage() {
             </div>
 
             <Link
-              href={isLoggedIn ? "/dashboard" : "/register"}
+              href={
+                isLoggedIn 
+                  ? billingCycle === "monthly" ? "/dashboard" : "/dashboard/topup?pkg=BASIC_ANNUAL"
+                  : billingCycle === "monthly" ? "/register" : "/register?plan=BASIC_ANNUAL"
+              }
               className="w-full py-3 rounded-xl bg-slate-800 text-white text-xs font-bold text-center hover:bg-slate-700 transition-colors shadow-sm block"
             >
-              {isLoggedIn ? "Buka Dashboard" : "Mulai Uji Coba Basic"}
+              {billingCycle === "monthly" ? "Mulai Uji Coba Basic" : "Pilih Basic Tahunan (Hemat Rp 150rb)"}
             </Link>
           </div>
 
-          {/* Card 2: Pro AI (Rp 329.000 / bulan) */}
+          {/* Card 2: Pro AI (Flagship Centerpiece) */}
           <div className="rounded-3xl border-2 border-emerald-500 bg-gradient-to-b from-emerald-950/40 via-slate-900 to-slate-900 p-7 flex flex-col justify-between space-y-6 shadow-2xl relative md:-translate-y-3">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
               <span className="rounded-full bg-emerald-500 px-4 py-1.5 text-[11px] font-black text-slate-950 shadow-lg uppercase tracking-wider">
-                ★ Flagship & Autonomous AI
+                {billingCycle === "monthly" ? "★ Flagship & Autonomous AI" : "★ Paling Populer & Hemat Maksimal"}
               </span>
             </div>
 
@@ -901,18 +954,32 @@ export default function LandingPage() {
               <div>
                 <h3 className="text-2xl font-black text-white">Paket Pro AI</h3>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-xs text-slate-500 line-through font-mono">Rp 499.000</span>
-                  <span className="text-3xl sm:text-4xl font-black text-white font-mono">Rp329.000</span>
-                  <span className="text-xs text-slate-400 font-semibold">/ bulan</span>
+                  <span className="text-xs text-slate-500 line-through font-mono">
+                    {billingCycle === "monthly" ? "Rp 499.000" : "Rp 3.948.000"}
+                  </span>
+                  <span className="text-3xl sm:text-4xl font-black text-white font-mono">
+                    {billingCycle === "monthly" ? "Rp329.000" : "Rp2.990.000"}
+                  </span>
+                  <span className="text-xs text-slate-400 font-semibold">
+                    {billingCycle === "monthly" ? "/ bulan" : "/ tahun"}
+                  </span>
                 </div>
                 <div className="mt-1 text-xs text-emerald-400 font-bold">
-                  Setara Mempekerjakan 3 Staf Digital 24 Jam Non-Stop
+                  {billingCycle === "monthly"
+                    ? "Setara Mempekerjakan 3 Staf Digital 24 Jam Non-Stop"
+                    : "Setara Rp 249.000/bln (Hemat Rp 958.000 • Bayar 10 Bulan Gratis 2 Bulan)"}
                 </div>
               </div>
 
               <div className="rounded-2xl bg-emerald-950/60 p-3.5 border border-emerald-500/30 text-center space-y-1">
-                <div className="text-sm font-black text-emerald-300">Pangkas Biaya Staf ~Rp 2.500.000/bln</div>
-                <div className="text-[11px] text-slate-300">CS WhatsApp + Desainer Landing Page Otomatis</div>
+                <div className="text-sm font-black text-emerald-300">
+                  {billingCycle === "monthly" ? "Pangkas Biaya Staf ~Rp 2.500.000/bln" : "Jumbo: +3.000 Order & 36x AI Landing Page"}
+                </div>
+                <div className="text-[11px] text-slate-300">
+                  {billingCycle === "monthly"
+                    ? "CS WhatsApp + Desainer Landing Page Otomatis"
+                    : "Kuota order & generator landing page aktif 1 tahun penuh"}
+                </div>
               </div>
 
               <ul className="space-y-2.5 text-xs text-slate-200">
@@ -938,11 +1005,13 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-amber-400 shrink-0" />
-                  <span><strong>3x AI Landing Page Generator</strong> Siap Iklan / bulan</span>
+                  <span>
+                    <strong>{billingCycle === "monthly" ? "3x" : "36x"} AI Landing Page Generator</strong> Siap Iklan
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-amber-400 shrink-0" />
-                  <span><strong>AI Content & Promo Scheduler</strong> 30 Hari</span>
+                  <span><strong>AI Content & Promo Scheduler</strong> Otomatis</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -952,72 +1021,135 @@ export default function LandingPage() {
             </div>
 
             <Link
-              href={isLoggedIn ? "/dashboard/topup?pkg=PRO_AI" : "/register"}
+              href={
+                isLoggedIn 
+                  ? billingCycle === "monthly" ? "/dashboard/topup?pkg=PRO_AI" : "/dashboard/topup?pkg=PRO_ANNUAL"
+                  : billingCycle === "monthly" ? "/register" : "/register?plan=PRO_ANNUAL"
+              }
               className="w-full py-3.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black text-center hover:bg-emerald-400 transition-all shadow-lg active:scale-95 block"
             >
-              Pilih Paket Pro AI (Solusi Autopilot)
+              {billingCycle === "monthly" ? "Pilih Paket Pro AI (Solusi Autopilot)" : "Pilih Pro AI Tahunan (Hemat Rp 958rb)"}
             </Link>
           </div>
 
-          {/* Card 3: Add-On AI Tokens (Mulai Rp 49.000) */}
+          {/* Card 3: Add-On AI Tokens (Bulanan) ATAU Pro Tahunan Sultan (Tahunan) */}
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-7 flex flex-col justify-between space-y-6 shadow-xl hover:border-slate-700 transition-all">
-            <div className="space-y-4">
-              <span className="rounded-full bg-indigo-500/20 px-3 py-1 text-[11px] font-bold text-indigo-300 border border-indigo-500/30">
-                Amunisi Tambahan Fleksibel
-              </span>
+            {billingCycle === "monthly" ? (
+              <>
+                <div className="space-y-4">
+                  <span className="rounded-full bg-indigo-500/20 px-3 py-1 text-[11px] font-bold text-indigo-300 border border-indigo-500/30">
+                    Amunisi Tambahan Fleksibel
+                  </span>
 
-              <div>
-                <h3 className="text-xl font-bold text-white">Add-On AI Tokens</h3>
-                <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-xs text-slate-400 font-medium">Mulai</span>
-                  <span className="text-3xl font-extrabold text-white font-mono">Rp49.000</span>
-                  <span className="text-xs text-slate-400 font-semibold">/ top-up</span>
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Add-On AI Tokens</h3>
+                    <div className="mt-2 flex items-baseline gap-1">
+                      <span className="text-xs text-slate-400 font-medium">Mulai</span>
+                      <span className="text-3xl font-extrabold text-white font-mono">Rp49.000</span>
+                      <span className="text-xs text-slate-400 font-semibold">/ top-up</span>
+                    </div>
+                    <div className="mt-1 text-xs text-indigo-400 font-semibold">
+                      Beli token sesuai kebutuhan tanpa langganan mahal
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-950/80 p-4 border border-slate-800 text-center space-y-1">
+                    <div className="text-sm font-black text-indigo-300">Token Aktif Selamanya</div>
+                    <div className="text-xs text-slate-400 font-medium">Tanpa Batas Kadaluarsa (No Expiry)</div>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-slate-300">
+                    <li className="flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-white">10x Foto Model Studio AI (Rp 50.000)</strong>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Ubah foto produk biasa jadi foto model katalog profesional.</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-white">3x AI Landing Page (Rp 49.000)</strong>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Generate copywriting + desain halaman siap iklan.</p>
+                      </div>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-white">1.000 Kuota Chat Jaga AI (Rp 49.000)</strong>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Bot AI CS WhatsApp untuk melayani tanya ongkir & closing.</p>
+                      </div>
+                    </li>
+                    <li className="flex items-center gap-2 pt-1 text-slate-400 text-[11px]">
+                      <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <span>Top-up instan via QRIS langsung dari Dashboard</span>
+                    </li>
+                  </ul>
                 </div>
-                <div className="mt-1 text-xs text-indigo-400 font-semibold">
-                  Beli token sesuai kebutuhan tanpa langganan mahal
+
+                <Link
+                  href={isLoggedIn ? "/dashboard/topup?tab=addon" : "/register"}
+                  className="w-full py-3 rounded-xl bg-slate-800 text-white text-xs font-bold text-center hover:bg-slate-700 transition-colors shadow-sm block"
+                >
+                  Lihat Menu Add-On Token
+                </Link>
+              </>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  <span className="rounded-full bg-indigo-500/20 px-3 py-1 text-[11px] font-bold text-indigo-300 border border-indigo-500/30">
+                    Paket Sultan Setahun Penuh
+                  </span>
+
+                  <div>
+                    <h3 className="text-xl font-bold text-white">Pro Tahunan (Sultan)</h3>
+                    <div className="mt-2 flex items-baseline gap-2">
+                      <span className="text-xs text-slate-500 line-through font-mono">Rp 1.188.000</span>
+                      <span className="text-3xl font-extrabold text-white font-mono">Rp799.000</span>
+                      <span className="text-xs text-slate-400 font-semibold">/ tahun</span>
+                    </div>
+                    <div className="mt-1 text-xs text-indigo-400 font-semibold">
+                      Setara Rp 66.500/bulan (Cuma Rp 200/tx)
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-950/80 p-4 border border-slate-800 text-center space-y-1">
+                    <div className="text-2xl font-black text-indigo-300 font-mono">+500 BONUS Order</div>
+                    <div className="text-xs text-slate-400 font-medium">Kuota Starter Jumbo Aktif Setahun</div>
+                  </div>
+
+                  <ul className="space-y-2.5 text-xs text-slate-300">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>Semua fitur Pro Member lengkap</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span className="font-bold text-white">Biaya Transaksi Terendah: Rp 200 / order</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>Dukungan <strong>Custom Domain Sendiri</strong> (tokoanda.com)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>100% Bebas Watermark KoZa</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>Prioritas Dukungan Teknis 24/7</span>
+                    </li>
+                  </ul>
                 </div>
-              </div>
 
-              <div className="rounded-2xl bg-slate-950/80 p-4 border border-slate-800 text-center space-y-1">
-                <div className="text-sm font-black text-indigo-300">Token Aktif Selamanya</div>
-                <div className="text-xs text-slate-400 font-medium">Tanpa Batas Kadaluarsa (No Expiry)</div>
-              </div>
-
-              <ul className="space-y-2.5 text-xs text-slate-300">
-                <li className="flex items-start gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white">10x Foto Model Studio AI (Rp 50.000)</strong>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Ubah foto produk biasa jadi foto model katalog profesional.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white">3x AI Landing Page (Rp 49.000)</strong>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Generate copywriting + desain halaman siap iklan.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="text-white">1.000 Kuota Chat Jaga AI (Rp 49.000)</strong>
-                    <p className="text-[11px] text-slate-400 mt-0.5">Bot AI CS WhatsApp untuk melayani tanya ongkir & closing.</p>
-                  </div>
-                </li>
-                <li className="flex items-center gap-2 pt-1 text-slate-400 text-[11px]">
-                  <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                  <span>Top-up instan via QRIS langsung dari Dashboard</span>
-                </li>
-              </ul>
-            </div>
-
-            <Link
-              href={isLoggedIn ? "/dashboard/topup?tab=addon" : "/register"}
-              className="w-full py-3 rounded-xl bg-slate-800 text-white text-xs font-bold text-center hover:bg-slate-700 transition-colors shadow-sm block"
-            >
-              Lihat Menu Add-On Token
-            </Link>
+                <Link
+                  href={isLoggedIn ? "/dashboard/topup?pkg=PRO_ANNUAL" : "/register?plan=PRO_ANNUAL"}
+                  className="w-full py-3 rounded-xl bg-slate-800 text-white text-xs font-bold text-center hover:bg-slate-700 transition-colors shadow-sm block"
+                >
+                  Pilih Paket Sultan (Rp 799rb)
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </section>
