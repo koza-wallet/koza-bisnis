@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, ArrowRight, Lock, Mail, AlertCircle, Store } from "lucide-react";
+import { ArrowRight, Lock, Mail, AlertCircle, ArrowLeft } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function LoginPage() {
       });
 
       if (error) {
-        setErrorMsg(error.message || "Gagal masuk. Periksa email dan password Anda.");
+        setErrorMsg(error.message || "Email atau password yang Anda masukkan tidak sesuai.");
         setIsLoading(false);
         return;
       }
@@ -37,48 +37,54 @@ export default function LoginPage() {
         router.refresh();
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Terjadi kesalahan server saat login.");
+      setErrorMsg(err.message || "Terjadi kendala jaringan saat menghubungi server.");
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col justify-center items-center px-4 py-12 relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="w-full max-w-md space-y-8 relative z-10">
-        {/* Brand Header */}
-        <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2 mb-2 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-              <Store className="w-5 h-5 text-slate-950" />
-            </div>
-            <span className="text-xl font-black tracking-tight text-white">
-              KoZa <span className="text-emerald-400">Bisnis</span>
-            </span>
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center px-4 py-12 font-sans selection:bg-emerald-500 selection:text-slate-950">
+      <div className="w-full max-w-sm space-y-7">
+        {/* Back link */}
+        <div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>Kembali ke Beranda</span>
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Masuk ke Dashboard Seller
+        </div>
+
+        {/* Brand Header */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 text-slate-950 font-black text-xs shadow-sm">
+              K
+            </div>
+            <span className="font-bold text-sm tracking-tight text-white">KoZa Bisnis</span>
+          </div>
+          <h1 className="text-2xl font-black tracking-tight text-white pt-1">
+            Masuk ke Dashboard
           </h1>
-          <p className="text-xs text-slate-400 max-w-xs mx-auto">
-            Kelola toko, pantau pesanan real-time, dan atur landing page Anda di satu tempat.
+          <p className="text-xs text-slate-400 leading-relaxed">
+            Kelola katalog produk, pantau pesanan kurir, dan lihat rekap laba bersih toko Anda.
           </p>
         </div>
 
-        {/* Login Form Card */}
-        <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-xl space-y-5">
+        {/* Form Card */}
+        <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 p-6 sm:p-7 shadow-xl space-y-5">
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-center gap-2 animate-fade-in">
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                Email Terdaftar
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-300">
+                Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -87,18 +93,16 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="seller@contoh.com"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                  placeholder="nama@tokoanda.com"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-slate-300">
-                  Password
-                </label>
-              </div>
+            <div className="space-y-1.5">
+              <label className="block text-xs font-semibold text-slate-300">
+                Kata Sandi
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
@@ -107,7 +111,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
             </div>
@@ -115,10 +119,10 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 transition-all active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
             >
               {isLoading ? (
-                <span>Memverifikasi...</span>
+                <span>Memverifikasi Akun...</span>
               ) : (
                 <>
                   <span>Masuk Sekarang</span>
@@ -128,12 +132,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="pt-2 text-center border-t border-slate-800/80">
+          <div className="pt-3 text-center border-t border-slate-800">
             <p className="text-xs text-slate-400">
-              Belum punya akun toko?{" "}
+              Belum punya toko?{" "}
               <Link
                 href="/register"
-                className="text-emerald-400 font-semibold hover:underline"
+                className="text-emerald-400 font-semibold hover:underline underline-offset-4"
               >
                 Daftar Toko Gratis
               </Link>
@@ -141,9 +145,9 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Footer info */}
+        {/* Security badge */}
         <p className="text-center text-[11px] text-slate-600">
-          Dilindungi oleh Enkripsi Multi-Tenant & Row Level Security (RLS) Supabase
+          Dilindungi oleh Row Level Security & Enkripsi Data Multi-Tenant
         </p>
       </div>
     </div>
