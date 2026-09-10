@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, generateOrderNumber } from "@/lib/utils";
-import { destinationOptions } from "@/lib/mock-data";
+import { destinationOptions, MASTER_COURIERS } from "@/lib/mock-data";
 import { Store, Product, OrderItem } from "@/types";
 import { 
   ShoppingBag, 
@@ -68,6 +68,9 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
             bankAccountNumber: storeRow.bank_account_number,
             bankAccountName: storeRow.bank_account_name,
             qrisImageUrl: storeRow.qris_image_url,
+            enabledCouriers: Array.isArray(storeRow.enabled_couriers) && storeRow.enabled_couriers.length > 0
+              ? storeRow.enabled_couriers
+              : ["JNT", "JNE", "SICEPAT"],
             createdAt: storeRow.created_at,
           });
 
@@ -92,6 +95,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                 imageUrl: p.image_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80",
                 category: p.category || "Umum",
                 isActive: p.is_active ?? true,
+                minOrderQuantity: p.min_order_quantity ? Number(p.min_order_quantity) : 1,
+                wholesaleTiers: Array.isArray(p.wholesale_tiers) ? p.wholesale_tiers : [],
                 createdAt: p.created_at,
               }))
             );
@@ -141,6 +146,21 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
   const [courierName, setCourierName] = useState("J&T Express");
   const [paymentMethod, setPaymentMethod] = useState<"WHATSAPP" | "QRIS_TOKO">("WHATSAPP");
 
+  // Dynamic Couriers supported by this Store
+  const storeCouriersCodes = store.enabledCouriers && store.enabledCouriers.length > 0
+    ? store.enabledCouriers
+    : ["JNT", "JNE", "SICEPAT"];
+
+  const activeCouriers = MASTER_COURIERS.filter((c) => storeCouriersCodes.includes(c.code));
+  const effectiveCourierList = activeCouriers.length > 0 ? activeCouriers : MASTER_COURIERS.slice(0, 3);
+
+  // Sync courierName if store disabled current courier
+  useEffect(() => {
+    if (effectiveCourierList.length > 0 && !effectiveCourierList.some((c) => c.name === courierName)) {
+      setCourierName(effectiveCourierList[0].name);
+    }
+  }, [effectiveCourierList, courierName]);
+
   // Success State
   const [completedOrder, setCompletedOrder] = useState<any | null>(null);
   const [copiedRekening, setCopiedRekening] = useState(false);
@@ -155,20 +175,41 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
     return matchCat && matchSearch;
   });
 
+  // Helper hitung harga satuan dinamis berdasarkan kuantiti grosir
+  const getProductUnitPrice = (prod: Product, qty: number): number => {
+    if (!prod.wholesaleTiers || prod.wholesaleTiers.length === 0) {
+      return prod.sellingPrice;
+    }
+    const sorted = [...prod.wholesaleTiers].sort((a, b) => {
+      const minA = Number(a.minQty ?? (a as any).min_qty ?? 0);
+      const minB = Number(b.minQty ?? (b as any).min_qty ?? 0);
+      return minB - minA;
+    });
+    for (const tier of sorted) {
+      const minQ = Number(tier.minQty ?? (tier as any).min_qty ?? 0);
+      const price = Number(tier.unitPrice ?? (tier as any).unit_price ?? 0);
+      if (minQ > 0 && qty >= minQ && price > 0) {
+        return price;
+      }
+    }
+    return prod.sellingPrice;
+  };
+
   // Cart Calculations (P1 Audit: costPrice is zeroed out to prevent HPP exposure)
   const cartItems: OrderItem[] = Object.entries(cart)
     .filter(([_, qty]) => qty > 0)
     .map(([id, qty]) => {
       const prod = products.find((p) => p.id === id);
       if (!prod) return null as any;
+      const unitPrice = getProductUnitPrice(prod, qty);
       return {
         productId: prod.id,
         productName: prod.name,
         quantity: qty,
-        unitPrice: prod.sellingPrice,
+        unitPrice,
         unitCost: 0, // P1 Audit: zeroed out on client, HPP is strictly hidden
         weightGrams: prod.weightGrams,
-        subtotal: prod.sellingPrice * qty,
+        subtotal: unitPrice * qty,
       };
     })
     .filter(Boolean);
@@ -177,23 +218,36 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
   const cartSubtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
   const totalWeightGrams = cartItems.reduce((sum, item) => sum + item.weightGrams * item.quantity, 0);
   const weightKgRounded = Math.max(1, Math.ceil(totalWeightGrams / 1000));
-  const shippingCost = selectedDestination.baseRate * weightKgRounded;
+  
+  // Kalkulasi Ongkir Cerdas: Diskon tarif kargo untuk muatan berat (> 5 kg)
+  const isKargo = courierName.includes("Trucking") || courierName.includes("Cargo") || courierName.includes("Kargo");
+  const shippingCost = isKargo
+    ? Math.max(25000, Math.round(selectedDestination.baseRate * 1.5 + Math.max(0, weightKgRounded - 5) * 3000))
+    : selectedDestination.baseRate * weightKgRounded;
+
   const grandTotal = cartSubtotal + shippingCost;
   const totalCostPrice = 0;
   const netProfit = 0;
 
   const addToCart = (prodId: string) => {
-    setCart((prev) => ({
-      ...prev,
-      [prodId]: (prev[prodId] || 0) + 1,
-    }));
+    const prod = products.find((p) => p.id === prodId);
+    const moq = prod?.minOrderQuantity && prod.minOrderQuantity > 1 ? prod.minOrderQuantity : 1;
+    setCart((prev) => {
+      const current = prev[prodId] || 0;
+      return {
+        ...prev,
+        [prodId]: current === 0 ? moq : current + 1,
+      };
+    });
   };
 
   const updateQuantity = (prodId: string, delta: number) => {
+    const prod = products.find((p) => p.id === prodId);
+    const moq = prod?.minOrderQuantity && prod.minOrderQuantity > 1 ? prod.minOrderQuantity : 1;
     setCart((prev) => {
       const current = prev[prodId] || 0;
       const next = current + delta;
-      if (next <= 0) {
+      if (next < moq) {
         const copy = { ...prev };
         delete copy[prodId];
         return copy;
@@ -442,6 +496,20 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                     <div className="text-sm sm:text-base font-extrabold text-emerald-400">
                       {formatRupiah(product.sellingPrice)}
                     </div>
+
+                    {/* Badge Grosir & MOQ */}
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {product.minOrderQuantity && product.minOrderQuantity > 1 && (
+                        <span className="rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-semibold">
+                          Min. {product.minOrderQuantity} pcs
+                        </span>
+                      )}
+                      {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
+                        <span className="rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 text-[9px] font-bold">
+                          Grosir s/d {formatRupiah(product.wholesaleTiers[product.wholesaleTiers.length - 1].unitPrice)}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Add to Cart / Quantity Selector */}
@@ -452,7 +520,11 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                         className="w-full py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-1.5"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        <span>Beli</span>
+                        <span>
+                          {product.minOrderQuantity && product.minOrderQuantity > 1
+                            ? `Beli (Min. ${product.minOrderQuantity})`
+                            : "Beli"}
+                        </span>
                       </button>
                     ) : (
                       <div className="flex items-center justify-between rounded-xl bg-slate-950 border border-slate-800 p-1">
@@ -664,10 +736,11 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                       onChange={(e) => setCourierName(e.target.value)}
                       className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-emerald-500 focus:outline-none"
                     >
-                      <option value="J&T Express">J&T Express (EZ 1-2 Hari)</option>
-                      <option value="JNE">JNE (Reguler 1-2 Hari)</option>
-                      <option value="SiCepat">SiCepat (REG 1-2 Hari)</option>
-                      <option value="Anteraja">Anteraja (Regular)</option>
+                      {effectiveCourierList.map((c) => (
+                        <option key={c.code} value={c.name}>
+                          {c.name} ({c.service})
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

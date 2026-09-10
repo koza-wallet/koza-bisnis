@@ -1,4 +1,4 @@
-import { Store, Product, Order, OperationalExpense, QuotaPackage, LandingPage } from '@/types';
+import { Store, Product, Order, OperationalExpense, QuotaPackage, LandingPage, CourierOption } from '@/types';
 
 export const initialStore: Store = {
   id: 'store-1',
@@ -16,6 +16,7 @@ export const initialStore: Store = {
   bankAccountNumber: '7720-1234-56',
   bankAccountName: 'Siti Rahmawati (Hijab Cantik)',
   qrisImageUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=00020101021226580014ID.LINKAJA.WWW01189360091100212345675204581253033605802ID5919Hijab+Cantik+Bandung6007Bandung61054013262070703A016304',
+  enabledCouriers: ['JNT', 'JNE', 'SICEPAT', 'JTR'],
   createdAt: '2026-09-01T08:00:00.000Z',
 };
 
@@ -247,6 +248,65 @@ export const destinationOptions = [
   { city: 'Kota Semarang', district: 'Banyumanik', baseRate: 16000 },
   { city: 'Kota Medan', district: 'Medan Baru', baseRate: 28000 },
   { city: 'Kota Makassar', district: 'Panakkukang', baseRate: 34000 },
+];
+
+export const MASTER_COURIERS: CourierOption[] = [
+  {
+    code: 'JNT',
+    name: 'J&T Express',
+    service: 'EZ (Reguler 1-2 Hari)',
+    category: 'REGULER',
+    description: 'Jangkauan luas ke seluruh pelosok Indonesia dengan penjemputan cepat.',
+    defaultRateOffset: 2000,
+  },
+  {
+    code: 'JNE',
+    name: 'JNE',
+    service: 'Reguler (1-2 Hari)',
+    category: 'REGULER',
+    description: 'Pelopor ekspedisi terpercaya dengan jaringan agen terlengkap.',
+    defaultRateOffset: 1000,
+  },
+  {
+    code: 'SICEPAT',
+    name: 'SiCepat',
+    service: 'REG (1-2 Hari)',
+    category: 'REGULER',
+    description: 'Tarif bersahabat dan kecepatan pengiriman prima.',
+    defaultRateOffset: 0,
+  },
+  {
+    code: 'ANTERAJA',
+    name: 'Anteraja',
+    service: 'Regular (1-3 Hari)',
+    category: 'REGULER',
+    description: 'Layanan terintegrasi dengan penjemputan langsung ke lokasi seller.',
+    defaultRateOffset: 0,
+  },
+  {
+    code: 'JTR',
+    name: 'JTR (JNE Trucking)',
+    service: 'Kargo Muatan Berat (3-5 Hari)',
+    category: 'KARGO',
+    description: 'Spesialis pengiriman barang besar & berat (≥ 10 kg) dengan tarif kargo hemat.',
+    defaultRateOffset: 5000,
+  },
+  {
+    code: 'JNTCARGO',
+    name: 'J&T Cargo',
+    service: 'Kargo Paket Besar (2-4 Hari)',
+    category: 'KARGO',
+    description: 'Pengiriman paket besar & partai grosir cepat ke seluruh kota di Indonesia.',
+    defaultRateOffset: 7000,
+  },
+  {
+    code: 'INDAH',
+    name: 'Indah Logistik Cargo',
+    service: 'Kargo Partai Besar (3-6 Hari)',
+    category: 'KARGO',
+    description: 'Pilihan utama distributor dan pabrik untuk muatan koli besar antarpulau.',
+    defaultRateOffset: 4000,
+  },
 ];
 
 export const initialLandingPages: LandingPage[] = [

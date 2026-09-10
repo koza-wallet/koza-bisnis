@@ -1,5 +1,14 @@
 export type MembershipPlan = 'NON_PRO' | 'PRO_MONTHLY' | 'PRO_ANNUAL';
 
+export interface CourierOption {
+  code: string;
+  name: string;
+  service: string;
+  category: 'REGULER' | 'KARGO';
+  description: string;
+  defaultRateOffset?: number;
+}
+
 export interface Store {
   id: string;
   slug: string;
@@ -16,7 +25,13 @@ export interface Store {
   bankAccountNumber?: string;
   bankAccountName?: string;
   qrisImageUrl?: string;
+  enabledCouriers?: string[]; // Daftar kode kurir aktif untuk toko
   createdAt: string;
+}
+
+export interface WholesaleTier {
+  minQty: number;
+  unitPrice: number;
 }
 
 export interface Product {
@@ -32,6 +47,8 @@ export interface Product {
   imageUrl: string;
   category: string;
   isActive: boolean;
+  minOrderQuantity?: number; // Minimum Order Quantity (MOQ)
+  wholesaleTiers?: WholesaleTier[]; // Daftar harga bertingkat grosir
   createdAt: string;
 }
 

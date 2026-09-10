@@ -80,7 +80,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
           // Ambil data toko publik dari view public_stores (Patch #10)
           const { data: storeRow } = await supabase
             .from("public_stores")
-            .select("id, name, whatsapp_number, origin_city, origin_district, qris_image_url, bank_name, bank_account_number, bank_account_name")
+            .select("id, name, whatsapp_number, origin_city, origin_district, qris_image_url, bank_name, bank_account_number, bank_account_name, enabled_couriers")
             .eq("id", lpRow.store_id)
             .maybeSingle();
 
@@ -95,7 +95,30 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
               bankName: storeRow.bank_name,
               bankAccountNumber: storeRow.bank_account_number,
               bankAccountName: storeRow.bank_account_name,
+              enabledCouriers: Array.isArray(storeRow.enabled_couriers) && storeRow.enabled_couriers.length > 0
+                ? storeRow.enabled_couriers
+                : ["JNT", "JNE", "SICEPAT"],
             });
+          }
+
+          // Ambil metadata produk (MOQ & tier grosir) jika terhubung ke produk katalog
+          if (lpRow.product_id) {
+            const { data: prodRow } = await supabase
+              .from("public_products")
+              .select("id, min_order_quantity, wholesale_tiers")
+              .eq("id", lpRow.product_id)
+              .maybeSingle();
+
+            if (prodRow) {
+              const moq = prodRow.min_order_quantity ? Number(prodRow.min_order_quantity) : 1;
+              setProductMeta({
+                minOrderQuantity: moq,
+                wholesaleTiers: Array.isArray(prodRow.wholesale_tiers) ? prodRow.wholesale_tiers : [],
+              });
+              if (moq > 1) {
+                setQuantity(moq);
+              }
+            }
           }
         } else {
           const fallbackLp = getLandingPageBySlug(slug);
@@ -115,6 +138,12 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     }
   }, [slug]);
 
+  // Product B2B Wholesale Meta
+  const [productMeta, setProductMeta] = useState<{
+    minOrderQuantity: number;
+    wholesaleTiers: Array<{ minQty: number; unitPrice: number }>;
+  } | null>(null);
+
   // Countdown timer state (hours, minutes, seconds)
   const [timeLeft, setTimeLeft] = useState({ hours: 7, minutes: 48, seconds: 15 });
 
@@ -123,7 +152,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [selectedDestination, setSelectedDestination] = useState(destinationOptions[0]);
-  const [selectedCourier, setSelectedCourier] = useState<"SICEPAT" | "JNT" | "JNE">("SICEPAT");
+  const [selectedCourier, setSelectedCourier] = useState<string>("SICEPAT");
   const [paymentMethod, setPaymentMethod] = useState<"WHATSAPP" | "QRIS_TOKO">("WHATSAPP");
   const [quantity, setQuantity] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -181,18 +210,59 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     );
   }
 
-  // Calculate pricing
-  const itemPrice = lp.pricing.promoPrice;
+  // Calculate pricing & B2B Wholesale Tiered Rates
+  const getDynamicItemPrice = () => {
+    let price = lp.pricing.promoPrice;
+    if (productMeta?.wholesaleTiers && productMeta.wholesaleTiers.length > 0) {
+      const sorted = [...productMeta.wholesaleTiers].sort((a, b) => {
+        const minA = Number(a.minQty ?? (a as any).min_qty ?? 0);
+        const minB = Number(b.minQty ?? (b as any).min_qty ?? 0);
+        return minB - minA;
+      });
+      for (const tier of sorted) {
+        const minQ = Number(tier.minQty ?? (tier as any).min_qty ?? 0);
+        const tierPrice = Number(tier.unitPrice ?? (tier as any).unit_price ?? 0);
+        if (minQ > 0 && quantity >= minQ && tierPrice > 0) {
+          price = tierPrice;
+          break;
+        }
+      }
+    }
+    return price;
+  };
+
+  const itemPrice = getDynamicItemPrice();
   const itemsTotal = itemPrice * quantity;
-  const shippingCost = selectedDestination.baseRate;
+  const isKargoSelected = selectedCourier === "JTR" || selectedCourier === "JNTCARGO";
+  const shippingCost = isKargoSelected
+    ? Math.max(25000, Math.round(selectedDestination.baseRate * 1.5))
+    : selectedDestination.baseRate;
   const grandTotal = itemsTotal + shippingCost;
 
-  // Courier Rates
-  const couriers = [
-    { id: "SICEPAT", name: "SiCepat REG", rate: shippingCost, desc: "Estimasi 1-3 hari", tag: "Rekomendasi" },
-    { id: "JNT", name: "J&T Express", rate: shippingCost + 2000, desc: "Estimasi 1-3 hari" },
-    { id: "JNE", name: "JNE Reguler", rate: shippingCost + 1000, desc: "Estimasi 2-4 hari" },
+  // All Available Courier Rates
+  const allMasterCouriers = [
+    { id: "SICEPAT", name: "SiCepat REG", rate: selectedDestination.baseRate, desc: "Estimasi 1-3 hari", tag: "Rekomendasi" },
+    { id: "JNT", name: "J&T Express", rate: selectedDestination.baseRate + 2000, desc: "Estimasi 1-3 hari" },
+    { id: "JNE", name: "JNE Reguler", rate: selectedDestination.baseRate + 1000, desc: "Estimasi 2-4 hari" },
+    { id: "ANTERAJA", name: "Anteraja", rate: selectedDestination.baseRate, desc: "Estimasi 1-3 hari" },
+    { id: "JTR", name: "JTR (JNE Trucking) Kargo", rate: Math.max(25000, Math.round(selectedDestination.baseRate * 1.5)), desc: "Kargo Barang Berat (3-5 hari)", tag: "Kargo Hemat" },
+    { id: "JNTCARGO", name: "J&T Cargo", rate: Math.max(28000, Math.round(selectedDestination.baseRate * 1.8)), desc: "Kargo Paket Besar (2-4 hari)", tag: "Kargo" },
+    { id: "INDAH", name: "Indah Logistik Cargo", rate: Math.max(26000, Math.round(selectedDestination.baseRate * 1.6)), desc: "Kargo Partai Besar (3-6 hari)", tag: "Kargo" },
   ];
+
+  const allowedStoreCouriers = store.enabledCouriers && store.enabledCouriers.length > 0
+    ? store.enabledCouriers
+    : ["JNT", "JNE", "SICEPAT"];
+
+  const filteredCouriers = allMasterCouriers.filter((c) => allowedStoreCouriers.includes(c.id));
+  const couriers = filteredCouriers.length > 0 ? filteredCouriers : allMasterCouriers.slice(0, 3);
+
+  // Auto-sync selectedCourier jika kurir yang aktif di toko berubah
+  useEffect(() => {
+    if (couriers.length > 0 && !couriers.some((c) => c.id === selectedCourier)) {
+      setSelectedCourier(couriers[0].id);
+    }
+  }, [couriers, selectedCourier]);
 
   // Theme configuration
   const getThemeClasses = () => {
@@ -662,30 +732,69 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
               </div>
 
               {/* Quantity selector */}
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-bold">{lp.title}</p>
-                  <p className={`text-sm font-black ${theme.accentText} mt-0.5`}>
-                    Rp {itemPrice.toLocaleString("id-ID")} / pcs
-                  </p>
+              <div className="space-y-2">
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-bold">{lp.title}</p>
+                      {productMeta?.minOrderQuantity && productMeta.minOrderQuantity > 1 && (
+                        <span className="rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-bold">
+                          Min. {productMeta.minOrderQuantity} pcs
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-sm font-black ${theme.accentText} mt-0.5`}>
+                      Rp {itemPrice.toLocaleString("id-ID")} / pcs
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(Math.max(productMeta?.minOrderQuantity || 1, quantity - 1))}
+                      className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 font-bold text-slate-300 hover:text-white flex items-center justify-center disabled:opacity-40"
+                      disabled={quantity <= (productMeta?.minOrderQuantity || 1)}
+                    >
+                      -
+                    </button>
+                    <span className="font-bold text-sm w-4 text-center">{quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 font-bold text-slate-300 hover:text-white flex items-center justify-center"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 font-bold text-slate-300 hover:text-white flex items-center justify-center"
-                  >
-                    -
-                  </button>
-                  <span className="font-bold text-sm w-4 text-center">{quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="h-8 w-8 rounded-lg bg-slate-800 border border-slate-700 font-bold text-slate-300 hover:text-white flex items-center justify-center"
-                  >
-                    +
-                  </button>
-                </div>
+
+                {/* Wholesale pricing table banner */}
+                {productMeta?.wholesaleTiers && productMeta.wholesaleTiers.length > 0 && (
+                  <div className="rounded-xl bg-indigo-950/40 border border-indigo-500/30 p-3 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-indigo-300">
+                      <span>⚡ Diskon Pembelian Grosir / Partai Besar:</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[10px]">
+                      {productMeta.wholesaleTiers.map((t, idx) => {
+                        const minQ = Number(t.minQty ?? (t as any).min_qty ?? 0);
+                        const uPrice = Number(t.unitPrice ?? (t as any).unit_price ?? 0);
+                        const isActive = quantity >= minQ;
+                        return (
+                          <div
+                            key={idx}
+                            className={`px-2 py-1.5 rounded-lg border transition-all ${
+                              isActive
+                                ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold"
+                                : "bg-slate-900/60 border-slate-800 text-slate-400"
+                            }`}
+                          >
+                            <span>≥ {minQ} pcs:</span>{" "}
+                            <span className="text-white font-semibold">Rp {uPrice.toLocaleString("id-ID")}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Customer Info */}

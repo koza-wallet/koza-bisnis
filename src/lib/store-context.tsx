@@ -101,6 +101,9 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         bankAccountNumber: storeRow.bank_account_number || undefined,
         bankAccountName: storeRow.bank_account_name || undefined,
         qrisImageUrl: storeRow.qris_image_url || undefined,
+        enabledCouriers: Array.isArray(storeRow.enabled_couriers) && storeRow.enabled_couriers.length > 0
+          ? storeRow.enabled_couriers
+          : ["JNT", "JNE", "SICEPAT"],
         createdAt: storeRow.created_at,
       };
       setStore(activeStore);
@@ -127,6 +130,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
             imageUrl: p.image_url || "",
             category: p.category || "Umum",
             isActive: p.is_active,
+            minOrderQuantity: p.min_order_quantity ?? 1,
+            wholesaleTiers: Array.isArray(p.wholesale_tiers) ? p.wholesale_tiers : [],
             createdAt: p.created_at,
           }))
         );
@@ -304,6 +309,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (updates.bankAccountNumber !== undefined) payload.bank_account_number = updates.bankAccountNumber;
       if (updates.bankAccountName !== undefined) payload.bank_account_name = updates.bankAccountName;
       if (updates.qrisImageUrl !== undefined) payload.qris_image_url = updates.qrisImageUrl;
+      if (updates.enabledCouriers !== undefined) payload.enabled_couriers = updates.enabledCouriers;
 
       supabase.from("stores").update(payload).eq("id", store.id).then();
     }
@@ -335,6 +341,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         image_url: prodData.imageUrl,
         category: prodData.category,
         is_active: prodData.isActive,
+        min_order_quantity: prodData.minOrderQuantity || 1,
+        wholesale_tiers: prodData.wholesaleTiers || [],
       }).then();
     }
   };
@@ -357,6 +365,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (updates.imageUrl !== undefined) payload.image_url = updates.imageUrl;
       if (updates.category !== undefined) payload.category = updates.category;
       if (updates.isActive !== undefined) payload.is_active = updates.isActive;
+      if (updates.minOrderQuantity !== undefined) payload.min_order_quantity = updates.minOrderQuantity;
+      if (updates.wholesaleTiers !== undefined) payload.wholesale_tiers = updates.wholesaleTiers;
 
       supabase.from("products").update(payload).eq("id", id).then();
     }

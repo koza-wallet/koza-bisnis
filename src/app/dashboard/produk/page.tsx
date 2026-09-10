@@ -29,6 +29,22 @@ export default function ProductManagementPage() {
   const [costPrice, setCostPrice] = useState("");
   const [weightGrams, setWeightGrams] = useState("250");
   const [stock, setStock] = useState("20");
+  const [minOrderQuantity, setMinOrderQuantity] = useState("1");
+  const [wholesaleTiers, setWholesaleTiers] = useState<Array<{ minQty: number; unitPrice: number }>>([]);
+
+  const addWholesaleTier = () => {
+    setWholesaleTiers([...wholesaleTiers, { minQty: 10, unitPrice: 0 }]);
+  };
+
+  const updateWholesaleTier = (index: number, field: "minQty" | "unitPrice", val: number) => {
+    const updated = [...wholesaleTiers];
+    updated[index] = { ...updated[index], [field]: val };
+    setWholesaleTiers(updated);
+  };
+
+  const removeWholesaleTier = (index: number) => {
+    setWholesaleTiers(wholesaleTiers.filter((_, i) => i !== index));
+  };
 
   const sellingNum = Number(sellingPrice) || 0;
   const costNum = Number(costPrice) || 0;
@@ -42,6 +58,10 @@ export default function ProductManagementPage() {
       return;
     }
 
+    const cleanTiers = wholesaleTiers
+      .filter((t) => t.minQty > 1 && t.unitPrice > 0)
+      .sort((a, b) => a.minQty - b.minQty);
+
     addProduct({
       storeId: "store-1",
       name,
@@ -54,6 +74,8 @@ export default function ProductManagementPage() {
       imageUrl: imageUrl || "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=600&auto=format&fit=crop&q=80",
       category,
       isActive: true,
+      minOrderQuantity: Math.max(1, Number(minOrderQuantity) || 1),
+      wholesaleTiers: cleanTiers,
     });
 
     // Reset Form
@@ -62,6 +84,8 @@ export default function ProductManagementPage() {
     setImageUrl("");
     setSellingPrice("");
     setCostPrice("");
+    setMinOrderQuantity("1");
+    setWholesaleTiers([]);
     setIsModalOpen(false);
   };
 
@@ -109,13 +133,23 @@ export default function ProductManagementPage() {
                   alt={product.name}
                   className="h-full w-full object-cover"
                 />
-                <div className="absolute top-3 left-3 flex gap-1.5">
+                <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 max-w-[75%]">
                   <span className="rounded-full bg-slate-950/80 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-semibold text-white border border-slate-700">
                     {product.category}
                   </span>
                   <span className="rounded-full bg-slate-950/80 backdrop-blur-md px-2 py-0.5 text-[10px] font-medium text-slate-300 border border-slate-700">
                     {product.weightGrams}g
                   </span>
+                  {product.minOrderQuantity && product.minOrderQuantity > 1 && (
+                    <span className="rounded-full bg-amber-500/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-slate-950 border border-amber-400">
+                      MOQ: {product.minOrderQuantity}
+                    </span>
+                  )}
+                  {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
+                    <span className="rounded-full bg-indigo-500/90 backdrop-blur-md px-2 py-0.5 text-[10px] font-bold text-white border border-indigo-400">
+                      Grosir ({product.wholesaleTiers.length})
+                    </span>
+                  )}
                 </div>
 
                 <div className="absolute top-3 right-3">
@@ -165,6 +199,24 @@ export default function ProductManagementPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Wholesale Tiers Preview */}
+                {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
+                  <div className="rounded-xl bg-indigo-950/40 p-2.5 border border-indigo-500/30 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-indigo-300">
+                      <span>Harga Grosir Bertingkat:</span>
+                      <span>{product.wholesaleTiers.length} Tingkat</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 text-[10px]">
+                      {product.wholesaleTiers.map((t, idx) => (
+                        <div key={idx} className="flex justify-between bg-slate-950/60 px-2 py-1 rounded border border-slate-800/80 text-slate-300">
+                          <span>≥ {t.minQty} pcs:</span>
+                          <span className="font-bold text-emerald-400">{formatRupiah(t.unitPrice)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Stock & Actions */}
                 <div className="flex items-center justify-between pt-1">
@@ -346,6 +398,96 @@ export default function ProductManagementPage() {
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
                 />
+              </div>
+
+              {/* Pengaturan Grosir & B2B (Opsional untuk Produsen/Distributor) */}
+              <div className="rounded-xl bg-slate-950/90 p-4 border border-indigo-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                      <span>Pengaturan Grosir & Produsen (B2B)</span>
+                      <span className="rounded bg-indigo-500/20 px-1.5 py-0.5 text-[9px] font-semibold text-indigo-400">Opsional</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Atur minimal order (MOQ) dan diskon kuantiti bertingkat untuk pembeli partai besar.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    Minimal Pembelian (MOQ / Minimum Order Quantity)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="1"
+                      value={minOrderQuantity}
+                      onChange={(e) => setMinOrderQuantity(e.target.value)}
+                      className="w-32 rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
+                    />
+                    <span className="text-xs text-slate-400">pcs (default 1 pcs untuk eceran)</span>
+                  </div>
+                </div>
+
+                {/* Wholesale Tiers */}
+                <div className="space-y-2 pt-2 border-t border-slate-800/80">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-slate-300">
+                      Tier Harga Grosir Bertingkat
+                    </label>
+                    <button
+                      type="button"
+                      onClick={addWholesaleTier}
+                      className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Tambah Tier</span>
+                    </button>
+                  </div>
+
+                  {wholesaleTiers.length === 0 ? (
+                    <p className="text-[11px] text-slate-500 italic">
+                      Belum ada tier harga grosir. Klik "+ Tambah Tier" untuk memberi harga khusus jika beli banyak.
+                    </p>
+                  ) : (
+                    <div className="space-y-2">
+                      {wholesaleTiers.map((tier, idx) => (
+                        <div key={idx} className="flex items-center gap-2 bg-slate-900/80 p-2 rounded-xl border border-slate-800">
+                          <div className="flex-1 flex items-center gap-1.5 text-xs text-slate-300">
+                            <span>Beli ≥</span>
+                            <input
+                              type="number"
+                              min="2"
+                              value={tier.minQty}
+                              onChange={(e) => updateWholesaleTier(idx, "minQty", Number(e.target.value))}
+                              className="w-20 rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white text-center focus:border-indigo-500 focus:outline-none"
+                            />
+                            <span>pcs:</span>
+                          </div>
+                          <div className="flex-1 flex items-center gap-1 text-xs text-slate-300">
+                            <span>Rp</span>
+                            <input
+                              type="number"
+                              placeholder="Harga Satuan"
+                              value={tier.unitPrice || ""}
+                              onChange={(e) => updateWholesaleTier(idx, "unitPrice", Number(e.target.value))}
+                              className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white focus:border-indigo-500 focus:outline-none"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeWholesaleTier(idx)}
+                            className="p-1 text-slate-500 hover:text-rose-400 rounded transition-colors"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Submit Buttons */}

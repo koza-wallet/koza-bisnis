@@ -166,21 +166,69 @@ export async function POST(req: NextRequest) {
       serviceRoleKey
     );
 
-    // Ambil harga asli produk dari database untuk mencocokkan harga resmi
+    // Validasi ekspedisi yang diaktifkan oleh toko (Store Shipping Settings)
+    const { data: storeCheck } = await supabase
+      .from("public_stores")
+      .select("id, enabled_couriers")
+      .eq("id", storeId)
+      .maybeSingle();
+
+    if (storeCheck && Array.isArray(storeCheck.enabled_couriers) && storeCheck.enabled_couriers.length > 0) {
+      const cleanCourier = sanitizeText(String(courierName || "")).toUpperCase();
+      const isAllowed = storeCheck.enabled_couriers.some((code: string) => {
+        const upperCode = code.toUpperCase();
+        if (upperCode === "JNT" && (cleanCourier.includes("J&T") || cleanCourier.includes("JNT"))) return true;
+        if (upperCode === "JNE" && cleanCourier.includes("JNE") && !cleanCourier.includes("TRUCKING") && !cleanCourier.includes("JTR")) return true;
+        if (upperCode === "SICEPAT" && cleanCourier.includes("SICEPAT")) return true;
+        if (upperCode === "ANTERAJA" && cleanCourier.includes("ANTERAJA")) return true;
+        if (upperCode === "JTR" && (cleanCourier.includes("JTR") || cleanCourier.includes("TRUCKING"))) return true;
+        if (upperCode === "JNTCARGO" && (cleanCourier.includes("J&T CARGO") || cleanCourier.includes("JNTCARGO"))) return true;
+        if (upperCode === "INDAH" && (cleanCourier.includes("INDAH") || cleanCourier.includes("INDAH LOGISTIK"))) return true;
+        return cleanCourier.includes(upperCode);
+      });
+
+      if (!isAllowed && cleanCourier.length > 0) {
+        return NextResponse.json(
+          { error: `Pilihan ekspedisi "${courierName}" saat ini tidak didukung oleh toko ini.` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Ambil metadata produk (harga, MOQ, tier grosir) dari database untuk validasi resmi
     const productIds = items
       .map((i: any) => i.productId || i.id)
       .filter((id: any): id is string => typeof id === "string" && id.length > 0);
 
-    let priceMap = new Map<string, number>();
+    interface ProductMeta {
+      id: string;
+      name: string;
+      sellingPrice: number;
+      minOrderQuantity: number;
+      wholesaleTiers: Array<{ min_qty?: number; minQty?: number; unit_price?: number; unitPrice?: number }>;
+    }
+
+    let productMetaMap = new Map<string, ProductMeta>();
     if (productIds.length > 0) {
       const { data: realProducts } = await supabase
         .from("public_products")
-        .select("id, selling_price")
+        .select("id, name, selling_price, min_order_quantity, wholesale_tiers")
         .eq("store_id", storeId)
         .in("id", productIds);
 
       if (realProducts) {
-        priceMap = new Map(realProducts.map((p: any) => [p.id, Number(p.selling_price)]));
+        productMetaMap = new Map(
+          realProducts.map((p: any) => [
+            p.id,
+            {
+              id: p.id,
+              name: p.name,
+              sellingPrice: Number(p.selling_price),
+              minOrderQuantity: Math.max(1, Number(p.min_order_quantity || 1)),
+              wholesaleTiers: Array.isArray(p.wholesale_tiers) ? p.wholesale_tiers : [],
+            },
+          ])
+        );
       }
     }
 
@@ -193,15 +241,46 @@ export async function POST(req: NextRequest) {
       const qty = Math.floor(Number(itm.quantity || 1));
       const pId = itm.productId || itm.id || undefined;
 
-      // Gunakan harga resmi database jika tersedia; fallback jika custom non-catalog item
-      const dbPrice = pId ? priceMap.get(pId) : undefined;
-      const price = dbPrice !== undefined ? dbPrice : Math.max(0, Number(itm.unitPrice || itm.price || 0));
-
-      if (qty < 1 || qty > 1000) {
+      if (qty < 1 || qty > 10000) {
         return NextResponse.json(
-          { error: "Jumlah barang tidak valid (antara 1 hingga 1000)." },
+          { error: "Jumlah barang tidak valid (antara 1 hingga 10000)." },
           { status: 400 }
         );
+      }
+
+      const pMeta = pId ? productMetaMap.get(pId) : undefined;
+
+      // 1. Validasi B2B: Minimum Order Quantity (MOQ)
+      if (pMeta && pMeta.minOrderQuantity > 1 && qty < pMeta.minOrderQuantity) {
+        return NextResponse.json(
+          {
+            error: `Minimal pemesanan untuk produk "${pMeta.name}" adalah ${pMeta.minOrderQuantity} pcs (Anda memesan ${qty} pcs).`,
+          },
+          { status: 400 }
+        );
+      }
+
+      // 2. Validasi B2B: Hitung harga satuan berdasarkan tier grosir jika kuantiti memenuhi syarat
+      let price = Math.max(0, Number(itm.unitPrice || itm.price || 0));
+      if (pMeta) {
+        let matchedPrice = pMeta.sellingPrice;
+        if (pMeta.wholesaleTiers && pMeta.wholesaleTiers.length > 0) {
+          const sortedTiers = [...pMeta.wholesaleTiers].sort((a, b) => {
+            const minA = Number(a.minQty ?? a.min_qty ?? 0);
+            const minB = Number(b.minQty ?? b.min_qty ?? 0);
+            return minB - minA;
+          });
+
+          for (const tier of sortedTiers) {
+            const minQ = Number(tier.minQty ?? tier.min_qty ?? 0);
+            const tierPrice = Number(tier.unitPrice ?? tier.unit_price ?? 0);
+            if (minQ > 0 && qty >= minQ && tierPrice > 0) {
+              matchedPrice = tierPrice;
+              break;
+            }
+          }
+        }
+        price = matchedPrice;
       }
 
       calculatedItemsTotal += qty * price;

@@ -13,7 +13,8 @@ import {
   Store as StoreIcon,
   Sparkles,
   Zap,
-  LogOut
+  LogOut,
+  Truck
 } from "lucide-react";
 
 export function DashboardNav() {
@@ -25,7 +26,7 @@ export function DashboardNav() {
     (o) => o.status === "MENUNGGU_BAYAR" || o.status === "DIPROSES"
   ).length;
 
-  // 5 core operational & growth menus
+  // Core operational & growth menus
   const navItems = [
     { href: "/dashboard", label: "Beranda", icon: Home },
     { href: "/dashboard/produk", label: "Produk", icon: Package },
@@ -48,6 +49,12 @@ export function DashboardNav() {
       label: "Laba Bersih", 
       mobileLabel: "Laba Bersih",
       icon: TrendingUp 
+    },
+    { 
+      href: "/dashboard/pengaturan", 
+      label: "Ekspedisi", 
+      mobileLabel: "Ekspedisi",
+      icon: Truck 
     },
   ];
 
@@ -153,9 +160,9 @@ export function DashboardNav() {
         </div>
       </div>
 
-      {/* Mobile Bottom Navigation Bar (5 Ergonomic Tabs, Zero Truncation) */}
+      {/* Mobile Bottom Navigation Bar (6 Ergonomic Tabs, Zero Truncation) */}
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-800/90 bg-slate-950/95 backdrop-blur-xl md:hidden safe-bottom">
-        <div className="grid grid-cols-5 py-1.5 px-1 items-center">
+        <div className="grid grid-cols-6 py-1.5 px-1 items-center">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
