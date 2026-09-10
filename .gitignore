@@ -42,6 +42,7 @@ next-env.d.ts
 
 # internal business & investor documents
 *Investor_Pitch_Forecast*
+/investor-pitch/
 *.pdf
 
 # internal development logs (dapur pembangunan)
