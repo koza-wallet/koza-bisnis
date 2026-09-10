@@ -121,6 +121,30 @@ export interface PublicOrderTracking {
   updatedAt?: string;
 }
 
+export type BotChatStatus = 'ACTIVE' | 'PAUSED' | 'ESCALATED_TO_HUMAN';
+
+export interface ChatSession {
+  id: string;
+  storeId: string;
+  buyerPhone: string;
+  botStatus: BotChatStatus;
+  pausedUntil?: string;
+  turnCount: number;
+  lastBuyerMessage?: string;
+  lastBotReply?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CostGuardEvaluation {
+  shouldProcessLLM: boolean;
+  botStatus: BotChatStatus;
+  sanitizedMessage: string;
+  rejectionReason?: 'ECHO_DETECTED' | 'GROUP_IGNORED' | 'BOT_PAUSED' | 'RATE_LIMITED' | 'DAILY_QUOTA_EXCEEDED' | 'CIRCUIT_BREAKER_OPEN' | 'MAGIC_COMMAND';
+  immediateReply?: string;
+  shouldEscalateToHuman?: boolean;
+}
+
 export interface OperationalExpense {
   id: string;
   storeId: string;
