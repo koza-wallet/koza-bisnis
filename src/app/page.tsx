@@ -643,7 +643,18 @@ export default function LandingPage() {
             <span className="font-bold text-slate-300">KoZa Bisnis</span>
             <span>• Solusi Toko Bio Link & Pembukuan UMKM Indonesia</span>
           </div>
-          <div>© {new Date().getFullYear()} KoZa Bisnis. Hak cipta dilindungi.</div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 text-slate-400">
+            <Link href="/kebijakan-privasi" className="hover:text-white transition-colors">
+              Kebijakan Privasi
+            </Link>
+            <span className="text-slate-700">•</span>
+            <Link href="/syarat-ketentuan" className="hover:text-white transition-colors">
+              Syarat & Ketentuan
+            </Link>
+            <span className="text-slate-700">•</span>
+            <span>© {new Date().getFullYear()} KoZa Bisnis</span>
+          </div>
         </div>
       </footer>
     </div>
