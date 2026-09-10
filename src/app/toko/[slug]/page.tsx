@@ -47,7 +47,7 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
       setIsLoading(true);
       try {
         const { data: storeRow, error: storeErr } = await supabase
-          .from("stores")
+          .from("public_stores")
           .select("*")
           .eq("slug", slug)
           .single();
@@ -62,8 +62,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
             whatsappNumber: storeRow.whatsapp_number,
             originCity: storeRow.origin_city || "Kota Jakarta Selatan",
             originDistrict: storeRow.origin_district || "Kebayoran Baru",
-            quotaBalance: storeRow.quota_balance ?? 10,
-            plan: storeRow.plan || "NON_PRO",
+            quotaBalance: 0,
+            plan: "NON_PRO",
             bankName: storeRow.bank_name,
             bankAccountNumber: storeRow.bank_account_number,
             bankAccountName: storeRow.bank_account_name,

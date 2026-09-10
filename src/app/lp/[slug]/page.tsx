@@ -45,7 +45,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
       try {
         const { data: lpRow, error: lpErr } = await supabase
           .from("landing_pages")
-          .select("*, stores(*)")
+          .select("*")
           .eq("slug", slug)
           .eq("is_active", true)
           .single();
@@ -77,13 +77,24 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
             createdAt: lpRow.created_at || new Date().toISOString(),
           });
 
-          if (lpRow.stores) {
+          // Ambil data toko publik dari view public_stores (Patch #10)
+          const { data: storeRow } = await supabase
+            .from("public_stores")
+            .select("id, name, whatsapp_number, origin_city, origin_district, qris_image_url, bank_name, bank_account_number, bank_account_name")
+            .eq("id", lpRow.store_id)
+            .maybeSingle();
+
+          if (storeRow) {
             setStore({
-              id: lpRow.stores.id,
-              name: lpRow.stores.name,
-              whatsappNumber: lpRow.stores.whatsapp_number,
-              originCity: lpRow.stores.origin_city,
-              originDistrict: lpRow.stores.origin_district,
+              id: storeRow.id,
+              name: storeRow.name,
+              whatsappNumber: storeRow.whatsapp_number,
+              originCity: storeRow.origin_city,
+              originDistrict: storeRow.origin_district,
+              qrisImageUrl: storeRow.qris_image_url,
+              bankName: storeRow.bank_name,
+              bankAccountNumber: storeRow.bank_account_number,
+              bankAccountName: storeRow.bank_account_name,
             });
           }
         } else {
@@ -236,7 +247,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     });
   };
 
-  const handleOrderSubmit = (e: React.FormEvent) => {
+  const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName || !customerPhone || !customerAddress) {
       alert("Silakan lengkapi nama, nomor WhatsApp, dan alamat pengiriman!");
@@ -245,88 +256,59 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
 
     setIsSubmitting(true);
 
-    const orderNumber = "KZ-" + Math.floor(100000 + Math.random() * 900000);
-    const unitCost = Math.round(itemPrice * 0.55); // Est. HPP
-    const totalCostPrice = unitCost * quantity;
-    const netProfit = itemsTotal - totalCostPrice;
+    try {
+      // 1. Patch #11: Panggil endpoint server-side /api/orders/create sebagai single source of truth
+      const res = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId: lp.storeId,
+          customerName,
+          customerPhone,
+          customerAddress,
+          destinationCity: selectedDestination.city,
+          destinationDistrict: selectedDestination.district,
+          courierName: selectedCourier,
+          courierService: "Reguler",
+          shippingCost,
+          items: [
+            {
+              productId: lp.productId || "prod-lp",
+              productName: lp.title,
+              quantity,
+              unitPrice: itemPrice,
+              subtotal: itemsTotal,
+            },
+          ],
+          paymentMethod,
+        }),
+      });
 
-    // 1. P1 Security: Panggil endpoint server-side dengan sanitasi & rate limiting
-    fetch("/api/orders/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        storeId: lp.storeId,
-        customerName,
-        customerPhone,
-        customerAddress,
-        destinationCity: selectedDestination.city,
-        destinationDistrict: selectedDestination.district,
-        courierName: selectedCourier,
-        courierService: "Reguler",
-        shippingCost,
-        items: [
-          {
-            productId: lp.productId || "prod-lp",
-            productName: lp.title,
-            quantity,
-            unitPrice: itemPrice,
-            subtotal: itemsTotal,
-          },
-        ],
-        paymentMethod,
-      }),
-    }).catch((e) => {
-      console.warn("Server order creation error, using local fallback:", e);
-    });
+      const resData = await res.json();
 
-    const res = createOrder({
-      orderNumber,
-      storeId: lp.storeId,
-      customerName,
-      customerPhone,
-      customerAddress,
-      destinationCity: selectedDestination.city,
-      destinationDistrict: selectedDestination.district,
-      courierName: selectedCourier,
-      courierService: "Reguler",
-      shippingCost,
-      itemsTotal,
-      grandTotal,
-      totalCostPrice,
-      netProfit,
-      status: paymentMethod === "QRIS_TOKO" ? "MENUNGGU_BAYAR" : "DIPROSES",
-      paymentMethod,
-      items: [
-        {
-          productId: lp.productId || "prod-lp",
-          productName: lp.title,
-          quantity,
-          unitPrice: itemPrice,
-          unitCost,
-          weightGrams: 300,
-          subtotal: itemsTotal,
-        },
-      ],
-    });
+      if (!res.ok) {
+        alert(resData.error || "Gagal membuat pesanan. Silakan coba lagi.");
+        setIsSubmitting(false);
+        return;
+      }
 
-    setIsSubmitting(false);
-
-    if (res.success && res.order) {
-      setOrderSuccess(res.order);
+      const completedOrder = resData.order;
+      setOrderSuccess(completedOrder);
+      setIsSubmitting(false);
 
       // Track conversion event for Meta & TikTok Pixel
       trackPixelPurchase({
         title: lp.title,
         value: grandTotal,
         quantity,
-        orderNumber,
+        orderNumber: completedOrder.orderNumber,
       });
 
       // If WhatsApp checkout, open WhatsApp directly
       if (paymentMethod === "WHATSAPP") {
         const text = encodeURIComponent(
           `Halo Kak Admin ${store.name}! Saya mau konfirmasi pesanan dari website:\n\n` +
-          `📦 *No. Order*: ${orderNumber}\n` +
+          `📦 *No. Order*: ${completedOrder.orderNumber}\n` +
           `🏷️ *Produk*: ${lp.title} (x${quantity})\n` +
           `💰 *Total Bayar*: Rp ${grandTotal.toLocaleString("id-ID")}\n\n` +
           `👤 *Nama*: ${customerName}\n` +
@@ -338,8 +320,10 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
         const waUrl = `https://wa.me/${store.whatsappNumber}?text=${text}`;
         window.open(waUrl, "_blank");
       }
-    } else {
-      alert(res.error || "Gagal membuat pesanan.");
+    } catch (err: any) {
+      console.error("Order submit failed:", err);
+      alert("Terjadi kesalahan saat memproses pesanan. Silakan coba lagi.");
+      setIsSubmitting(false);
     }
   };
 
@@ -364,77 +348,46 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
               isPreview={false}
               storeName={store.name}
               storePhone={store.whatsappNumber}
-              onCheckoutSubmit={(orderData) => {
-                const orderNumber = "KZ-" + Math.floor(100000 + Math.random() * 900000);
-                const unitCost = 50000;
-                const totalCostPrice = unitCost * (orderData.quantity || 1);
-                const netProfit = (orderData.itemsTotal || 0) - totalCostPrice;
+              onCheckoutSubmit={async (orderData) => {
+                try {
+                  const res = await fetch("/api/orders/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      storeId: lp.storeId,
+                      customerName: orderData.customerName,
+                      customerPhone: orderData.customerPhone,
+                      customerAddress: orderData.customerAddress,
+                      destinationCity: orderData.destination,
+                      destinationDistrict: "",
+                      courierName: orderData.courier,
+                      courierService: "Reguler",
+                      shippingCost: orderData.shippingCost,
+                      items: [
+                        {
+                          productId: lp.productId || "prod-lp",
+                          productName: lp.title,
+                          quantity: orderData.quantity || 1,
+                          unitPrice: orderData.promoPrice || 149000,
+                          subtotal: orderData.itemsTotal,
+                        },
+                      ],
+                      paymentMethod: orderData.paymentMethod,
+                    }),
+                  });
 
-                // 1. P1 Security: Panggil endpoint server-side dengan sanitasi & rate limiting
-                fetch("/api/orders/create", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    storeId: lp.storeId,
-                    customerName: orderData.customerName,
-                    customerPhone: orderData.customerPhone,
-                    customerAddress: orderData.customerAddress,
-                    destinationCity: orderData.destination,
-                    destinationDistrict: "",
-                    courierName: orderData.courier,
-                    courierService: "Reguler",
-                    shippingCost: orderData.shippingCost,
-                    items: [
-                      {
-                        productId: lp.productId || "prod-lp",
-                        productName: lp.title,
-                        quantity: orderData.quantity || 1,
-                        unitPrice: orderData.promoPrice || 149000,
-                        subtotal: orderData.itemsTotal,
-                      },
-                    ],
-                    paymentMethod: orderData.paymentMethod,
-                  }),
-                }).catch((e) => {
-                  console.warn("Server modular order creation error:", e);
-                });
-
-                createOrder({
-                  orderNumber,
-                  storeId: lp.storeId,
-                  customerName: orderData.customerName,
-                  customerPhone: orderData.customerPhone,
-                  customerAddress: orderData.customerAddress,
-                  destinationCity: orderData.destination,
-                  destinationDistrict: "",
-                  courierName: orderData.courier,
-                  courierService: "Reguler",
-                  shippingCost: orderData.shippingCost,
-                  itemsTotal: orderData.itemsTotal,
-                  grandTotal: orderData.grandTotal,
-                  totalCostPrice,
-                  netProfit,
-                  status: orderData.paymentMethod === "QRIS_TOKO" ? "MENUNGGU_BAYAR" : "DIPROSES",
-                  paymentMethod: orderData.paymentMethod,
-                  items: [
-                    {
-                      productId: lp.productId || "prod-lp",
-                      productName: lp.title,
+                  const resData = await res.json();
+                  if (res.ok && resData.order) {
+                    trackPixelPurchase({
+                      title: lp.title,
+                      value: orderData.grandTotal,
                       quantity: orderData.quantity || 1,
-                      unitPrice: orderData.promoPrice || 149000,
-                      unitCost,
-                      weightGrams: 300,
-                      subtotal: orderData.itemsTotal,
-                    },
-                  ],
-                });
-
-                trackPixelPurchase({
-                  title: lp.title,
-                  value: orderData.grandTotal,
-                  quantity: orderData.quantity || 1,
-                  orderNumber,
-                });
+                      orderNumber: resData.order.orderNumber,
+                    });
+                  }
+                } catch (e) {
+                  console.warn("Server modular order creation error:", e);
+                }
               }}
             />
           ))}
