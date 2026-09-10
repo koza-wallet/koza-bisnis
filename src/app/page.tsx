@@ -901,7 +901,7 @@ export default function LandingPage() {
               <ul className="space-y-2.5 text-xs text-slate-300">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span className="font-semibold text-emerald-300">0% Potongan Komisi Penjualan</span>
+                  <span className="font-semibold text-emerald-300">0% Komisi Transaksi (Uang 100% Milik Anda)</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -917,15 +917,35 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Buku Kas & Kalkulasi Laba Bersih Otomatis</span>
+                  <span>Buku Kas & Pelacakan Resi Publik (/lacak)</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Halaman Lacak Resi Publik (/lacak)</span>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <X className="h-4 w-4 text-slate-600 shrink-0" />
+                  <span>100% Bebas Watermark (Ada <em>Powered by KoZa</em>)</span>
                 </li>
-                <li className="flex items-center gap-2 text-slate-400 text-[11px]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-600 shrink-0"></span>
-                  <span>Watermark elegan <em>Powered by KoZa</em> di etalase</span>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <X className="h-4 w-4 text-slate-600 shrink-0" />
+                  <span>Dukungan Custom Domain Toko (namatoko.com)</span>
+                </li>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <X className="h-4 w-4 text-slate-600 shrink-0" />
+                  <span>TikTok Pixel & Meta Pixel Terintegrasi Siap Iklan</span>
+                </li>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <X className="h-4 w-4 text-slate-600 shrink-0" />
+                  <span>Jaga AI CS WhatsApp 24/7 (Closing & Lacak Resi Otomatis)</span>
+                </li>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <X className="h-4 w-4 text-slate-600 shrink-0" />
+                  <span>{billingCycle === "monthly" ? "3x" : "36x"} AI Landing Page Generator Siap Iklan</span>
+                </li>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <X className="h-4 w-4 text-slate-600 shrink-0" />
+                  <span>AI Content & Promo Scheduler Otomatis</span>
+                </li>
+                <li className="flex items-center gap-2 text-slate-500">
+                  <X className="h-4 w-4 text-slate-600 shrink-0" />
+                  <span>Server Prioritas Cepat & Dukungan VIP 24/7</span>
                 </li>
               </ul>
             </div>
