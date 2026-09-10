@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createClient as createServiceClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
@@ -171,7 +172,11 @@ export async function POST(req: NextRequest) {
         transactionStatus === "deny"
       ) {
         const failStatus = transactionStatus === "expire" ? "EXPIRED" : "FAILED";
-        await supabase.rpc("handle_midtrans_failure", {
+        const supabaseAdmin = createServiceClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
+          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
+        );
+        await supabaseAdmin.rpc("handle_midtrans_failure", {
           p_order_id: orderId,
           p_status: failStatus,
         });
@@ -184,7 +189,12 @@ export async function POST(req: NextRequest) {
     }
 
     if (isSuccess) {
-      const { data: rpcData, error: rpcErr } = await supabase.rpc(
+      const supabaseAdmin = createServiceClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
+        process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
+      );
+
+      const { data: rpcData, error: rpcErr } = await supabaseAdmin.rpc(
         "handle_midtrans_settlement",
         {
           p_order_id: orderId,

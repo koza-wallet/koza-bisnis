@@ -58,10 +58,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Inisialisasi Supabase Client untuk eksekusi RPC atomic
+    // 2. Inisialisasi Supabase Client dengan Service Role Key untuk eksekusi RPC berprivilese
     const supabase = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
     );
 
     // 3. Evaluasi Status Pembayaran

@@ -151,6 +151,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 3. Inisialisasi Supabase Client & Validasi Harga Server-Side (Audit P1)
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-anon-key"
+    );
+
+    // Ambil harga asli produk dari database untuk mencocokkan harga resmi
+    const productIds = items
+      .map((i: any) => i.productId || i.id)
+      .filter((id: any): id is string => typeof id === "string" && id.length > 0);
+
+    let priceMap = new Map<string, number>();
+    if (productIds.length > 0) {
+      const { data: realProducts } = await supabase
+        .from("public_products")
+        .select("id, selling_price")
+        .eq("store_id", storeId)
+        .in("id", productIds);
+
+      if (realProducts) {
+        priceMap = new Map(realProducts.map((p: any) => [p.id, Number(p.selling_price)]));
+      }
+    }
+
     // Validasi item pesanan
     let calculatedItemsTotal = 0;
     const sanitizedItems = [];
@@ -158,7 +182,11 @@ export async function POST(req: NextRequest) {
     for (const itm of items) {
       const itmName = sanitizeText(String(itm.productName || itm.name || "Produk"));
       const qty = Math.floor(Number(itm.quantity || 1));
-      const price = Math.max(0, Number(itm.unitPrice || itm.price || 0));
+      const pId = itm.productId || itm.id || undefined;
+
+      // Gunakan harga resmi database jika tersedia; fallback jika custom non-catalog item
+      const dbPrice = pId ? priceMap.get(pId) : undefined;
+      const price = dbPrice !== undefined ? dbPrice : Math.max(0, Number(itm.unitPrice || itm.price || 0));
 
       if (qty < 1 || qty > 1000) {
         return NextResponse.json(
@@ -169,7 +197,7 @@ export async function POST(req: NextRequest) {
 
       calculatedItemsTotal += qty * price;
       sanitizedItems.push({
-        productId: itm.productId || itm.id || undefined,
+        productId: pId,
         productName: itmName,
         quantity: qty,
         unitPrice: price,
@@ -180,12 +208,6 @@ export async function POST(req: NextRequest) {
     const validShippingCost = Math.max(0, Number(shippingCost || 0));
     const grandTotal = calculatedItemsTotal + validShippingCost;
     const orderNumber = generateOrderNumber();
-
-    // 3. Simpan ke database Supabase
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
 
     const initialStatus =
       paymentMethod === "QRIS_TOKO" ? "DIPROSES" : "MENUNGGU_BAYAR";

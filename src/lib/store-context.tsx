@@ -409,7 +409,6 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
     if (isSupabaseUser && store.id) {
       const supabase = createClient();
-      supabase.from("stores").update({ quota_balance: newQuota }).eq("id", store.id).then();
       supabase.from("orders").insert({
         id: newId,
         store_id: store.id,
@@ -467,10 +466,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       quotaBalance: newBalance,
     }));
 
-    if (isSupabaseUser && store.id) {
-      const supabase = createClient();
-      supabase.from("stores").update({ quota_balance: newBalance }).eq("id", store.id).then();
-    }
+    // Mutasi kuota kini resmi dikelola server-side via Midtrans Settlement
   };
 
   const upgradePlan = (plan: MembershipPlan) => {
@@ -488,14 +484,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       quotaBalance: newBalance,
     }));
 
-    if (isSupabaseUser && store.id) {
-      const supabase = createClient();
-      supabase.from("stores").update({
-        plan,
-        plan_expiry_date: expiry.toISOString(),
-        quota_balance: newBalance,
-      }).eq("id", store.id).then();
-    }
+    // Mutasi paket membership kini resmi dikelola server-side via Midtrans Settlement
   };
 
   const addExpense = (expData: Omit<OperationalExpense, "id" | "date">) => {
