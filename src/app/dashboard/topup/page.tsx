@@ -30,7 +30,8 @@ import {
   AlertCircle,
   Plus,
   Minus,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Lock
 } from "lucide-react";
 
 declare global {
@@ -104,7 +105,8 @@ function QuotaTopupContent() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [activeTierTab, setActiveTierTab] = useState<"PRO" | "NON_PRO">("PRO");
+  const isStorePro = store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
+  const [activeTierTab, setActiveTierTab] = useState<"PRO" | "NON_PRO">(isStorePro ? "PRO" : "NON_PRO");
 
   // Payment execution state
   const [isPaying, setIsPaying] = useState(false);
@@ -123,7 +125,9 @@ function QuotaTopupContent() {
   // Custom Quota input state (for Non-Pro 3rd package option)
   const [customQuotaInput, setCustomQuotaInput] = useState<number>(25);
 
-  const isStorePro = store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
+  useEffect(() => {
+    setActiveTierTab(isStorePro ? "PRO" : "NON_PRO");
+  }, [isStorePro]);
 
   const fetchTransactions = useCallback(async () => {
     try {
@@ -151,15 +155,26 @@ function QuotaTopupContent() {
     if (pkgCode) {
       const match = quotaPackages.find((p) => p.code === pkgCode.toUpperCase());
       if (match) {
-        setSelectedPkg(match);
-        setSelectedMembership(null);
-        setActiveTierTab(match.tier);
-        setIsModalOpen(true);
+        if (match.tier === "PRO" && !isStorePro) {
+          // Arahkan ke membership Pro jika non-pro mencoba buka paket Pro via URL
+          handleSelectMembership("PRO_MONTHLY");
+        } else {
+          setSelectedPkg(match);
+          setSelectedMembership(null);
+          setActiveTierTab(match.tier);
+          setIsModalOpen(true);
+        }
       }
     }
-  }, [searchParams]);
+  }, [searchParams, isStorePro]);
 
   const handleSelectPackage = (pkg: QuotaPackage) => {
+    // Proteksi Kuota Pro: Jika user non-pro mencoba beli kuota Pro, wajibkan langganan Pro dulu
+    if (pkg.tier === "PRO" && !isStorePro) {
+      handleSelectMembership("PRO_MONTHLY");
+      return;
+    }
+
     setSelectedPkg(pkg);
     setSelectedMembership(null);
     setIsSuccess(false);
@@ -490,6 +505,11 @@ function QuotaTopupContent() {
         >
           <Crown className="h-3.5 w-3.5" />
           <span>Paket Pro Member (Rp 250/order - HEMAT 75%)</span>
+          {!isStorePro && (
+            <span className="rounded-full bg-slate-950/50 px-2 py-0.5 text-[10px] text-amber-300 font-bold border border-amber-500/30 flex items-center gap-1">
+              <Lock className="h-2.5 w-2.5" /> Pro Only
+            </span>
+          )}
         </button>
 
         <button
@@ -503,6 +523,33 @@ function QuotaTopupContent() {
           <span>Paket Non-Pro (Rp 1.000/order)</span>
         </button>
       </div>
+
+      {/* Upsell Banner jika Non-Pro membuka Tab Pro */}
+      {activeTierTab === "PRO" && !isStorePro && (
+        <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl animate-in fade-in duration-300">
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="rounded-2xl bg-amber-500/20 p-2.5 text-amber-400 shrink-0">
+              <Crown className="h-6 w-6" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="text-sm font-black text-amber-300 flex items-center justify-center sm:justify-start gap-1.5">
+                <Lock className="h-4 w-4" />
+                <span>Tarif Kuota Rp 250/order Khusus Member Pro</span>
+              </div>
+              <div className="text-xs text-slate-300">
+                Akun toko Anda saat ini berstatus <strong>NON-PRO</strong>. Berlangganan Pro mulai <strong>Rp 99rb/bln</strong> untuk membuka akses kuota super hemat 75% selamanya + dapat bonus hingga 500 kuota langsung!
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => handleSelectMembership("PRO_MONTHLY")}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-400 text-slate-950 font-black text-xs whitespace-nowrap shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 shrink-0"
+          >
+            <span>Upgrade Pro Sekarang</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Pricing Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
@@ -581,17 +628,28 @@ function QuotaTopupContent() {
                 </ul>
               </div>
 
-              <button
-                onClick={() => handleSelectPackage(pkg)}
-                className={`w-full py-3.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 ${
-                  pkg.popular
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 hover:brightness-110 shadow-emerald-500/20"
-                    : "bg-slate-800 text-white hover:bg-slate-700"
-                }`}
-              >
-                <span>Beli Kuota</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
+              {pkg.tier === "PRO" && !isStorePro ? (
+                <button
+                  onClick={() => handleSelectPackage(pkg)}
+                  className="w-full py-3.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 via-amber-400 to-emerald-400 text-slate-950 hover:brightness-110 shadow-amber-500/20 group"
+                >
+                  <Lock className="h-3.5 w-3.5 text-slate-900 group-hover:scale-110 transition-transform" />
+                  <span>Upgrade Pro untuk Beli (Mulai Rp 99rb)</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSelectPackage(pkg)}
+                  className={`w-full py-3.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 ${
+                    pkg.popular
+                      ? "bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 hover:brightness-110 shadow-emerald-500/20"
+                      : "bg-slate-800 text-white hover:bg-slate-700"
+                  }`}
+                >
+                  <span>Beli Kuota</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           );
         })}

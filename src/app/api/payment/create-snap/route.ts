@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     // 1. Ambil data toko milik penjual yang sedang login
     const { data: store, error: storeErr } = await supabase
       .from("stores")
-      .select("id, name, whatsapp_number")
+      .select("id, name, whatsapp_number, plan")
       .eq("owner_id", user.id)
       .maybeSingle();
 
@@ -79,6 +79,21 @@ export async function POST(req: NextRequest) {
             { status: 400 }
           );
         }
+
+        // Proteksi Kuota Pro: hanya bisa dibeli jika akun toko berstatus Pro aktif
+        if (matchedPkg.tier === "PRO") {
+          const isStorePro = store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
+          if (!isStorePro) {
+            return NextResponse.json(
+              {
+                error:
+                  "Paket kuota Pro khusus untuk member Pro aktif. Silakan upgrade ke langganan Pro terlebih dahulu.",
+              },
+              { status: 403 }
+            );
+          }
+        }
+
         grossAmount = matchedPkg.price;
         packageName = `KoZa Bisnis - Top-Up Kuota ${matchedPkg.quota} Order`;
         quotaAmount = matchedPkg.quota;
