@@ -49,27 +49,40 @@ export async function POST(req: NextRequest) {
     if (packageType === "MEMBERSHIP") {
       if (packageCode === "PRO_ANNUAL") {
         grossAmount = 799000;
-        packageName = "Paket Pro Member Sultan (1 Tahun)";
+        packageName = "KoZa Bisnis - Paket Pro Tahunan (1 Tahun)";
         quotaAmount = 500;
         planTier = "PRO_ANNUAL";
       } else {
         grossAmount = 99000;
-        packageName = "Paket Pro Member (1 Bulan)";
+        packageName = "KoZa Bisnis - Paket Pro Bulanan (1 Bulan)";
         quotaAmount = 100;
         planTier = "PRO_MONTHLY";
       }
     } else {
       // Paket Kuota
-      const matchedPkg = quotaPackages.find((p) => p.code === packageCode);
-      if (!matchedPkg) {
-        return NextResponse.json(
-          { error: "Paket kuota tidak valid." },
-          { status: 400 }
-        );
+      if (packageCode === "NONPRO_CUSTOM" || packageCode === "CUSTOM_QUOTA") {
+        const customQty = Math.floor(Number(body.customQuota || 0));
+        if (!Number.isFinite(customQty) || customQty < 10 || customQty > 100000) {
+          return NextResponse.json(
+            { error: "Jumlah kuota custom harus berupa angka valid antara 10 hingga 100.000 order." },
+            { status: 400 }
+          );
+        }
+        quotaAmount = customQty;
+        grossAmount = customQty * 1000;
+        packageName = `KoZa Bisnis - Custom ${customQty} Kuota Order`;
+      } else {
+        const matchedPkg = quotaPackages.find((p) => p.code === packageCode);
+        if (!matchedPkg) {
+          return NextResponse.json(
+            { error: "Paket kuota tidak valid." },
+            { status: 400 }
+          );
+        }
+        grossAmount = matchedPkg.price;
+        packageName = `KoZa Bisnis - Top-Up Kuota ${matchedPkg.quota} Order`;
+        quotaAmount = matchedPkg.quota;
       }
-      grossAmount = matchedPkg.price;
-      packageName = `Top-Up Kuota ${matchedPkg.quota} Order`;
-      quotaAmount = matchedPkg.quota;
     }
 
     // Terapkan diskon kupon jika valid
@@ -115,9 +128,9 @@ export async function POST(req: NextRequest) {
         },
       ],
       callbacks: {
-        finish: `${req.nextUrl.origin}/dashboard/topup`,
-        error: `${req.nextUrl.origin}/dashboard/topup`,
-        pending: `${req.nextUrl.origin}/dashboard/topup`,
+        finish: `${req.nextUrl.origin}/dashboard/topup?order_id=${orderId}&payment=success`,
+        error: `${req.nextUrl.origin}/dashboard/topup?order_id=${orderId}&payment=error`,
+        pending: `${req.nextUrl.origin}/dashboard/topup?order_id=${orderId}&payment=pending`,
       },
       usage_limit: 1,
     };
@@ -163,7 +176,11 @@ export async function POST(req: NextRequest) {
       });
 
     if (insertErr) {
-      console.error("Failed to insert pending transaction:", insertErr);
+      console.error("Failed to insert pending transaction:", {
+        message: insertErr.message,
+        details: insertErr.details,
+        code: insertErr.code,
+      });
     }
 
     const clientKey =

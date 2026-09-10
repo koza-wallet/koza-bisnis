@@ -27,7 +27,10 @@ import {
   ArrowRight,
   Loader2,
   RefreshCw,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Minus,
+  SlidersHorizontal
 } from "lucide-react";
 
 declare global {
@@ -117,6 +120,9 @@ function QuotaTopupContent() {
   const [transactions, setTransactions] = useState<TopupTransactionRecord[]>([]);
   const [checkingOrderId, setCheckingOrderId] = useState<string | null>(null);
 
+  // Custom Quota input state (for Non-Pro 3rd package option)
+  const [customQuotaInput, setCustomQuotaInput] = useState<number>(25);
+
   const isStorePro = store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
 
   const fetchTransactions = useCallback(async () => {
@@ -155,6 +161,30 @@ function QuotaTopupContent() {
 
   const handleSelectPackage = (pkg: QuotaPackage) => {
     setSelectedPkg(pkg);
+    setSelectedMembership(null);
+    setIsSuccess(false);
+    setDiscountApplied(false);
+    setCouponInput("");
+    setCouponError("");
+    setPaymentError("");
+    setIsModalOpen(true);
+  };
+
+  const handleSelectCustomPackage = (quota: number) => {
+    const validQuota = Math.max(10, Math.floor(quota || 10));
+    const customPkg: QuotaPackage = {
+      id: "pkg-nonpro-custom",
+      code: "NONPRO_CUSTOM",
+      name: `Top-Up Custom (${validQuota} Order)`,
+      quota: validQuota,
+      price: validQuota * 1000,
+      originalPrice: validQuota * 1000,
+      pricePerOrder: 1000,
+      discountPercent: 0,
+      badge: "Suka-Suka",
+      tier: "NON_PRO",
+    };
+    setSelectedPkg(customPkg);
     setSelectedMembership(null);
     setIsSuccess(false);
     setDiscountApplied(false);
@@ -224,6 +254,7 @@ function QuotaTopupContent() {
         body: JSON.stringify({
           packageCode,
           packageType,
+          customQuota: packageCode === "NONPRO_CUSTOM" ? selectedPkg?.quota : undefined,
           couponCode: discountApplied ? couponInput : undefined,
         }),
       });
@@ -296,15 +327,30 @@ function QuotaTopupContent() {
     async (orderId: string, transactionId?: string) => {
       setCheckingOrderId(orderId);
       try {
-        const res = await fetch("/api/payment/verify-status", {
+        let res = await fetch("/api/payment/verify-status", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ orderId, transactionId }),
         });
-        const data = await res.json();
+        let data = await res.json();
+
+        // Jika belum settled, tunggu 1.5 detik lalu coba sekali lagi (antisipasi lag sinkronisasi gateway)
+        if (!data.settled) {
+          await new Promise((r) => setTimeout(r, 1500));
+          res = await fetch("/api/payment/verify-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId, transactionId }),
+          });
+          data = await res.json();
+        }
+
         if (data.settled) {
           await refreshStore();
           await fetchTransactions();
+          setIsSuccess(true);
+          setActiveOrderId(orderId);
+          setIsModalOpen(true);
         } else {
           await fetchTransactions();
         }
@@ -322,13 +368,15 @@ function QuotaTopupContent() {
     const txStatusParam = searchParams.get("transaction_status");
     const statusCodeParam = searchParams.get("status_code");
     const txIdParam = searchParams.get("transaction_id");
+    const paymentParam = searchParams.get("payment");
 
     // Jika kembali dari redirect Midtrans (Finish URL)
     if (
       orderIdParam &&
-      (txStatusParam || statusCodeParam || searchParams.get("payment") === "success")
+      (txStatusParam || statusCodeParam || paymentParam === "success")
     ) {
       handleVerifyOrder(orderIdParam, txIdParam || undefined);
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [searchParams, handleVerifyOrder]);
 
@@ -541,12 +589,132 @@ function QuotaTopupContent() {
                     : "bg-slate-800 text-white hover:bg-slate-700"
                 }`}
               >
-                <span>Beli via Midtrans</span>
+                <span>Beli Kuota</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
           );
         })}
+
+        {/* Opsi Paket Ke-3 (Khusus Non-Pro): Custom Kuota Bebas (Suka-Suka) */}
+        {activeTierTab === "NON_PRO" && (
+          <div className="rounded-3xl border border-emerald-500/40 bg-gradient-to-b from-slate-900 via-slate-900/80 to-emerald-950/20 p-6 flex flex-col justify-between space-y-6 transition-all relative hover:border-emerald-400 shadow-xl">
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  <span>Custom Kuota Order</span>
+                </span>
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-black text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                  Suka-Suka
+                </span>
+              </div>
+
+              {/* Harga Realtime Dinamis */}
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-black text-white">
+                    {formatRupiah(Math.max(10, customQuotaInput || 10) * 1000)}
+                  </span>
+                </div>
+                <div className="mt-1 text-xs text-emerald-400 font-bold">
+                  Tarif Tetap Rp 1.000 per transaksi
+                </div>
+              </div>
+
+              {/* Kuota Counter & Input Stepper Box */}
+              <div className="rounded-2xl bg-slate-950/90 p-4 border border-slate-800 text-center space-y-3">
+                <div className="text-xs text-slate-400 font-medium">
+                  Tentukan Jumlah Kuota Order:
+                </div>
+
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCustomQuotaInput((prev) => Math.max(10, (prev || 10) - 5))}
+                    className="h-9 w-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors active:scale-95 disabled:opacity-40"
+                    disabled={customQuotaInput <= 10}
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={10}
+                      max={10000}
+                      step={5}
+                      value={customQuotaInput || ""}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10);
+                        setCustomQuotaInput(isNaN(val) ? 0 : val);
+                      }}
+                      onBlur={() => {
+                        if (!customQuotaInput || customQuotaInput < 10) {
+                          setCustomQuotaInput(10);
+                        }
+                      }}
+                      className="w-28 text-center py-1.5 px-2 rounded-xl bg-slate-900 border border-emerald-500/40 text-xl font-black text-white focus:outline-none focus:border-emerald-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="block text-[10px] text-slate-400 mt-0.5">Order</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCustomQuotaInput((prev) => (prev || 10) + 5)}
+                    className="h-9 w-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center transition-colors active:scale-95"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Quick Add Pills */}
+                <div className="flex items-center justify-center gap-1.5 pt-1">
+                  {[10, 25, 50, 100].map((addVal) => (
+                    <button
+                      key={addVal}
+                      type="button"
+                      onClick={() => setCustomQuotaInput(addVal)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                        customQuotaInput === addVal
+                          ? "bg-emerald-500 text-slate-950 font-black shadow-sm"
+                          : "bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white border border-slate-800"
+                      }`}
+                    >
+                      {addVal} tx
+                    </button>
+                  ))}
+                </div>
+                <div className="text-[10px] text-slate-500 italic">
+                  *Minimal pembelian custom 10 kuota order
+                </div>
+              </div>
+
+              <ul className="space-y-2 text-xs text-slate-300">
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <span>Masa aktif selamanya (tidak pernah hangus)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <span>Uang pembeli 100% langsung cair ke rekening</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <span>Perhitungan otomatis laba bersih & buku kas</span>
+                </li>
+              </ul>
+            </div>
+
+            <button
+              onClick={() => handleSelectCustomPackage(customQuotaInput)}
+              className="w-full py-3.5 rounded-xl font-black text-xs transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 hover:brightness-110 shadow-emerald-500/20"
+            >
+              <span>Beli Kuota</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Trust & Payment Channels Banner */}
@@ -558,7 +726,7 @@ function QuotaTopupContent() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h3 className="text-base font-extrabold text-white">Riwayat Transaksi Top-Up</h3>
-              <p className="text-xs text-slate-400">Daftar transaksi pembayaran kuota & status di gateway Midtrans.</p>
+              <p className="text-xs text-slate-400">Daftar riwayat transaksi pembayaran dan pembaruan kuota toko.</p>
             </div>
             <button
               onClick={fetchTransactions}
@@ -654,10 +822,10 @@ function QuotaTopupContent() {
                 <div className="text-center space-y-1">
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
                     <ShieldCheck className="h-3.5 w-3.5" />
-                    <span>Midtrans Payment Gateway (Official)</span>
+                    <span>Pembayaran Aman & Otomatis</span>
                   </div>
                   <h3 className="text-xl font-extrabold text-white">Konfirmasi Pembayaran</h3>
-                  <p className="text-xs text-slate-400">Pilih metode pembayaran (QRIS, VA Bank, E-Wallet) via Midtrans Snap popup.</p>
+                  <p className="text-xs text-slate-400">Pilih metode pembayaran (QRIS, Virtual Account Bank, E-Wallet, atau Minimarket).</p>
                 </div>
 
                 {/* Box Detail Kuota / Paket */}
@@ -754,12 +922,12 @@ function QuotaTopupContent() {
                   {isPaying ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Menyiapkan Gerbang Midtrans...</span>
+                      <span>Menyiapkan Pembayaran...</span>
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="h-4 w-4" />
-                      <span>Bayar Sekarang dengan Midtrans</span>
+                      <span>Bayar Sekarang</span>
                     </>
                   )}
                 </button>
@@ -772,7 +940,7 @@ function QuotaTopupContent() {
                 <div className="space-y-1">
                   <h3 className="text-xl font-extrabold text-white">Pembayaran Berhasil!</h3>
                   <p className="text-xs text-slate-300">
-                    Midtrans telah mengonfirmasi transaksi Anda. Saldo kuota dan status akun toko telah langsung diperbarui secara otomatis.
+                    Pembayaran Anda telah terkonfirmasi. Saldo kuota dan status akun toko telah langsung diperbarui secara otomatis.
                   </p>
                   {activeOrderId && (
                     <div className="text-[11px] font-mono text-slate-500 pt-1">Order ID: {activeOrderId}</div>

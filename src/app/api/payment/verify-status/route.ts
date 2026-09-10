@@ -77,20 +77,11 @@ export async function POST(req: NextRequest) {
 
     const basicAuth = Buffer.from(serverKey + ":").toString("base64");
 
-    // Coba cek dengan orderId
-    let midtransRes = await fetch(`${statusApiBase}/${orderId}/status`, {
-      method: "GET",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        Authorization: `Basic ${basicAuth}`,
-      },
-      cache: "no-store",
-    });
+    // 1. Coba cek dengan orderId (standar Midtrans Core API)
+    let midtransData: any = null;
 
-    // Jika orderId 404 (misal kanal BI SNAP / DANA), coba gunakan transactionId
-    if (!midtransRes.ok && transactionId) {
-      midtransRes = await fetch(`${statusApiBase}/${transactionId}/status`, {
+    try {
+      const coreRes = await fetch(`${statusApiBase}/${orderId}/status`, {
         method: "GET",
         headers: {
           Accept: "application/json",
@@ -99,13 +90,73 @@ export async function POST(req: NextRequest) {
         },
         cache: "no-store",
       });
+
+      if (coreRes.ok) {
+        const parsed = await coreRes.json();
+        // Midtrans Core API mengembalikan status_code "404" jika order_id tidak terdaftar di v2 (misal kanal DANA)
+        if (parsed && parsed.status_code !== "404" && parsed.transaction_status) {
+          midtransData = parsed;
+        }
+      }
+    } catch (err) {
+      console.warn("Core API status check error:", err);
+    }
+
+    // 2. Jika Core API tidak menemukan transaksi, periksa via Snap Token resmi
+    if (!midtransData?.transaction_status && tx.snap_token) {
+      try {
+        const snapStatusUrl = isProduction
+          ? `https://app.midtrans.com/snap/v1/transactions/${tx.snap_token}/status`
+          : `https://app.sandbox.midtrans.com/snap/v1/transactions/${tx.snap_token}/status`;
+
+        const snapRes = await fetch(snapStatusUrl, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            Authorization: `Basic ${basicAuth}`,
+          },
+          cache: "no-store",
+        });
+
+        if (snapRes.ok) {
+          const snapData = await snapRes.json();
+          if (snapData && snapData.transaction_status) {
+            midtransData = snapData;
+          }
+        }
+      } catch (err) {
+        console.warn("Snap token status check error:", err);
+      }
+    }
+
+    // 3. Jika masih belum ditemukan dan client meneruskan transactionId
+    if (!midtransData?.transaction_status && transactionId) {
+      try {
+        const txRes = await fetch(`${statusApiBase}/${transactionId}/status`, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Basic ${basicAuth}`,
+          },
+          cache: "no-store",
+        });
+
+        if (txRes.ok) {
+          const parsedTx = await txRes.json();
+          if (parsedTx && parsedTx.status_code !== "404" && parsedTx.transaction_status) {
+            midtransData = parsedTx;
+          }
+        }
+      } catch (err) {
+        console.warn("Transaction ID status check error:", err);
+      }
     }
 
     let isSuccess = false;
     let paymentType = "midtrans";
 
-    if (midtransRes.ok) {
-      const midtransData = await midtransRes.json();
+    if (midtransData?.transaction_status) {
       const transactionStatus = midtransData.transaction_status;
       const fraudStatus = midtransData.fraud_status;
       paymentType = midtransData.payment_type || paymentType;

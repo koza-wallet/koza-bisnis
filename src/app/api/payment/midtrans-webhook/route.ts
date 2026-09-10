@@ -39,7 +39,14 @@ export async function POST(req: NextRequest) {
       .update(rawString)
       .digest("hex");
 
-    if (expectedSignature !== signature_key) {
+    const expectedBuf = Buffer.from(expectedSignature);
+    const receivedBuf = Buffer.from(String(signature_key));
+
+    const isMatch =
+      expectedBuf.length === receivedBuf.length &&
+      crypto.timingSafeEqual(expectedBuf, receivedBuf);
+
+    if (!isMatch) {
       console.warn("Invalid Midtrans webhook signature:", {
         order_id,
         received: signature_key,
