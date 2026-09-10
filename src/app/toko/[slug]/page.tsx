@@ -63,7 +63,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
             originCity: storeRow.origin_city || "Kota Jakarta Selatan",
             originDistrict: storeRow.origin_district || "Kebayoran Baru",
             quotaBalance: 0,
-            plan: "NON_PRO",
+            plan: (storeRow.plan as any) || "NON_PRO",
+            customDomain: storeRow.custom_domain,
             bankName: storeRow.bank_name,
             bankAccountNumber: storeRow.bank_account_number,
             bankAccountName: storeRow.bank_account_name,
@@ -164,6 +165,9 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
   // Success State
   const [completedOrder, setCompletedOrder] = useState<any | null>(null);
   const [copiedRekening, setCopiedRekening] = useState(false);
+
+  // Status White-label Toko (Pro AI / Annual / Monthly bebas watermark)
+  const isStoreWhiteLabel = store.plan === "PRO_AI" || store.plan === "PRO_ANNUAL" || store.plan === "PRO_MONTHLY";
 
   // Filter Products
   const activeProducts = products.filter((p) => p.isActive);
@@ -552,6 +556,23 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
           })}
         </div>
       </main>
+
+      {/* Footer / Watermark Viral Loop untuk Toko Basic & Non-Pro */}
+      {!isStoreWhiteLabel && (
+        <footer className="mt-12 pb-24 text-center px-4">
+          <Link
+            href={`/register?ref=${encodeURIComponent(store.slug)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-sm group"
+          >
+            <span>Dibuat dengan</span>
+            <span className="font-bold text-slate-200 group-hover:text-white">KoZa Bisnis</span>
+            <span className="text-slate-600">•</span>
+            <span className="text-emerald-400 font-semibold">Buka Toko 0% Komisi →</span>
+          </Link>
+        </footer>
+      )}
 
       {/* Floating Bottom Cart Bar */}
       {cartTotalItems > 0 && (

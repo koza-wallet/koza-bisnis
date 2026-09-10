@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { quotaPackages } from "@/lib/mock-data";
+import { quotaPackages, aiTokenPackages } from "@/lib/mock-data";
 
 export async function POST(req: NextRequest) {
   try {
@@ -52,12 +52,28 @@ export async function POST(req: NextRequest) {
         packageName = "KoZa Bisnis - Paket Pro Tahunan (1 Tahun)";
         quotaAmount = 500;
         planTier = "PRO_ANNUAL";
-      } else {
-        grossAmount = 99000;
-        packageName = "KoZa Bisnis - Paket Pro Bulanan (1 Bulan)";
+      } else if (packageCode === "BASIC") {
+        grossAmount = 75000;
+        packageName = "KoZa Bisnis - Paket Basic (1 Bulan)";
         quotaAmount = 100;
-        planTier = "PRO_MONTHLY";
+        planTier = "BASIC";
+      } else {
+        grossAmount = 329000;
+        packageName = "KoZa Bisnis - Paket Pro AI (1 Bulan)";
+        quotaAmount = 250;
+        planTier = "PRO_AI";
       }
+    } else if (packageType === "AI_TOKEN") {
+      const matchedAI = aiTokenPackages.find((p) => p.code === packageCode);
+      if (!matchedAI) {
+        return NextResponse.json(
+          { error: "Paket token AI tidak valid." },
+          { status: 400 }
+        );
+      }
+      grossAmount = matchedAI.price;
+      packageName = `KoZa Bisnis - ${matchedAI.name}`;
+      quotaAmount = matchedAI.tokenAmount;
     } else {
       // Paket Kuota
       if (packageCode === "NONPRO_CUSTOM" || packageCode === "CUSTOM_QUOTA") {
@@ -82,7 +98,7 @@ export async function POST(req: NextRequest) {
 
         // Proteksi Kuota Pro: hanya bisa dibeli jika akun toko berstatus Pro aktif
         if (matchedPkg.tier === "PRO") {
-          const isStorePro = store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
+          const isStorePro = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
           if (!isStorePro) {
             return NextResponse.json(
               {

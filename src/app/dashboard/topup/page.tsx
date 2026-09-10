@@ -4,9 +4,9 @@ import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { useStore } from "@/lib/store-context";
-import { quotaPackages } from "@/lib/mock-data";
+import { quotaPackages, aiTokenPackages } from "@/lib/mock-data";
 import { formatRupiah } from "@/lib/utils";
-import { QuotaPackage } from "@/types";
+import { QuotaPackage, AITokenPackage } from "@/types";
 import { PaymentMethodsBanner } from "@/components/payment-methods";
 import { PromoBanner } from "@/components/promo-banner";
 import { createClient } from "@/lib/supabase/client";
@@ -95,8 +95,9 @@ function QuotaTopupContent() {
   const { store, refreshStore } = useStore();
   const searchParams = useSearchParams();
   const [selectedPkg, setSelectedPkg] = useState<QuotaPackage | null>(null);
+  const [selectedAIToken, setSelectedAIToken] = useState<AITokenPackage | null>(null);
   const [selectedMembership, setSelectedMembership] = useState<{
-    code: "PRO_MONTHLY" | "PRO_ANNUAL";
+    code: "BASIC" | "PRO_AI" | "PRO_ANNUAL";
     name: string;
     price: number;
     quotaBonus: number;
@@ -105,7 +106,7 @@ function QuotaTopupContent() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const isStorePro = store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
+  const isStorePro = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
   const [activeTierTab, setActiveTierTab] = useState<"PRO" | "NON_PRO">(isStorePro ? "PRO" : "NON_PRO");
 
   // Payment execution state
@@ -153,16 +154,25 @@ function QuotaTopupContent() {
   useEffect(() => {
     const pkgCode = searchParams.get("pkg");
     if (pkgCode) {
-      const match = quotaPackages.find((p) => p.code === pkgCode.toUpperCase());
-      if (match) {
-        if (match.tier === "PRO" && !isStorePro) {
-          // Arahkan ke membership Pro jika non-pro mencoba buka paket Pro via URL
-          handleSelectMembership("PRO_MONTHLY");
-        } else {
-          setSelectedPkg(match);
-          setSelectedMembership(null);
-          setActiveTierTab(match.tier);
-          setIsModalOpen(true);
+      const codeUpper = pkgCode.toUpperCase();
+      if (codeUpper === "PRO_AI" || codeUpper === "PRO_MONTHLY") {
+        handleSelectMembership("PRO_AI");
+      } else if (codeUpper === "BASIC") {
+        handleSelectMembership("BASIC");
+      } else if (codeUpper === "PRO_ANNUAL") {
+        handleSelectMembership("PRO_ANNUAL");
+      } else {
+        const match = quotaPackages.find((p) => p.code === codeUpper);
+        if (match) {
+          if (match.tier === "PRO" && !isStorePro) {
+            handleSelectMembership("PRO_AI");
+          } else {
+            setSelectedPkg(match);
+            setSelectedMembership(null);
+            setSelectedAIToken(null);
+            setActiveTierTab(match.tier);
+            setIsModalOpen(true);
+          }
         }
       }
     }
@@ -171,12 +181,13 @@ function QuotaTopupContent() {
   const handleSelectPackage = (pkg: QuotaPackage) => {
     // Proteksi Kuota Pro: Jika user non-pro mencoba beli kuota Pro, wajibkan langganan Pro dulu
     if (pkg.tier === "PRO" && !isStorePro) {
-      handleSelectMembership("PRO_MONTHLY");
+      handleSelectMembership("PRO_AI");
       return;
     }
 
     setSelectedPkg(pkg);
     setSelectedMembership(null);
+    setSelectedAIToken(null);
     setIsSuccess(false);
     setDiscountApplied(false);
     setCouponInput("");
@@ -209,15 +220,33 @@ function QuotaTopupContent() {
     setIsModalOpen(true);
   };
 
-  const handleSelectMembership = (tier: "PRO_MONTHLY" | "PRO_ANNUAL") => {
+  const handleSelectMembership = (tier: "BASIC" | "PRO_AI" | "PRO_ANNUAL") => {
     setSelectedPkg(null);
+    setSelectedAIToken(null);
     setSelectedMembership({
       code: tier,
-      name: tier === "PRO_ANNUAL" ? "Paket Pro Sultan (1 Tahun)" : "Paket Pro Member (1 Bulan)",
-      price: tier === "PRO_ANNUAL" ? 799000 : 99000,
-      quotaBonus: tier === "PRO_ANNUAL" ? 500 : 100,
+      name:
+        tier === "PRO_ANNUAL"
+          ? "Paket Pro Sultan (1 Tahun)"
+          : tier === "PRO_AI"
+          ? "Paket Pro AI (1 Bulan)"
+          : "Paket Basic (1 Bulan)",
+      price: tier === "PRO_ANNUAL" ? 799000 : tier === "PRO_AI" ? 329000 : 75000,
+      quotaBonus: tier === "PRO_ANNUAL" ? 500 : tier === "PRO_AI" ? 250 : 100,
       duration: tier === "PRO_ANNUAL" ? "365 Hari" : "30 Hari",
     });
+    setIsSuccess(false);
+    setDiscountApplied(false);
+    setCouponInput("");
+    setCouponError("");
+    setPaymentError("");
+    setIsModalOpen(true);
+  };
+
+  const handleSelectAIToken = (tokenPkg: AITokenPackage) => {
+    setSelectedPkg(null);
+    setSelectedMembership(null);
+    setSelectedAIToken(tokenPkg);
     setIsSuccess(false);
     setDiscountApplied(false);
     setCouponInput("");
@@ -241,6 +270,7 @@ function QuotaTopupContent() {
   const getCurrentBasePrice = () => {
     if (selectedPkg) return selectedPkg.price;
     if (selectedMembership) return selectedMembership.price;
+    if (selectedAIToken) return selectedAIToken.price;
     return 0;
   };
 
@@ -256,8 +286,8 @@ function QuotaTopupContent() {
     setPaymentError("");
 
     try {
-      const packageType = selectedMembership ? "MEMBERSHIP" : "QUOTA";
-      const packageCode = selectedMembership ? selectedMembership.code : selectedPkg?.code;
+      const packageType = selectedMembership ? "MEMBERSHIP" : selectedAIToken ? "AI_TOKEN" : "QUOTA";
+      const packageCode = selectedMembership ? selectedMembership.code : selectedAIToken ? selectedAIToken.code : selectedPkg?.code;
 
       if (!packageCode) {
         throw new Error("Pilihan paket tidak ditemukan.");
@@ -435,7 +465,12 @@ function QuotaTopupContent() {
             {isStorePro ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-300 px-3 py-0.5 text-xs font-black text-slate-950 shadow-sm">
                 <Crown className="h-3.5 w-3.5" />
-                <span>PRO MEMBER (Aktif)</span>
+                <span>PRO AI (Aktif)</span>
+              </span>
+            ) : store.plan === "BASIC" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-0.5 text-xs font-bold">
+                <Check className="h-3.5 w-3.5" />
+                <span>BASIC (Aktif)</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1 rounded-full bg-slate-800 px-3 py-0.5 text-xs font-bold text-slate-300 border border-slate-700">
@@ -448,11 +483,15 @@ function QuotaTopupContent() {
             {isStorePro ? (
               <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4" />
-                Tarif Transaksi: <strong>Hanya Rp 250 / order (HEMAT 75%)</strong> • Bebas Watermark
+                100% Bebas Watermark • 3 Karyawan AI Otonom • Custom Domain & Pixel Iklan
+              </span>
+            ) : store.plan === "BASIC" ? (
+              <span className="text-slate-300">
+                Paket Toko Mandiri: 0% Komisi Transaksi • Upgrade ke Pro AI untuk 3 Karyawan Digital & White-Label!
               </span>
             ) : (
               <span className="text-slate-300">
-                Tarif Transaksi: <strong>Rp 1.000 / order</strong>. Upgrade ke Pro untuk hemat 75% jadi Rp 250/tx!
+                Pilih paket Basic (Rp 75rb/bln) atau Pro AI (Rp 329rb/bln) untuk membuka potensi penuh toko Anda.
               </span>
             )}
           </div>
@@ -460,36 +499,45 @@ function QuotaTopupContent() {
 
         <div className="flex items-center gap-4 sm:gap-6 border-t sm:border-t-0 sm:border-l border-slate-800 pt-4 sm:pt-0 sm:pl-8 text-center sm:text-right shrink-0">
           <div>
-            <div className="text-xs text-slate-400 font-medium">Sisa Kuota Order:</div>
-            <div className="text-3xl sm:text-4xl font-black text-emerald-400">
+            <div className="text-xs text-slate-400 font-medium">Sisa Kuota:</div>
+            <div className="text-2xl sm:text-3xl font-black text-emerald-400">
               {store.quotaBalance}
             </div>
-            <div className="text-[11px] text-slate-500 font-medium">Pesanan Tersedia</div>
+            <div className="text-[10px] text-slate-500 font-medium">Order Tersedia</div>
           </div>
 
-          {!isStorePro ? (
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => handleSelectMembership("PRO_MONTHLY")}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 hover:brightness-110 active:scale-95 transition-all"
-              >
-                Upgrade Pro (Rp 99rb)
-              </button>
-              <button
-                onClick={() => handleSelectMembership("PRO_ANNUAL")}
-                className="px-3 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-400 font-bold text-[11px] hover:bg-emerald-500/10 transition-colors"
-              >
-                Sultan 1 Thn (Rp 799rb)
-              </button>
+          <div>
+            <div className="text-xs text-slate-400 font-medium">Token AI:</div>
+            <div className="text-2xl sm:text-3xl font-black text-indigo-400">
+              {store.aiCreditsBalance ?? 0}
             </div>
-          ) : (
+            <div className="text-[10px] text-slate-500 font-medium">Kredit AI</div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            {!isStorePro && (
+              <button
+                onClick={() => handleSelectMembership("PRO_AI")}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 hover:brightness-110 active:scale-95 transition-all whitespace-nowrap"
+              >
+                Upgrade Pro AI (Rp 329rb)
+              </button>
+            )}
+            {store.plan !== "BASIC" && !isStorePro && (
+              <button
+                onClick={() => handleSelectMembership("BASIC")}
+                className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-bold text-[11px] hover:text-white transition-colors whitespace-nowrap"
+              >
+                Paket Basic (Rp 75rb)
+              </button>
+            )}
             <button
               onClick={() => handleSelectMembership("PRO_ANNUAL")}
-              className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition-colors"
+              className="px-3 py-1.5 rounded-lg border border-indigo-500/30 text-indigo-300 font-bold text-[11px] hover:bg-indigo-500/10 transition-colors whitespace-nowrap"
             >
-              Perpanjang Pro (Rp 799rb/th)
+              Pro Sultan 1 Thn (Rp 799rb)
             </button>
-          )}
+          </div>
         </div>
       </div>
 
@@ -537,15 +585,15 @@ function QuotaTopupContent() {
                 <span>Tarif Kuota Rp 250/order Khusus Member Pro</span>
               </div>
               <div className="text-xs text-slate-300">
-                Akun toko Anda saat ini berstatus <strong>NON-PRO</strong>. Berlangganan Pro mulai <strong>Rp 99rb/bln</strong> untuk membuka akses kuota super hemat 75% selamanya + dapat bonus hingga 500 kuota langsung!
+                Akun toko Anda saat ini berstatus <strong>NON-PRO</strong>. Berlangganan Pro AI untuk membuka akses kuota super hemat 75% selamanya + 3 Karyawan AI Otonom!
               </div>
             </div>
           </div>
           <button
-            onClick={() => handleSelectMembership("PRO_MONTHLY")}
+            onClick={() => handleSelectMembership("PRO_AI")}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-emerald-400 text-slate-950 font-black text-xs whitespace-nowrap shadow-lg shadow-amber-500/20 hover:brightness-110 active:scale-95 transition-all flex items-center gap-1.5 shrink-0"
           >
-            <span>Upgrade Pro Sekarang</span>
+            <span>Upgrade Pro AI Sekarang</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -775,6 +823,61 @@ function QuotaTopupContent() {
         )}
       </div>
 
+      {/* Seksi Add-On AI Tokens (Amunisi Tambahan) */}
+      <div id="addon" className="space-y-4 pt-6 border-t border-slate-800">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-indigo-400" />
+              <span>Katalog Add-On AI Tokens</span>
+            </h2>
+            <p className="text-xs text-slate-400">
+              Beli token kredit ekstra sesuai kebutuhan operasional toko. Token aktif selamanya tanpa kadaluarsa.
+            </p>
+          </div>
+          <span className="rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-bold text-indigo-300 border border-indigo-500/30 w-fit">
+            Token Aktif Selamanya
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          {aiTokenPackages.map((tokenPkg) => (
+            <div
+              key={tokenPkg.code}
+              className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 flex flex-col justify-between space-y-5 hover:border-indigo-500/40 transition-all shadow-lg"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-[10px] font-bold text-indigo-300 border border-indigo-500/30">
+                    {tokenPkg.badge || "Add-On"}
+                  </span>
+                  <span className="text-xs font-black text-indigo-400 font-mono">+{tokenPkg.tokenAmount} Token</span>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-bold text-white">{tokenPkg.name}</h3>
+                  <div className="text-2xl font-black text-white font-mono mt-1">
+                    {formatRupiah(tokenPkg.price)}
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  {tokenPkg.description}
+                </p>
+              </div>
+
+              <button
+                onClick={() => handleSelectAIToken(tokenPkg)}
+                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md active:scale-95 flex items-center justify-center gap-1.5"
+              >
+                <span>Beli Token Ini</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Trust & Payment Channels Banner */}
       <PaymentMethodsBanner />
 
@@ -865,7 +968,7 @@ function QuotaTopupContent() {
       )}
 
       {/* Modal Checkout Midtrans Snap */}
-      {isModalOpen && (selectedPkg || selectedMembership) && (
+      {isModalOpen && (selectedPkg || selectedMembership || selectedAIToken) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="relative w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-7 shadow-2xl space-y-6">
             <button
@@ -891,7 +994,11 @@ function QuotaTopupContent() {
                   <div className="flex justify-between text-slate-400">
                     <span>Item:</span>
                     <span className="font-bold text-white">
-                      {selectedMembership ? selectedMembership.name : selectedPkg?.name}
+                      {selectedMembership
+                        ? selectedMembership.name
+                        : selectedAIToken
+                        ? selectedAIToken.name
+                        : selectedPkg?.name}
                     </span>
                   </div>
                   <div className="flex justify-between text-slate-400">
@@ -899,6 +1006,8 @@ function QuotaTopupContent() {
                     <span className="font-bold text-emerald-400">
                       {selectedMembership
                         ? `+${selectedMembership.quotaBonus} Kuota Bonus (${selectedMembership.duration})`
+                        : selectedAIToken
+                        ? `+${selectedAIToken.tokenAmount} Token Kredit AI`
                         : `+${selectedPkg?.quota} Order`}
                     </span>
                   </div>

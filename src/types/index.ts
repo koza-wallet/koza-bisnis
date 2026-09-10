@@ -1,4 +1,4 @@
-export type MembershipPlan = 'NON_PRO' | 'PRO_MONTHLY' | 'PRO_ANNUAL';
+export type MembershipPlan = 'BASIC' | 'PRO_AI' | 'NON_PRO' | 'PRO_MONTHLY' | 'PRO_ANNUAL';
 
 export interface CourierOption {
   code: string;
@@ -21,6 +21,8 @@ export interface Store {
   quotaBalance: number;
   plan?: MembershipPlan;
   planExpiryDate?: string;
+  aiCreditsBalance?: number;
+  customDomain?: string;
   bankName?: string;
   bankAccountNumber?: string;
   bankAccountName?: string;
@@ -177,6 +179,16 @@ export interface QuotaPackage {
   badge?: string;
   popular?: boolean;
   tier: 'NON_PRO' | 'PRO';
+}
+
+export interface AITokenPackage {
+  code: string;
+  name: string;
+  category: 'PHOTO_MODEL' | 'LANDING_PAGE' | 'CS_CHAT';
+  tokenAmount: number;
+  price: number;
+  description: string;
+  badge?: string;
 }
 
 export type LandingPageTheme = "EMERALD" | "MIDNIGHT" | "ROSE" | "ELECTRIC";

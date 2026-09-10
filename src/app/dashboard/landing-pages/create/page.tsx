@@ -43,8 +43,8 @@ export default function CreateLandingPage() {
   // Mode Selection: AI, Kanvas Kosong (Berdu), or Template Library
   const [creationMode, setCreationMode] = useState<CreationMode>("AI");
 
-  // User Pro Status
-  const isUserPro = store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
+  // User Pro Status (Termasuk Pro AI atau pemilik token AI)
+  const isUserPro = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL" || (store.aiCreditsBalance !== undefined && store.aiCreditsBalance > 0);
 
   // State for AI Generator
   const [selectedProductId, setSelectedProductId] = useState<string>("");

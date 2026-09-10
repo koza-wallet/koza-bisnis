@@ -1,4 +1,4 @@
-import { Store, Product, Order, OperationalExpense, QuotaPackage, LandingPage, CourierOption } from '@/types';
+import { Store, Product, Order, OperationalExpense, QuotaPackage, AITokenPackage, LandingPage, CourierOption } from '@/types';
 
 export const initialStore: Store = {
   id: 'store-1',
@@ -10,8 +10,9 @@ export const initialStore: Store = {
   originCity: 'Kota Bandung',
   originDistrict: 'Coblong',
   quotaBalance: 98,
-  plan: 'PRO_MONTHLY',
+  plan: 'PRO_AI',
   planExpiryDate: '2026-10-09T00:00:00.000Z',
+  aiCreditsBalance: 5,
   bankName: 'BCA',
   bankAccountNumber: '7720-1234-56',
   bankAccountName: 'Siti Rahmawati (Hijab Cantik)',
@@ -235,6 +236,36 @@ export const quotaPackages: QuotaPackage[] = [
     discountPercent: 75,
     badge: 'Sultan Juragan',
     tier: 'PRO',
+  },
+];
+
+export const aiTokenPackages: AITokenPackage[] = [
+  {
+    code: 'AI_PHOTO_10',
+    name: '10x Foto Model Studio AI',
+    category: 'PHOTO_MODEL',
+    tokenAmount: 10,
+    price: 50000,
+    badge: 'Katalog Viral',
+    description: 'Ubah foto produk HP menjadi foto katalog studio profesional dengan model manusia AI realistis.',
+  },
+  {
+    code: 'AI_LANDING_3',
+    name: '3x AI Landing Page Generator',
+    category: 'LANDING_PAGE',
+    tokenAmount: 3,
+    price: 49000,
+    badge: 'Siap Iklan Ads',
+    description: 'Generate 3 landing page konversi tinggi siap iklan Meta & TikTok dalam hitungan detik.',
+  },
+  {
+    code: 'AI_CHAT_1000',
+    name: '1.000 Kuota Chat Jaga AI WhatsApp',
+    category: 'CS_CHAT',
+    tokenAmount: 1000,
+    price: 49000,
+    badge: 'Autopilot 24/7',
+    description: 'Kuota percakapan bot AI CS WA 24/7 untuk menjawab ongkir, cek resi & closing pembeli.',
   },
 ];
 

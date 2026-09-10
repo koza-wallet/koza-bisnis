@@ -97,6 +97,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         quotaBalance: storeRow.quota_balance,
         plan: (storeRow.plan as MembershipPlan) || "NON_PRO",
         planExpiryDate: storeRow.plan_expiry_date || undefined,
+        aiCreditsBalance: storeRow.ai_credits_balance ?? 0,
+        customDomain: storeRow.custom_domain || undefined,
         bankName: storeRow.bank_name || undefined,
         bankAccountNumber: storeRow.bank_account_number || undefined,
         bankAccountName: storeRow.bank_account_name || undefined,
@@ -310,6 +312,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (updates.bankAccountName !== undefined) payload.bank_account_name = updates.bankAccountName;
       if (updates.qrisImageUrl !== undefined) payload.qris_image_url = updates.qrisImageUrl;
       if (updates.enabledCouriers !== undefined) payload.enabled_couriers = updates.enabledCouriers;
+      if (updates.aiCreditsBalance !== undefined) payload.ai_credits_balance = updates.aiCreditsBalance;
+      if (updates.customDomain !== undefined) payload.custom_domain = updates.customDomain;
 
       supabase.from("stores").update(payload).eq("id", store.id).then();
     }
@@ -547,18 +551,32 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   };
 
   const upgradePlan = (plan: MembershipPlan) => {
-    const bonusQuota = plan === "PRO_MONTHLY" ? 100 : plan === "PRO_ANNUAL" ? 500 : 0;
+    let bonusQuota = 0;
+    let bonusAI = 0;
     const now = new Date();
     const expiry = new Date(now);
-    if (plan === "PRO_MONTHLY") expiry.setDate(expiry.getDate() + 30);
-    if (plan === "PRO_ANNUAL") expiry.setDate(expiry.getDate() + 365);
+    if (plan === "PRO_ANNUAL") {
+      bonusQuota = 500;
+      bonusAI = 36;
+      expiry.setDate(expiry.getDate() + 365);
+    } else if (plan === "PRO_AI" || plan === "PRO_MONTHLY") {
+      bonusQuota = 250;
+      bonusAI = 3;
+      expiry.setDate(expiry.getDate() + 30);
+    } else if (plan === "BASIC") {
+      bonusQuota = 100;
+      bonusAI = 0;
+      expiry.setDate(expiry.getDate() + 30);
+    }
     const newBalance = store.quotaBalance + bonusQuota;
+    const newAIBalance = (store.aiCreditsBalance || 0) + bonusAI;
 
     setStore((prev) => ({
       ...prev,
       plan,
       planExpiryDate: expiry.toISOString(),
       quotaBalance: newBalance,
+      aiCreditsBalance: newAIBalance,
     }));
 
     // Mutasi paket membership kini resmi dikelola server-side via Midtrans Settlement

@@ -48,42 +48,44 @@ export default function LandingPage() {
     }
   }, []);
 
-  // Kalkulasi Finansial
+  // Kalkulasi Finansial 2.0
   const totalMonthlyGMV = monthlyOrders * averageOrderValue;
   const marketplaceFeeTotal = totalMonthlyGMV * (marketplaceFeePercent / 100);
-  const nonProTotalFee = monthlyOrders * 1000;
-  const proTotalFee = 99000 + (monthlyOrders * 250); // Rp99rb sewa + Rp250/tx (HEMAT 75%)
+  const basicTotalFee = 75000; // Flat Rp 75.000 / bulan, 0% komisi
+  const proAITotalFee = 329000; // Flat Rp 329.000 / bulan, 0% komisi + 3 Karyawan AI
   
-  const isProBetter = monthlyOrders >= 132;
-  const bestKozaFee = isProBetter ? proTotalFee : nonProTotalFee;
-  const totalSavings = marketplaceFeeTotal - bestKozaFee;
-  const savingsPercent = Math.round(((marketplaceFeeTotal - bestKozaFee) / marketplaceFeeTotal) * 100);
-  const proSavingsOverNonPro = Math.max(0, nonProTotalFee - proTotalFee);
+  // Penghematan riil KoZa Basic terhadap Marketplace
+  const basicSavings = Math.max(0, marketplaceFeeTotal - basicTotalFee);
+  const basicSavingsPercent = marketplaceFeeTotal > 0 ? Math.round((basicSavings / marketplaceFeeTotal) * 100) : 0;
+
+  // Nilai efisiensi staf AI (Admin CS Rp 1,5 Jt + Desainer Landing Page Rp 1 Jt = Rp 2.500.000/bln)
+  const replacedStaffValue = 2500000;
+  const proAITotalBenefit = (marketplaceFeeTotal + replacedStaffValue) - proAITotalFee;
 
   const faqs = [
     {
-      q: "Apa bedanya Paket Non-Pro dan Pro Member?",
-      a: "Paket Non-Pro tanpa biaya sewa bulanan (Rp 0/bulan) dengan biaya per transaksi Rp 1.000/order, sangat ideal untuk toko yang baru merintis. Sedangkan Pro Member (Rp 99.000/bulan) memberikan diskon biaya transaksi 75% (hanya Rp 250/order), bebas watermark, akses bot WhatsApp Jaga AI 24/7, integrasi TikTok/Meta Pixel untuk iklan, dan bonus 100 kuota order pertama.",
+      q: "Apa bedanya Paket Basic (Rp 75.000/bln) dan Pro AI (Rp 329.000/bln)?",
+      a: "Paket Basic (Rp 75.000/bulan) memberikan toko online bio link mandiri lengkap dengan kalkulator ongkir otomatis, checkout WA/QRIS, pembukuan laba bersih, dan 0% komisi transaksi (terdapat watermark elegan 'Powered by KoZa'). Sedangkan Pro AI (Rp 329.000/bulan) memberikan fasilitas 100% white-label (bebas watermark), custom domain (namatoko.com), pixel iklan TikTok/Meta, serta 3 Karyawan AI Otonom: Jaga AI CS WhatsApp 24/7, generator 3 landing page iklan per bulan, dan AI content scheduler.",
     },
     {
-      q: "Kapan waktu yang paling tepat untuk upgrade ke Pro Member?",
-      a: "Begitu penjualan toko Anda mencapai minimal 132 pesanan per bulan (hanya sekitar 4-5 paket per hari). Di titik ini, penghematan transaksi Rp 750/order sudah langsung menutupi seluruh biaya sewa Rp 99.000. Langganan Pro Anda langsung balik modal dan keuntungan bersih Anda jauh lebih besar.",
+      q: "Mengapa KoZa mengenakan biaya flat bulanan, bukan potongan komisi per penjualan?",
+      a: "Karena kami ingin penjual bertumbuh tanpa dihukum oleh kesuksesan sendiri. Di marketplace, saat omset Anda naik ke Rp 20–50 Juta, potongan komisi 15%–25% menyedot Rp 3–12 Juta setiap bulan! Di KoZa, omset berapapun uang pembeli 100% langsung masuk ke rekening bank atau QRIS Anda tanpa potongan komisi sepeser pun.",
     },
     {
-      q: "Apakah uang hasil penjualan pembeli dipotong persenan oleh KoZa Bisnis?",
-      a: "Sama sekali tidak ada potongan persenan. Berbeda dari marketplace konvensional yang memotong 8% hingga 12% dari omset kotor, di KoZa Bisnis uang pembeli 100% langsung masuk ke rekening bank, QRIS, atau WhatsApp Anda sendiri. Sistem hanya mengenakan biaya kuota flat yang sangat terjangkau.",
+      q: "Apa fungsi watermark 'Powered by KoZa' pada Paket Basic?",
+      a: "Pada Paket Basic, bagian footer etalase toko menyertakan badge micro-branding elegan bertuliskan 'Powered by KoZa Bisnis • Buka Toko 0% Komisi'. Ini memungkinkan kami menjaga biaya sewa sistem toko mandiri sangat terjangkau (Rp 75.000/bulan). Jika Anda menginginkan tampilan 100% eksklusif merek Anda sendiri tanpa watermark KoZa, Anda dapat upgrade ke Pro AI kapan saja.",
     },
     {
-      q: "Bagaimana cara pembeli menyelesaikan pesanan di bio link saya?",
-      a: "Sangat mudah dan cepat. Pembeli membuka link bio toko Anda, memilih produk dan varian, memasukkan kota/kecamatan pengiriman (tarif ongkir kurir J&T, JNE, SiCepat langsung terhitung otomatis), lalu membayar via QRIS toko Anda atau checkout instan ke WhatsApp.",
+      q: "Bagaimana cara kerja Add-On AI Tokens (Mulai Rp 49.000)?",
+      a: "Add-On AI Tokens adalah amunisi tambahan jika Anda membutuhkan output AI ekstra di luar paket bulanan. Misalnya mengubah foto produk HP biasa menjadi foto model studio profesional dengan AI (Rp 50.000 / 10 foto), menambah generator landing page iklan (Rp 49.000 / 3 halaman), atau menambah kuota chat CS WA. Token add-on tidak pernah hangus (tanpa masa kadaluarsa).",
     },
     {
-      q: "Apakah kuota transaksi yang sudah dibeli bisa hangus di akhir bulan?",
-      a: "Tidak pernah hangus. Seluruh kuota transaksi yang Anda miliki aktif selamanya sampai habis terpakai untuk melayani pesanan pembeli.",
+      q: "Bagaimana cara pembeli menyelesaikan pesanan di toko bio link saya?",
+      a: "Sangat mudah dan cepat. Pembeli membuka link toko Anda, memilih produk dan varian, memasukkan kota/kecamatan pengiriman (tarif ongkir kurir J&T, JNE, SiCepat, dll langsung terhitung otomatis), lalu membayar via QRIS toko Anda atau checkout instan ke WhatsApp.",
     },
     {
       q: "Bagaimana KoZa Bisnis menghitung laba bersih toko secara otomatis?",
-      a: "Anda cukup mencantumkan harga modal (HPP rahasia) saat mengunggah produk. Setiap ada pesanan masuk, sistem otomatis mengurangkan harga jual dengan HPP dan biaya operasional. Anda langsung dapat melihat laba bersih riil tanpa perlu rumus Excel rumit.",
+      a: "Anda cukup mencantumkan harga modal (HPP rahasia) saat mengunggah produk. Setiap ada pesanan masuk, sistem otomatis mengurangkan harga jual dengan HPP dan biaya operasional. Anda langsung dapat melihat laba bersih riil di Dashboard tanpa perlu rumus Excel rumit.",
     },
   ];
 
@@ -762,36 +764,26 @@ export default function LandingPage() {
                 <div className="text-xs text-slate-400">Potongan komisi hilang sia-sia</div>
               </div>
 
-              {/* Kolom 2: KoZa Non-Pro */}
-              <div className={`rounded-2xl border p-5 text-center space-y-1.5 transition-all ${
-                !isProBetter 
-                  ? "border-emerald-500/50 bg-emerald-950/20 shadow-lg" 
-                  : "border-slate-800 bg-slate-950/60 opacity-70"
-              }`}>
+              {/* Kolom 2: KoZa Basic */}
+              <div className="rounded-2xl border border-emerald-500/30 bg-slate-900/80 p-5 text-center space-y-1.5 shadow-md">
                 <div className="flex items-center justify-center gap-1 text-xs font-bold text-slate-300 uppercase tracking-wider">
-                  <span>KoZa Non-Pro</span>
-                  {!isProBetter && <span className="rounded bg-emerald-500/20 text-emerald-400 px-1 text-[9px]">TEPAT</span>}
+                  <span>KoZa Basic</span>
+                  <span className="rounded bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 text-[9px] font-bold">0% KOMISI</span>
                 </div>
-                <div className="text-2xl font-black text-white font-mono">{formatRupiah(nonProTotalFee)}</div>
-                <div className="text-xs text-slate-400">Rp0 sewa + Rp1.000/tx</div>
+                <div className="text-2xl font-black text-white font-mono">{formatRupiah(basicTotalFee)}</div>
+                <div className="text-xs text-emerald-400 font-semibold">Flat Rp 75rb/bln • Bio Link & Ongkir</div>
               </div>
 
-              {/* Kolom 3: KoZa Pro */}
-              <div className={`rounded-2xl border-2 p-5 text-center space-y-1.5 relative transition-all ${
-                isProBetter 
-                  ? "border-emerald-500 bg-gradient-to-b from-emerald-950/40 to-slate-900 shadow-xl shadow-emerald-500/10" 
-                  : "border-slate-800 bg-slate-950/60"
-              }`}>
-                {isProBetter && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
-                    <span className="rounded-full bg-emerald-500 px-3 py-0.5 text-[10px] font-black text-slate-950 uppercase tracking-wider shadow">
-                      ★ PALING HEMAT 75%
-                    </span>
-                  </div>
-                )}
-                <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">KoZa Pro Member</div>
-                <div className="text-2xl font-black text-white font-mono">{formatRupiah(proTotalFee)}</div>
-                <div className="text-xs text-emerald-300 font-semibold">Rp99rb sewa + Cuma Rp250/tx</div>
+              {/* Kolom 3: KoZa Pro AI */}
+              <div className="rounded-2xl border-2 border-emerald-500 bg-gradient-to-b from-emerald-950/40 via-slate-900 to-slate-900 p-5 text-center space-y-1.5 relative shadow-xl shadow-emerald-500/10">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                  <span className="rounded-full bg-emerald-500 px-3 py-0.5 text-[10px] font-black text-slate-950 uppercase tracking-wider shadow">
+                    ★ AUTONOMOUS AI
+                  </span>
+                </div>
+                <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">KoZa Pro AI</div>
+                <div className="text-2xl font-black text-white font-mono">{formatRupiah(proAITotalFee)}</div>
+                <div className="text-xs text-emerald-300 font-semibold">Rp 329rb/bln • 0% Komisi + 3 Karyawan AI</div>
               </div>
             </div>
 
@@ -801,26 +793,18 @@ export default function LandingPage() {
                 <div className="flex items-center justify-center sm:justify-start gap-2">
                   <Sparkles className="h-4 w-4 text-emerald-400" />
                   <span className="text-xs font-bold text-white uppercase tracking-wider">
-                    {isProBetter ? "Rekomendasi: Upgrade ke Pro Member" : "Rekomendasi: Mulai dari Paket Non-Pro"}
+                    Dampak Finansial & Operasional Toko Anda
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  {isProBetter ? (
-                    <>
-                      Dengan volume <strong>{monthlyOrders} pesanan/bulan</strong>, penghematan biaya transaksi Anda mencapai <strong className="text-emerald-400 font-mono">{formatRupiah(proSavingsOverNonPro)}</strong> per bulan.
-                    </>
-                  ) : (
-                    <>
-                      Karena toko masih di bawah 132 pesanan/bulan, paket Non-Pro tanpa biaya bulanan adalah langkah awal tanpa risiko.
-                    </>
-                  )}
+                  Dengan beralih ke <strong>KoZa Basic</strong>, Anda menyelamatkan omset <strong className="text-emerald-400 font-mono">{formatRupiah(basicSavings)}</strong>/bulan dari potongan komisi. Dan dengan <strong>Pro AI</strong>, Anda juga menggantikan biaya staf CS & desainer hingga <strong className="text-emerald-400 font-mono">{formatRupiah(replacedStaffValue)}</strong>/bulan.
                 </p>
               </div>
 
               <div className="text-center sm:text-right shrink-0 border-t sm:border-t-0 sm:border-l border-slate-800 pt-3 sm:pt-0 sm:pl-6">
                 <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Uang Anda Diselamatkan</div>
-                <div className="text-2xl font-black text-emerald-400 font-mono">+{formatRupiah(totalSavings)}</div>
-                <div className="text-xs text-emerald-300 font-semibold">Hemat {savingsPercent}% Pengeluaran!</div>
+                <div className="text-2xl font-black text-emerald-400 font-mono">+{formatRupiah(basicSavings)}</div>
+                <div className="text-xs text-emerald-300 font-semibold">Hemat {basicSavingsPercent}% Pengeluaran!</div>
               </div>
             </div>
           </div>
@@ -832,31 +816,31 @@ export default function LandingPage() {
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
             <DollarSign className="h-3.5 w-3.5" />
-            <span>Struktur Biaya Transparan</span>
+            <span>Struktur Biaya Transparan & Adil</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
             Pilihan Paket Sesuai Skala Bisnis Anda
           </h2>
           <p className="text-xs sm:text-sm text-slate-400">
-            Mulai gratis di paket Non-Pro tanpa sewa, atau pilih Pro Member untuk hemat 75% biaya transaksi.
+            Pilih paket Basic hemat untuk mulai mandiri, atau upgrade ke Pro AI untuk memiliki 3 karyawan digital otonom 24/7.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 items-stretch pt-2">
-          {/* Card 1: Non-Pro Starter */}
+          {/* Card 1: Basic (Rp 75.000 / bulan) */}
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-7 flex flex-col justify-between space-y-6 shadow-xl hover:border-slate-700 transition-all">
             <div className="space-y-4">
               <span className="rounded-full bg-slate-800 px-3 py-1 text-[11px] font-bold text-slate-300 border border-slate-700">
-                Bebas Sewa Bulanan
+                Pilihan Hemat Pemula
               </span>
               <div>
-                <h3 className="text-xl font-bold text-white">Non-Pro (Starter)</h3>
+                <h3 className="text-xl font-bold text-white">Paket Basic</h3>
                 <div className="mt-2 flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold text-white font-mono">Rp0</span>
+                  <span className="text-3xl font-extrabold text-white font-mono">Rp75.000</span>
                   <span className="text-xs text-slate-400 font-semibold">/ bulan</span>
                 </div>
-                <div className="mt-1 text-xs text-slate-300">
-                  Tarif Transaksi: <strong className="text-emerald-400 font-bold font-mono">Rp 1.000</strong> / order
+                <div className="mt-1 text-xs text-emerald-400 font-semibold">
+                  0% Komisi Transaksi • Uang 100% Milik Anda
                 </div>
               </div>
 
@@ -866,6 +850,10 @@ export default function LandingPage() {
               </div>
 
               <ul className="space-y-2.5 text-xs text-slate-300">
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span className="font-semibold text-emerald-300">0% Potongan Komisi Penjualan</span>
+                </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                   <span>Katalog toko bio link aktif selamanya</span>
@@ -880,7 +868,15 @@ export default function LandingPage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <span>Buku Kas & Kalkulasi Laba Bersih Otomatis</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
                   <span>Halaman Lacak Resi Publik (/lacak)</span>
+                </li>
+                <li className="flex items-center gap-2 text-slate-400 text-[11px]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-600 shrink-0"></span>
+                  <span>Watermark elegan <em>Powered by KoZa</em> di etalase</span>
                 </li>
               </ul>
             </div>
@@ -889,117 +885,138 @@ export default function LandingPage() {
               href={isLoggedIn ? "/dashboard" : "/register"}
               className="w-full py-3 rounded-xl bg-slate-800 text-white text-xs font-bold text-center hover:bg-slate-700 transition-colors shadow-sm block"
             >
-              {isLoggedIn ? "Buka Dashboard" : "Mulai Gratis Sekarang"}
+              {isLoggedIn ? "Buka Dashboard" : "Mulai Uji Coba Basic"}
             </Link>
           </div>
 
-          {/* Card 2: Pro Member (HEMAT 75%) */}
+          {/* Card 2: Pro AI (Rp 329.000 / bulan) */}
           <div className="rounded-3xl border-2 border-emerald-500 bg-gradient-to-b from-emerald-950/40 via-slate-900 to-slate-900 p-7 flex flex-col justify-between space-y-6 shadow-2xl relative md:-translate-y-3">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
               <span className="rounded-full bg-emerald-500 px-4 py-1.5 text-[11px] font-black text-slate-950 shadow-lg uppercase tracking-wider">
-                ★ Paling Populer & Hemat 75%
+                ★ Flagship & Autonomous AI
               </span>
             </div>
 
             <div className="space-y-4 pt-2">
               <div>
-                <h3 className="text-2xl font-black text-white">Pro Member</h3>
+                <h3 className="text-2xl font-black text-white">Paket Pro AI</h3>
                 <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-xs text-slate-500 line-through font-mono">Rp 199.000</span>
-                  <span className="text-3xl sm:text-4xl font-black text-white font-mono">Rp99.000</span>
+                  <span className="text-xs text-slate-500 line-through font-mono">Rp 499.000</span>
+                  <span className="text-3xl sm:text-4xl font-black text-white font-mono">Rp329.000</span>
                   <span className="text-xs text-slate-400 font-semibold">/ bulan</span>
                 </div>
-                <div className="mt-1 text-xs text-emerald-400 font-bold flex items-center gap-1.5">
-                  <span>Biaya Transaksi:</span>
-                  <span className="line-through text-slate-500 font-mono text-[11px]">Rp 1.000</span>
-                  <span className="bg-emerald-500 text-slate-950 px-1.5 py-0.5 rounded font-black text-xs font-mono">Rp 250 / tx</span>
+                <div className="mt-1 text-xs text-emerald-400 font-bold">
+                  Setara Mempekerjakan 3 Staf Digital 24 Jam Non-Stop
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-emerald-950/60 p-4 border border-emerald-500/30 text-center space-y-1">
-                <div className="text-2xl font-black text-emerald-300 font-mono">+100 BONUS Order</div>
-                <div className="text-xs text-slate-300 font-medium">Langsung Aktif Saat Upgrade</div>
+              <div className="rounded-2xl bg-emerald-950/60 p-3.5 border border-emerald-500/30 text-center space-y-1">
+                <div className="text-sm font-black text-emerald-300">Pangkas Biaya Staf ~Rp 2.500.000/bln</div>
+                <div className="text-[11px] text-slate-300">CS WhatsApp + Desainer Landing Page Otomatis</div>
               </div>
 
               <ul className="space-y-2.5 text-xs text-slate-200">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0 font-bold" />
-                  <span className="font-semibold text-emerald-300">Hemat 75% Biaya Transaksi (Rp 250/order)</span>
+                  <span className="font-semibold text-emerald-300">0% Komisi Transaksi (Sama seperti Basic)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0 font-bold" />
+                  <span className="font-bold text-white">100% Bebas Watermark (White-Label Penuh)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-400 shrink-0 font-bold" />
+                  <span className="font-bold text-white">Dukungan Custom Domain Toko (namatoko.com)</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span><strong>Asisten Bot AI WhatsApp & Human Takeover</strong> 24/7</span>
+                  <span><strong>TikTok Pixel & Meta Pixel</strong> Terintegrasi Siap Iklan</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-amber-400 shrink-0" />
+                  <span><strong>Jaga AI CS WhatsApp 24/7</strong> (Closing & Lacak Resi Otomatis)</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-amber-400 shrink-0" />
+                  <span><strong>3x AI Landing Page Generator</strong> Siap Iklan / bulan</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-amber-400 shrink-0" />
+                  <span><strong>AI Content & Promo Scheduler</strong> 30 Hari</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span><strong>100% Bebas Watermark</strong> (Branding toko eksklusif)</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span><strong>TikTok Pixel & Meta Pixel</strong> Terintegrasi</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Buku Kas Lengkap (Omset, HPP & Biaya Ops)</span>
+                  <span>Server Prioritas Cepat & Dukungan VIP 24/7</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              href="/dashboard/topup?pkg=PRO_MONTHLY"
+              href={isLoggedIn ? "/dashboard/topup?pkg=PRO_AI" : "/register"}
               className="w-full py-3.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black text-center hover:bg-emerald-400 transition-all shadow-lg active:scale-95 block"
             >
-              Pilih Pro Member (Hemat 75%)
+              Pilih Paket Pro AI (Solusi Autopilot)
             </Link>
           </div>
 
-          {/* Card 3: Pro Tahunan (Sultan) */}
+          {/* Card 3: Add-On AI Tokens (Mulai Rp 49.000) */}
           <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-7 flex flex-col justify-between space-y-6 shadow-xl hover:border-slate-700 transition-all">
             <div className="space-y-4">
               <span className="rounded-full bg-indigo-500/20 px-3 py-1 text-[11px] font-bold text-indigo-300 border border-indigo-500/30">
-                Paket Setahun Penuh
+                Amunisi Tambahan Fleksibel
               </span>
 
               <div>
-                <h3 className="text-xl font-bold text-white">Pro Tahunan (Sultan)</h3>
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className="text-xs text-slate-500 line-through font-mono">Rp 1.188.000</span>
-                  <span className="text-3xl font-extrabold text-white font-mono">Rp799.000</span>
-                  <span className="text-xs text-slate-400 font-semibold">/ tahun</span>
+                <h3 className="text-xl font-bold text-white">Add-On AI Tokens</h3>
+                <div className="mt-2 flex items-baseline gap-1">
+                  <span className="text-xs text-slate-400 font-medium">Mulai</span>
+                  <span className="text-3xl font-extrabold text-white font-mono">Rp49.000</span>
+                  <span className="text-xs text-slate-400 font-semibold">/ top-up</span>
                 </div>
-                <div className="mt-1 text-xs text-indigo-400 font-semibold">Setara Rp 66.500/bulan (Cuma Rp 200/tx)</div>
+                <div className="mt-1 text-xs text-indigo-400 font-semibold">
+                  Beli token sesuai kebutuhan tanpa langganan mahal
+                </div>
               </div>
 
               <div className="rounded-2xl bg-slate-950/80 p-4 border border-slate-800 text-center space-y-1">
-                <div className="text-2xl font-black text-indigo-300 font-mono">+500 BONUS Order</div>
-                <div className="text-xs text-slate-400 font-medium">Kuota Starter Jumbo Aktif Setahun</div>
+                <div className="text-sm font-black text-indigo-300">Token Aktif Selamanya</div>
+                <div className="text-xs text-slate-400 font-medium">Tanpa Batas Kadaluarsa (No Expiry)</div>
               </div>
 
               <ul className="space-y-2.5 text-xs text-slate-300">
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Semua fitur Pro Member lengkap</span>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white">10x Foto Model Studio AI (Rp 50.000)</strong>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Ubah foto produk biasa jadi foto model katalog profesional.</p>
+                  </div>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span className="font-bold text-white">Biaya Transaksi Terendah: Rp 200 / order</span>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white">3x AI Landing Page (Rp 49.000)</strong>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Generate copywriting + desain halaman siap iklan.</p>
+                  </div>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Dukungan <strong>Custom Domain Sendiri</strong> (tokoanda.com)</span>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white">1.000 Kuota Chat Jaga AI (Rp 49.000)</strong>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Bot AI CS WhatsApp untuk melayani tanya ongkir & closing.</p>
+                  </div>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-emerald-400 shrink-0" />
-                  <span>Prioritas Dukungan Teknis 24/7</span>
+                <li className="flex items-center gap-2 pt-1 text-slate-400 text-[11px]">
+                  <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <span>Top-up instan via QRIS langsung dari Dashboard</span>
                 </li>
               </ul>
             </div>
 
             <Link
-              href="/dashboard/topup?pkg=PRO_ANNUAL"
+              href={isLoggedIn ? "/dashboard/topup?tab=addon" : "/register"}
               className="w-full py-3 rounded-xl bg-slate-800 text-white text-xs font-bold text-center hover:bg-slate-700 transition-colors shadow-sm block"
             >
-              Pilih Paket Tahunan
+              Lihat Menu Add-On Token
             </Link>
           </div>
         </div>

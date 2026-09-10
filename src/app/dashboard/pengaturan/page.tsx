@@ -21,15 +21,18 @@ import {
   ArrowRight,
   Shield,
   MessageSquare,
-  HelpCircle
+  HelpCircle,
+  Globe
 } from "lucide-react";
 
 export default function StoreSettingsPage() {
   const { store, updateStore } = useStore();
-  const [activeTab, setActiveTab] = useState<"shipping" | "ai_bot">("shipping");
+  const [activeTab, setActiveTab] = useState<"shipping" | "ai_bot" | "domain">("shipping");
+  const [customDomainInput, setCustomDomainInput] = useState(store.customDomain || "");
+  const [isDomainSaved, setIsDomainSaved] = useState(false);
 
   const isStorePro = Boolean(
-    (store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL") &&
+    (store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL") &&
     (!store.planExpiryDate || new Date(store.planExpiryDate).getTime() > Date.now())
   );
   
@@ -66,6 +69,12 @@ export default function StoreSettingsPage() {
     setIsSaved(true);
     setErrorMessage(null);
     setTimeout(() => setIsSaved(false), 4000);
+  };
+
+  const handleSaveDomain = () => {
+    updateStore({ customDomain: customDomainInput.trim().toLowerCase() });
+    setIsDomainSaved(true);
+    setTimeout(() => setIsDomainSaved(false), 4000);
   };
 
   const regulerCouriers = MASTER_COURIERS.filter((c) => c.category === "REGULER");
@@ -110,6 +119,23 @@ export default function StoreSettingsPage() {
           {!isStorePro && (
             <span className="flex items-center gap-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 text-[10px] font-black">
               <Lock className="h-2.5 w-2.5" /> PRO
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("domain")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all relative ${
+            activeTab === "domain"
+              ? "bg-slate-800 text-white shadow-sm"
+              : "text-slate-400 hover:text-slate-200 hover:bg-slate-900/50"
+          }`}
+        >
+          <Globe className="h-4 w-4 text-emerald-400" />
+          <span>Custom Domain & Branding</span>
+          {!isStorePro && (
+            <span className="flex items-center gap-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 text-[10px] font-black">
+              <Lock className="h-2.5 w-2.5" /> PRO AI
             </span>
           )}
         </button>
@@ -443,6 +469,103 @@ export default function StoreSettingsPage() {
                   <p className="text-[11px] text-slate-400 italic">
                     *Tip: Anda juga cukup mengetik balasan langsung dari WhatsApp HP Anda, bot akan otomatis menjeda diri selama 60 menit tanpa Anda perlu mengetik perintah.
                   </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: CUSTOM DOMAIN & WHITE-LABEL */}
+      {activeTab === "domain" && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {!isStorePro ? (
+            <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-900 p-6 sm:p-8 space-y-4 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+                <div className="flex items-start gap-4">
+                  <div className="rounded-2xl bg-amber-500/20 p-3 text-amber-400 shrink-0">
+                    <Crown className="h-8 w-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2 justify-center sm:justify-start">
+                      <span>Eksklusif Member Pro AI</span>
+                      <span className="rounded-full bg-amber-500/20 text-amber-300 text-xs px-2.5 py-0.5 border border-amber-500/30">
+                        White-Label
+                      </span>
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
+                      Gunakan alamat domain sendiri (misal: <strong>namatoko.com</strong>) dan hilangkan seluruh watermark KoZa dari etalase toko Anda.
+                    </p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/dashboard/topup?pkg=PRO_AI"
+                  className="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black text-xs hover:brightness-110 active:scale-95 transition-all shadow-lg shadow-emerald-500/20 whitespace-nowrap flex items-center gap-2 shrink-0"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>Upgrade ke Pro AI (Rp 329rb)</span>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-6 sm:p-7 space-y-6 shadow-xl">
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-emerald-400" />
+                  <span>Hubungkan Domain Pribadi Toko Anda</span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Arahkan domain atau subdomain Anda ke server KoZa untuk memperkuat kredibilitas merek toko Anda.
+                </p>
+              </div>
+
+              {isDomainSaved && (
+                <div className="flex items-center gap-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-emerald-300 animate-in fade-in duration-300">
+                  <Check className="h-5 w-5 shrink-0" />
+                  <div className="text-xs sm:text-sm font-semibold">
+                    Domain berhasil disimpan! Sistem sedang memproses konfigurasi SSL & DNS.
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+                  Nama Domain Toko:
+                </label>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={customDomainInput}
+                    onChange={(e) => setCustomDomainInput(e.target.value)}
+                    placeholder="misal: belanja.tokoberkah.com atau tokoku.com"
+                    className="flex-1 rounded-xl bg-slate-950 border border-slate-800 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                  />
+                  <button
+                    onClick={handleSaveDomain}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-6 py-3 text-xs font-bold text-white transition-all shadow-md active:scale-95 shrink-0"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>Simpan Domain</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-slate-950/80 border border-slate-800 p-5 space-y-3 text-xs">
+                <div className="font-bold text-slate-300 flex items-center gap-1.5">
+                  <HelpCircle className="h-4 w-4 text-emerald-400" />
+                  <span>Panduan Pengaturan DNS (Domain Name Server):</span>
+                </div>
+                <div className="space-y-2 text-slate-400">
+                  <p>1. Buka dashboard registrar domain Anda (Niagahoster, Domainesia, Cloudflare, Namecheap, dll).</p>
+                  <p>2. Tambahkan DNS Record baru dengan tipe <strong>CNAME</strong>:</p>
+                  <div className="rounded-xl bg-slate-900 border border-slate-800 p-3 font-mono text-emerald-300 space-y-1">
+                    <div>Type: <strong>CNAME</strong></div>
+                    <div>Host / Name: <strong>@ (atau subdomain Anda)</strong></div>
+                    <div>Target / Value: <strong>cname.kozabisnis.com</strong></div>
+                    <div>TTL: <strong>Auto / 3600</strong></div>
+                  </div>
+                  <p>3. Setelah DNS tersimpan, propagasi domain biasanya memakan waktu antara 15 menit hingga 24 jam.</p>
                 </div>
               </div>
             </div>
