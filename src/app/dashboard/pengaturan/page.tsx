@@ -22,7 +22,10 @@ import {
   Shield,
   MessageSquare,
   HelpCircle,
-  Globe
+  Globe,
+  ExternalLink,
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 
 export default function StoreSettingsPage() {
@@ -30,6 +33,14 @@ export default function StoreSettingsPage() {
   const [activeTab, setActiveTab] = useState<"shipping" | "ai_bot" | "domain">("shipping");
   const [customDomainInput, setCustomDomainInput] = useState(store.customDomain || "");
   const [isDomainSaved, setIsDomainSaved] = useState(false);
+  const [isCheckingDns, setIsCheckingDns] = useState(false);
+  const [dnsStatus, setDnsStatus] = useState<{
+    configured: boolean;
+    message: string;
+    targetCname?: string;
+    targetA?: string;
+    checkedAt?: string;
+  } | null>(null);
 
   const isStorePro = Boolean(
     (store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL") &&
@@ -71,10 +82,33 @@ export default function StoreSettingsPage() {
     setTimeout(() => setIsSaved(false), 4000);
   };
 
+  const handleVerifyDomain = async (domainToTest?: string) => {
+    const domain = (domainToTest || customDomainInput || store.customDomain || "").trim().toLowerCase();
+    if (!domain) return;
+    setIsCheckingDns(true);
+    setDnsStatus(null);
+    try {
+      const res = await fetch(`/api/domain/verify?domain=${encodeURIComponent(domain)}`);
+      const data = await res.json();
+      setDnsStatus(data);
+    } catch {
+      setDnsStatus({
+        configured: false,
+        message: "Gagal terhubung ke layanan verifikasi DNS. Periksa koneksi internet Anda.",
+      });
+    } finally {
+      setIsCheckingDns(false);
+    }
+  };
+
   const handleSaveDomain = () => {
-    updateStore({ customDomain: customDomainInput.trim().toLowerCase() });
+    const cleaned = customDomainInput.trim().toLowerCase();
+    updateStore({ customDomain: cleaned });
     setIsDomainSaved(true);
     setTimeout(() => setIsDomainSaved(false), 4000);
+    if (cleaned) {
+      handleVerifyDomain(cleaned);
+    }
   };
 
   const regulerCouriers = MASTER_COURIERS.filter((c) => c.category === "REGULER");
@@ -539,17 +573,77 @@ export default function StoreSettingsPage() {
                     value={customDomainInput}
                     onChange={(e) => setCustomDomainInput(e.target.value)}
                     placeholder="misal: belanja.tokoberkah.com atau tokoku.com"
-                    className="flex-1 rounded-xl bg-slate-950 border border-slate-800 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="flex-1 rounded-xl bg-slate-950 border border-slate-800 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors font-mono"
                   />
-                  <button
-                    onClick={handleSaveDomain}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-6 py-3 text-xs font-bold text-white transition-all shadow-md active:scale-95 shrink-0"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>Simpan Domain</span>
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={handleSaveDomain}
+                      className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3 text-xs font-bold text-white transition-all shadow-md active:scale-95"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>Simpan</span>
+                    </button>
+                    <button
+                      onClick={() => handleVerifyDomain()}
+                      disabled={isCheckingDns || !customDomainInput.trim()}
+                      className="flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 px-5 py-3 text-xs font-bold text-slate-200 border border-slate-700 transition-all active:scale-95"
+                    >
+                      {isCheckingDns ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
+                          <span>Mengecek...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4 text-emerald-400" />
+                          <span>Cek DNS</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              {/* Status Hasil Pengecekan DNS */}
+              {dnsStatus && (
+                <div
+                  className={`rounded-2xl border p-4 sm:p-5 space-y-3 animate-in fade-in duration-300 ${
+                    dnsStatus.configured
+                      ? "bg-emerald-950/30 border-emerald-500/40 text-emerald-200"
+                      : "bg-amber-950/30 border-amber-500/40 text-amber-200"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 font-bold text-sm">
+                      {dnsStatus.configured ? (
+                        <>
+                          <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />
+                          <span className="text-emerald-300">Domain Terhubung & Aktif!</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
+                          <span className="text-amber-300">DNS Belum Terdeteksi / Masih Propagasi</span>
+                        </>
+                      )}
+                    </div>
+                    {dnsStatus.configured && (
+                      <a
+                        href={`https://${customDomainInput.trim().toLowerCase()}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500 text-slate-950 text-xs font-bold hover:bg-emerald-400 transition-colors shadow-sm shrink-0"
+                      >
+                        <span>Buka Toko</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-xs leading-relaxed opacity-90">
+                    {dnsStatus.message}
+                  </p>
+                </div>
+              )}
 
               <div className="rounded-2xl bg-slate-950/80 border border-slate-800 p-5 space-y-3 text-xs">
                 <div className="font-bold text-slate-300 flex items-center gap-1.5">
