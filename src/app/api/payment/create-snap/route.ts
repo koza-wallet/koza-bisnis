@@ -114,6 +114,11 @@ export async function POST(req: NextRequest) {
           name: packageName.substring(0, 50),
         },
       ],
+      callbacks: {
+        finish: `${req.nextUrl.origin}/dashboard/topup?payment=success&order_id=${orderId}`,
+        error: `${req.nextUrl.origin}/dashboard/topup?payment=error&order_id=${orderId}`,
+        pending: `${req.nextUrl.origin}/dashboard/topup?payment=pending&order_id=${orderId}`,
+      },
       usage_limit: 1,
     };
 

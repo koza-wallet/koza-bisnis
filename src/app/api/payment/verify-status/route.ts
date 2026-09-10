@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { orderId } = body;
+    const { orderId, transactionId, transactionStatus: callbackStatus, statusCode } = body;
 
     if (!orderId) {
       return NextResponse.json(
@@ -61,11 +61,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Query status langsung ke Midtrans API
+    // 2. Query status ke Midtrans API
     const isProduction = process.env.MIDTRANS_IS_PRODUCTION === "true";
-    const statusApiUrl = isProduction
-      ? `https://api.midtrans.com/v2/${orderId}/status`
-      : `https://api.sandbox.midtrans.com/v2/${orderId}/status`;
+    const statusApiBase = isProduction
+      ? "https://api.midtrans.com/v2"
+      : "https://api.sandbox.midtrans.com/v2";
 
     const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
     if (!serverKey) {
@@ -76,7 +76,9 @@ export async function POST(req: NextRequest) {
     }
 
     const basicAuth = Buffer.from(serverKey + ":").toString("base64");
-    const midtransRes = await fetch(statusApiUrl, {
+
+    // Coba cek dengan orderId
+    let midtransRes = await fetch(`${statusApiBase}/${orderId}/status`, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -86,27 +88,62 @@ export async function POST(req: NextRequest) {
       cache: "no-store",
     });
 
-    if (!midtransRes.ok) {
-      return NextResponse.json({
-        settled: false,
-        status: tx.status,
+    // Jika orderId 404 (misal kanal BI SNAP / DANA), coba gunakan transactionId
+    if (!midtransRes.ok && transactionId) {
+      midtransRes = await fetch(`${statusApiBase}/${transactionId}/status`, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Basic ${basicAuth}`,
+        },
+        cache: "no-store",
       });
     }
 
-    const midtransData = await midtransRes.json();
-    const transactionStatus = midtransData.transaction_status;
-    const fraudStatus = midtransData.fraud_status;
+    let isSuccess = false;
+    let paymentType = "midtrans";
 
-    const isSuccess =
-      transactionStatus === "settlement" ||
-      (transactionStatus === "capture" && fraudStatus === "accept");
+    if (midtransRes.ok) {
+      const midtransData = await midtransRes.json();
+      const transactionStatus = midtransData.transaction_status;
+      const fraudStatus = midtransData.fraud_status;
+      paymentType = midtransData.payment_type || paymentType;
+
+      isSuccess =
+        transactionStatus === "settlement" ||
+        (transactionStatus === "capture" && fraudStatus === "accept");
+
+      if (
+        transactionStatus === "cancel" ||
+        transactionStatus === "expire" ||
+        transactionStatus === "deny"
+      ) {
+        const failStatus = transactionStatus === "expire" ? "EXPIRED" : "FAILED";
+        await supabase.rpc("handle_midtrans_failure", {
+          p_order_id: orderId,
+          p_status: failStatus,
+        });
+
+        return NextResponse.json({
+          settled: false,
+          status: failStatus,
+        });
+      }
+    } else if (
+      (callbackStatus === "settlement" || callbackStatus === "capture") &&
+      (statusCode === "200" || statusCode === 200)
+    ) {
+      // Fallback callback redirect dari Midtrans Finish URL
+      isSuccess = true;
+    }
 
     if (isSuccess) {
       const { data: rpcData, error: rpcErr } = await supabase.rpc(
         "handle_midtrans_settlement",
         {
           p_order_id: orderId,
-          p_payment_type: midtransData.payment_type || "midtrans",
+          p_payment_type: paymentType,
         }
       );
 
@@ -121,26 +158,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (
-      transactionStatus === "cancel" ||
-      transactionStatus === "expire" ||
-      transactionStatus === "deny"
-    ) {
-      const failStatus = transactionStatus === "expire" ? "EXPIRED" : "FAILED";
-      await supabase.rpc("handle_midtrans_failure", {
-        p_order_id: orderId,
-        p_status: failStatus,
-      });
-
-      return NextResponse.json({
-        settled: false,
-        status: failStatus,
-      });
-    }
-
     return NextResponse.json({
       settled: false,
-      status: transactionStatus || tx.status,
+      status: tx.status,
     });
   } catch (err: any) {
     console.error("Error verify-status route:", err);
