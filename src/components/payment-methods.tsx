@@ -23,7 +23,7 @@ export function PaymentMethodsBanner() {
           <span>Didukung Berbagai Metode Pembayaran Nasional</span>
         </h3>
         <p className="text-xs text-slate-400">
-          Transaksi kuota diproses secara aman & instan melalui jaringan QRIS Nasional & Payment Gateway Midtrans.
+          Transaksi kuota diproses secara aman & instan melalui jaringan QRIS Nasional, Virtual Account Bank & E-Wallet dengan verifikasi otomatis 24/7.
         </p>
       </div>
 
