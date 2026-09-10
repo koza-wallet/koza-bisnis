@@ -162,9 +162,11 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
     }
   }, [effectiveCourierList, courierName]);
 
-  // Success State
+  // Success & Loading State
   const [completedOrder, setCompletedOrder] = useState<any | null>(null);
   const [copiedRekening, setCopiedRekening] = useState(false);
+  const [copiedOrderNumber, setCopiedOrderNumber] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Status White-label Toko (Pro AI / Annual / Monthly bebas watermark)
   const isStoreWhiteLabel = store.plan === "PRO_AI" || store.plan === "PRO_ANNUAL" || store.plan === "PRO_MONTHLY";
@@ -260,12 +262,29 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
     });
   };
 
+  const handleCopyOrderNumber = () => {
+    if (!completedOrder?.orderNumber) return;
+    navigator.clipboard.writeText(completedOrder.orderNumber);
+    setCopiedOrderNumber(true);
+    setTimeout(() => setCopiedOrderNumber(false), 2000);
+  };
+
+  const handleCopyRekening = () => {
+    if (!store.bankAccountNumber) return;
+    navigator.clipboard.writeText(store.bankAccountNumber);
+    setCopiedRekening(true);
+    setTimeout(() => setCopiedRekening(false), 2000);
+  };
+
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName || !customerPhone || !customerAddress) {
       alert("Mohon lengkapi Nama, No WhatsApp, dan Alamat Pengiriman Anda.");
       return;
     }
+
+    if (isSubmitting) return; // Prevent double click (click-path-audit)
+    setIsSubmitting(true);
 
     const orderNumber = generateOrderNumber();
 
@@ -293,6 +312,7 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
 
       if (!res.ok) {
         alert(resData.error || "Gagal membuat pesanan. Silakan coba lagi.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -300,6 +320,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
         setCompletedOrder(resData.order);
         setCart({});
         setIsCartOpen(false);
+        setIsCheckoutModalOpen(false);
+        setIsSubmitting(false);
         return;
       }
     } catch (err) {
@@ -327,6 +349,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
       items: cartItems,
     });
 
+    setIsSubmitting(false);
+
     if (!result.success) {
       alert(result.error || "Gagal membuat pesanan");
       return;
@@ -335,6 +359,7 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
     setCompletedOrder(result.order);
     setCart({});
     setIsCartOpen(false);
+    setIsCheckoutModalOpen(false);
   };
 
   const handleOpenWhatsAppOrder = () => {
@@ -391,23 +416,31 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-24">
-      {/* Top Banner Navigation */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-28 selection:bg-emerald-500 selection:text-slate-950">
+      {/* 1. Header Profil Toko Minimalis & Editorial */}
+      <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl">
         <div className="mx-auto max-w-4xl px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={store.logoUrl}
-              alt={store.name}
-              className="h-9 w-9 rounded-full object-cover border border-emerald-500/30"
-            />
+            <div className="relative h-10 w-10 rounded-2xl overflow-hidden border border-emerald-500/30 ring-2 ring-emerald-500/10 shrink-0 shadow-md">
+              <img
+                src={store.logoUrl}
+                alt={store.name}
+                className="h-full w-full object-cover"
+              />
+            </div>
             <div>
-              <h1 className="text-sm font-bold text-white tracking-tight leading-tight">
-                {store.name}
-              </h1>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-tight">
+                  {store.name}
+                </h1>
+                <span className="hidden sm:inline-flex items-center gap-0.5 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-400 border border-emerald-500/30">
+                  <ShieldCheck className="h-3 w-3" />
+                  <span>Resmi</span>
+                </span>
+              </div>
               <div className="flex items-center gap-1 text-[11px] text-slate-400">
-                <MapPin className="h-3 w-3 text-emerald-400" />
+                <MapPin className="h-3 w-3 text-emerald-400 shrink-0" />
                 <span>Dikirim dari {store.originCity}</span>
               </div>
             </div>
@@ -415,51 +448,63 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
 
           <Link
             href="/dashboard"
-            className="text-[11px] text-slate-400 hover:text-emerald-400 border border-slate-800 rounded-lg px-2.5 py-1 transition-colors"
+            className="text-[11px] font-semibold text-slate-400 hover:text-emerald-300 border border-slate-800 hover:border-slate-700 bg-slate-900/50 rounded-xl px-3 py-1.5 transition-all shadow-sm flex items-center gap-1"
           >
-            Masuk Dashboard Seller →
+            <span>Dashboard</span>
+            <span>→</span>
           </Link>
         </div>
       </header>
 
-      {/* Hero Store Profile Box */}
-      <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-b border-slate-800/80 px-4 py-6">
-        <div className="mx-auto max-w-4xl space-y-3">
+      {/* 2. Hero Store Profile Box & Search Bar */}
+      <div className="bg-gradient-to-b from-slate-900/60 via-slate-950/40 to-slate-950 border-b border-slate-800/60 px-4 py-6 sm:py-8">
+        <div className="mx-auto max-w-4xl space-y-4">
           <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
             {store.description}
           </p>
 
-          <div className="flex flex-wrap items-center gap-3 text-xs pt-1">
-            <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-              <ShieldCheck className="h-3.5 w-3.5" /> 100% Produk Original & Bergaransi
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs pt-0.5">
+            <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 text-[11px]">
+              <ShieldCheck className="h-3.5 w-3.5" /> 100% Original & Bergaransi
             </span>
-            <span className="text-slate-400">
-              Pengiriman via <strong>J&T, JNE, SiCepat</strong>
+            <span className="inline-flex items-center gap-1 text-slate-400 bg-slate-900/80 px-2.5 py-1 rounded-full border border-slate-800 text-[11px]">
+              <Truck className="h-3 w-3 text-emerald-400" />
+              <span>Ekspedisi Resmi <strong>J&T, JNE, SiCepat, Kargo</strong></span>
             </span>
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar Berpresisi Tinggi */}
           <div className="relative pt-2">
             <Search className="absolute left-3.5 top-5 h-4 w-4 text-slate-500" />
             <input
               type="text"
-              placeholder="Cari gamis, pashmina, hijab..."
+              placeholder="Cari produk di toko ini..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-slate-800 bg-slate-900/80 pl-10 pr-4 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none shadow-inner"
+              className="w-full rounded-2xl border border-slate-800 bg-slate-900/80 pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-inner transition-all"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3.5 top-5 text-slate-500 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
           {/* Categories Tab Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-1 scrollbar-none">
+          <div className="flex items-center gap-2 overflow-x-auto pt-1 pb-1 scrollbar-none">
             {categories.map((cat) => (
               <button
                 key={cat}
+                type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`rounded-xl px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
                   selectedCategory === cat
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800"
+                    ? "bg-emerald-500 text-slate-950 font-bold shadow-md shadow-emerald-500/20"
+                    : "bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800"
                 }`}
               >
                 {cat}
@@ -469,131 +514,167 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
         </div>
       </div>
 
-      {/* Product Catalog Grid */}
-      <main className="mx-auto max-w-4xl w-full px-4 py-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-4">
-          {filteredProducts.map((product) => {
-            const inCartQty = cart[product.id] || 0;
+      {/* 3. Product Catalog Grid */}
+      <main className="mx-auto max-w-4xl w-full px-4 py-8">
+        <div className="flex items-center justify-between pb-4">
+          <h2 className="text-sm font-bold text-slate-300 uppercase tracking-wider text-[11px]">
+            Katalog Produk ({filteredProducts.length})
+          </h2>
+          {selectedCategory !== "SEMUA" && (
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("SEMUA")}
+              className="text-xs text-emerald-400 hover:underline"
+            >
+              Lihat Semua Kategori
+            </button>
+          )}
+        </div>
 
-            return (
-              <div
-                key={product.id}
-                className="group rounded-2xl border border-slate-800/80 bg-slate-900/40 overflow-hidden flex flex-col justify-between hover:border-slate-700 transition-all shadow-md"
-              >
-                <div className="relative aspect-square w-full bg-slate-800 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-2 left-2 rounded-full bg-slate-950/80 backdrop-blur-md px-2 py-0.5 text-[9px] font-semibold text-slate-300 border border-slate-700">
-                    {product.weightGrams}g
-                  </span>
-                </div>
+        {filteredProducts.length === 0 ? (
+          <div className="rounded-3xl border border-slate-800/80 bg-slate-900/40 p-12 text-center space-y-3">
+            <ShoppingBag className="h-8 w-8 text-slate-600 mx-auto" />
+            <div className="text-sm font-bold text-white">Tidak ada produk yang cocok</div>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto">
+              Coba kata kunci pencarian lain atau ubah filter kategori di atas.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-5">
+            {filteredProducts.map((product) => {
+              const inCartQty = cart[product.id] || 0;
 
-                <div className="p-3 sm:p-4 space-y-2 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <h3 className="text-xs sm:text-sm font-bold text-white line-clamp-2 leading-snug">
-                      {product.name}
-                    </h3>
-                    <div className="text-sm sm:text-base font-extrabold text-emerald-400">
-                      {formatRupiah(product.sellingPrice)}
-                    </div>
-
-                    {/* Badge Grosir & MOQ */}
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {product.minOrderQuantity && product.minOrderQuantity > 1 && (
-                        <span className="rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 text-[9px] font-semibold">
-                          Min. {product.minOrderQuantity} pcs
-                        </span>
-                      )}
-                      {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
-                        <span className="rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.5 text-[9px] font-bold">
-                          Grosir s/d {formatRupiah(product.wholesaleTiers[product.wholesaleTiers.length - 1].unitPrice)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Add to Cart / Quantity Selector */}
-                  <div className="pt-2">
-                    {inCartQty === 0 ? (
-                      <button
-                        onClick={() => addToCart(product.id)}
-                        className="w-full py-2 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-600 hover:text-white text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-1.5"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>
-                          {product.minOrderQuantity && product.minOrderQuantity > 1
-                            ? `Beli (Min. ${product.minOrderQuantity})`
-                            : "Beli"}
-                        </span>
-                      </button>
-                    ) : (
-                      <div className="flex items-center justify-between rounded-xl bg-slate-950 border border-slate-800 p-1">
-                        <button
-                          onClick={() => updateQuantity(product.id, -1)}
-                          className="h-7 w-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 hover:text-white"
-                        >
-                          <Minus className="h-3.5 w-3.5" />
-                        </button>
-                        <span className="font-bold text-xs text-white">
-                          {inCartQty}
-                        </span>
-                        <button
-                          onClick={() => updateQuantity(product.id, 1)}
-                          className="h-7 w-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white hover:bg-emerald-500"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
+              return (
+                <div
+                  key={product.id}
+                  className="group rounded-3xl border border-slate-800/80 bg-slate-900/50 backdrop-blur-sm overflow-hidden flex flex-col justify-between hover:border-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-950/20 transition-all duration-300 shadow-md"
+                >
+                  {/* Image Container with Hover Zoom */}
+                  <div className="relative aspect-square w-full bg-slate-800 overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                    />
+                    <span className="absolute top-2.5 left-2.5 rounded-full bg-slate-950/80 backdrop-blur-md px-2 py-0.5 text-[9px] font-semibold text-slate-300 border border-slate-700 font-mono">
+                      {product.weightGrams}g
+                    </span>
+                    {product.stock > 0 && product.stock <= 5 && (
+                      <span className="absolute top-2.5 right-2.5 rounded-full bg-rose-500/20 backdrop-blur-md px-2 py-0.5 text-[9px] font-bold text-rose-300 border border-rose-500/30">
+                        Sisa {product.stock}
+                      </span>
                     )}
                   </div>
+
+                  {/* Card Content */}
+                  <div className="p-3.5 sm:p-4 space-y-3 flex-1 flex flex-col justify-between">
+                    <div className="space-y-1.5">
+                      <h3 className="text-xs sm:text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-emerald-300 transition-colors">
+                        {product.name}
+                      </h3>
+                      <div className="text-sm sm:text-base font-black text-emerald-400 font-mono">
+                        {formatRupiah(product.sellingPrice)}
+                      </div>
+
+                      {/* Badge Grosir & MOQ */}
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {product.minOrderQuantity && product.minOrderQuantity > 1 && (
+                          <span className="rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/25 px-1.5 py-0.5 text-[9px] font-semibold">
+                            Min. {product.minOrderQuantity} pcs
+                          </span>
+                        )}
+                        {product.wholesaleTiers && product.wholesaleTiers.length > 0 && (
+                          <span className="rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 px-1.5 py-0.5 text-[9px] font-bold">
+                            Grosir s/d {formatRupiah(product.wholesaleTiers[product.wholesaleTiers.length - 1].unitPrice)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Add to Cart / Quantity Selector Taktil */}
+                    <div className="pt-1">
+                      {inCartQty === 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => addToCart(product.id)}
+                          className="w-full py-2.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500 hover:text-slate-950 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-sm"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>
+                            {product.minOrderQuantity && product.minOrderQuantity > 1
+                              ? `Beli (Min. ${product.minOrderQuantity})`
+                              : "Beli"}
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center justify-between rounded-xl bg-slate-950 border border-slate-800 p-1 shadow-inner">
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(product.id, -1)}
+                            className="h-7 w-7 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300 hover:text-white active:scale-95 transition-all"
+                          >
+                            <Minus className="h-3.5 w-3.5" />
+                          </button>
+                          <span className="font-extrabold text-xs text-white font-mono">
+                            {inCartQty}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(product.id, 1)}
+                            className="h-7 w-7 rounded-lg bg-emerald-600 flex items-center justify-center text-white hover:bg-emerald-500 active:scale-95 transition-all shadow-sm"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </main>
 
-      {/* Footer / Watermark Viral Loop untuk Toko Basic & Non-Pro */}
+      {/* 4. Footer / Watermark Viral Loop untuk Toko Basic & Non-Pro */}
       {!isStoreWhiteLabel && (
         <footer className="mt-12 pb-24 text-center px-4">
           <Link
             href={`/register?ref=${encodeURIComponent(store.slug)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-sm group"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-md group"
           >
             <span>Dibuat dengan</span>
-            <span className="font-bold text-slate-200 group-hover:text-white">KoZa Bisnis</span>
+            <span className="font-extrabold text-slate-200 group-hover:text-white">KoZa Bisnis</span>
             <span className="text-slate-600">•</span>
-            <span className="text-emerald-400 font-semibold">Buka Toko 0% Komisi →</span>
+            <span className="text-emerald-400 font-bold">Buka Toko 0% Komisi →</span>
           </Link>
         </footer>
       )}
 
-      {/* Floating Bottom Cart Bar */}
+      {/* 5. Floating Bottom Cart Dock (Obsidian Glassmorphism) */}
       {cartTotalItems > 0 && (
-        <div className="fixed bottom-4 left-0 right-0 z-40 px-4">
-          <div className="mx-auto max-w-md">
+        <div className="fixed bottom-4 left-0 right-0 z-40 px-4 pointer-events-none">
+          <div className="mx-auto max-w-md pointer-events-auto">
             <button
+              type="button"
               onClick={() => setIsCartOpen(true)}
-              className="w-full flex items-center justify-between rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 p-4 text-white shadow-2xl shadow-emerald-500/30 hover:brightness-105 transition-all active:scale-95"
+              className="w-full flex items-center justify-between rounded-2xl bg-slate-900/95 border border-emerald-500/40 backdrop-blur-xl p-3.5 sm:p-4 text-white shadow-2xl shadow-emerald-950/60 hover:border-emerald-400 active:scale-98 transition-all group"
             >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 font-bold text-sm">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500 text-slate-950 font-black text-xs shadow-md">
                   {cartTotalItems}
                 </div>
                 <div className="text-left">
-                  <div className="text-xs text-emerald-100">Keranjang Belanja</div>
-                  <div className="text-sm font-extrabold">{formatRupiah(cartSubtotal)}</div>
+                  <div className="text-[11px] text-slate-400 font-medium">Keranjang Belanja</div>
+                  <div className="text-sm sm:text-base font-black text-white font-mono">{formatRupiah(cartSubtotal)}</div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 text-xs font-bold bg-slate-950/20 px-3 py-1.5 rounded-xl">
-                <span>Lanjut Checkout</span>
+              <div className="flex items-center gap-1.5 text-xs font-black bg-emerald-500 text-slate-950 px-3.5 py-2 rounded-xl shadow-md group-hover:bg-emerald-400 transition-colors">
+                <span>Checkout</span>
                 <ChevronRight className="h-4 w-4" />
               </div>
             </button>
@@ -601,43 +682,46 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
         </div>
       )}
 
-      {/* Cart Drawer Modal */}
+      {/* 6. Cart Drawer Modal (Obsidian Sheet) */}
       {isCartOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-sm p-0 sm:p-4">
-          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6 shadow-2xl max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-t-3xl sm:rounded-3xl border border-slate-800 bg-slate-900/95 backdrop-blur-xl p-5 sm:p-6 shadow-2xl max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="h-5 w-5 text-emerald-400" />
-                <h3 className="text-base font-bold text-white">Keranjang ({cartTotalItems} item)</h3>
+                <h3 className="text-base font-bold text-white">Keranjang Belanja ({cartTotalItems} item)</h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsCartOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-white p-1"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {/* Cart Items List */}
-            <div className="divide-y divide-slate-800 overflow-y-auto flex-1 my-3 pr-1">
+            <div className="divide-y divide-slate-800/80 overflow-y-auto flex-1 my-3 pr-1">
               {cartItems.map((item) => (
                 <div key={item.productId} className="py-3 flex items-center justify-between gap-3">
-                  <div className="space-y-0.5">
-                    <div className="text-xs font-bold text-white">{item.productName}</div>
-                    <div className="text-xs font-mono text-emerald-400">{formatRupiah(item.unitPrice)}</div>
+                  <div className="space-y-0.5 flex-1 min-w-0">
+                    <div className="text-xs font-bold text-white truncate">{item.productName}</div>
+                    <div className="text-xs font-mono text-emerald-400 font-semibold">{formatRupiah(item.unitPrice)}</div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
+                      type="button"
                       onClick={() => updateQuantity(item.productId, -1)}
-                      className="h-6 w-6 rounded-md bg-slate-800 text-slate-300 flex items-center justify-center"
+                      className="h-7 w-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center hover:text-white active:scale-95"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
-                    <span className="font-bold text-xs text-white w-4 text-center">{item.quantity}</span>
+                    <span className="font-bold text-xs text-white w-5 text-center font-mono">{item.quantity}</span>
                     <button
+                      type="button"
                       onClick={() => updateQuantity(item.productId, 1)}
-                      className="h-6 w-6 rounded-md bg-emerald-600 text-white flex items-center justify-center"
+                      className="h-7 w-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 active:scale-95 shadow-sm"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
@@ -647,100 +731,106 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
             </div>
 
             {/* Cart Footer */}
-            <div className="border-t border-slate-800 pt-3 space-y-3">
+            <div className="border-t border-slate-800 pt-4 space-y-3">
               <div className="flex justify-between text-xs">
                 <span className="text-slate-400">Total Berat Paket:</span>
-                <span className="font-semibold text-white">{totalWeightGrams} gram (~{weightKgRounded} kg)</span>
+                <span className="font-semibold text-white font-mono">{totalWeightGrams} gram (~{weightKgRounded} kg)</span>
               </div>
               <div className="flex justify-between text-sm font-bold">
                 <span className="text-white">Subtotal Barang:</span>
-                <span className="text-emerald-400">{formatRupiah(cartSubtotal)}</span>
+                <span className="text-emerald-400 font-mono text-base font-black">{formatRupiah(cartSubtotal)}</span>
               </div>
 
               <button
+                type="button"
                 onClick={() => {
                   setIsCartOpen(false);
                   setIsCheckoutModalOpen(true);
                 }}
-                className="w-full py-3 rounded-xl bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 active:scale-95"
+                className="w-full py-3.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black hover:bg-emerald-400 shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2"
               >
-                Lanjut ke Pengiriman & Pembayaran
+                <span>Lanjut ke Pengiriman & Pembayaran</span>
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Checkout Modal (Address & Payment selection) */}
+      {/* 7. Checkout Modal (Obsidian Form) */}
       {isCheckoutModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl relative my-8 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl border border-slate-800 bg-slate-900/95 backdrop-blur-xl p-6 sm:p-7 shadow-2xl relative my-8 space-y-5">
             <button
+              type="button"
               onClick={() => setIsCheckoutModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1"
             >
               <X className="h-5 w-5" />
             </button>
 
             <div className="space-y-1">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Truck className="h-5 w-5 text-emerald-400" />
-                <span>Pengiriman & Pembayaran</span>
-              </h2>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold text-emerald-400 border border-emerald-500/20">
+                <Truck className="h-3.5 w-3.5" />
+                <span>Checkout Mandiri 0% Komisi</span>
+              </div>
+              <h2 className="text-lg font-black text-white">Pengiriman & Pembayaran</h2>
               <p className="text-xs text-slate-400">
-                Pilih tujuan pengiriman dan metode bayar (via WhatsApp atau QRIS).
+                Lengkapi alamat pengiriman untuk kalkulasi ongkir kurir otomatis.
               </p>
             </div>
 
-            <form onSubmit={handleCheckoutSubmit} className="space-y-4 text-xs">
-              {/* Data Pembeli */}
-              <div className="space-y-2">
-                <span className="font-bold text-slate-300 block uppercase tracking-wider text-[10px]">
-                  1. Informasi Penerima
+            <form onSubmit={handleCheckoutSubmit} className="space-y-5 text-xs">
+              {/* Step 1: Data Penerima */}
+              <div className="space-y-2.5">
+                <span className="font-bold text-slate-300 block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                  <span>1. Informasi Penerima</span>
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <input
                     type="text"
                     required
                     placeholder="Nama Lengkap *"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    className="rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                   />
                   <input
                     type="tel"
                     required
-                    placeholder="Nomor WhatsApp *"
+                    placeholder="Nomor WhatsApp (Aktif) *"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
-                    className="rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
+                    className="rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none"
                   />
                 </div>
                 <textarea
                   rows={2}
                   required
-                  placeholder="Alamat Lengkap (Jalan, No Rumah, RT/RW, Patokan) *"
+                  placeholder="Alamat Lengkap (Nama Jalan, No Rumah, RT/RW, Patokan) *"
                   value={customerAddress}
                   onChange={(e) => setCustomerAddress(e.target.value)}
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
+                  className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
                 />
               </div>
 
-              {/* Kurir & Ongkir Otomatis */}
-              <div className="space-y-2">
-                <span className="font-bold text-slate-300 block uppercase tracking-wider text-[10px]">
-                  2. Tujuan & Ekspedisi (Kalkulator Ongkir)
+              {/* Step 2: Kurir & Ongkir Otomatis */}
+              <div className="space-y-2.5">
+                <span className="font-bold text-slate-300 block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                  <span>2. Tujuan & Ekspedisi (Kalkulator Ongkir)</span>
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Kota / Kecamatan Tujuan</label>
+                    <label className="block text-[10px] text-slate-400 mb-1">Kecamatan Tujuan</label>
                     <select
                       value={selectedDestination.district}
                       onChange={(e) => {
                         const d = destinationOptions.find((opt) => opt.district === e.target.value);
                         if (d) setSelectedDestination(d);
                       }}
-                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-white focus:border-emerald-500 focus:outline-none"
                     >
                       {destinationOptions.map((opt) => (
                         <option key={opt.district} value={opt.district}>
@@ -751,11 +841,11 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-slate-400 mb-1">Pilihan Kurir</label>
+                    <label className="block text-[10px] text-slate-400 mb-1">Pilihan Ekspedisi</label>
                     <select
                       value={courierName}
                       onChange={(e) => setCourierName(e.target.value)}
-                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-white focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3.5 py-2.5 text-white focus:border-emerald-500 focus:outline-none font-semibold"
                     >
                       {effectiveCourierList.map((c) => (
                         <option key={c.code} value={c.name}>
@@ -766,137 +856,175 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
                   </div>
                 </div>
 
-                <div className="flex justify-between rounded-xl bg-slate-950/60 p-2.5 border border-slate-800 text-slate-300">
-                  <span>Ongkir ke {selectedDestination.district} ({weightKgRounded} kg):</span>
-                  <span className="font-bold text-white">{formatRupiah(shippingCost)}</span>
+                <div className="flex justify-between items-center rounded-xl bg-slate-950 p-3 border border-slate-800 text-xs">
+                  <span className="text-slate-400">
+                    Ongkir ke <strong>{selectedDestination.district}</strong> ({weightKgRounded} kg):
+                  </span>
+                  <span className="font-bold text-emerald-400 font-mono">{formatRupiah(shippingCost)}</span>
                 </div>
               </div>
 
-              {/* Metode Bayar */}
-              <div className="space-y-2">
-                <span className="font-bold text-slate-300 block uppercase tracking-wider text-[10px]">
-                  3. Pilih Metode Pembayaran
+              {/* Step 3: Metode Bayar */}
+              <div className="space-y-2.5">
+                <span className="font-bold text-slate-300 block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+                  <span>3. Pilih Metode Pembayaran</span>
                 </span>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("WHATSAPP")}
-                    className={`p-3 rounded-xl border text-left transition-all ${
+                    className={`p-3.5 rounded-2xl border text-left transition-all relative ${
                       paymentMethod === "WHATSAPP"
-                        ? "border-emerald-500 bg-emerald-500/10 text-white"
-                        : "border-slate-800 bg-slate-950 text-slate-400"
+                        ? "border-emerald-500 bg-emerald-500/10 text-white shadow-md shadow-emerald-500/10"
+                        : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-emerald-400 mb-0.5">
-                      <MessageSquare className="h-3.5 w-3.5" />
+                    <div className="flex items-center gap-2 font-bold text-xs text-emerald-400 mb-1">
+                      <MessageSquare className="h-4 w-4" />
                       <span>Order via WhatsApp</span>
                     </div>
-                    <p className="text-[10px] text-slate-400">
-                      Kirim format pesanan otomatis ke chat seller
+                    <p className="text-[11px] text-slate-400 leading-snug">
+                      Format order otomatis dikirimkan ke chat WhatsApp penjual.
                     </p>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setPaymentMethod("QRIS_TOKO")}
-                    className={`p-3 rounded-xl border text-left transition-all ${
+                    className={`p-3.5 rounded-2xl border text-left transition-all relative ${
                       paymentMethod === "QRIS_TOKO"
-                        ? "border-emerald-500 bg-emerald-500/10 text-white"
-                        : "border-slate-800 bg-slate-950 text-slate-400"
+                        ? "border-purple-500 bg-purple-500/10 text-white shadow-md shadow-purple-500/10"
+                        : "border-slate-800 bg-slate-950 text-slate-400 hover:border-slate-700"
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 font-bold text-xs text-purple-400 mb-0.5">
-                      <QrCode className="h-3.5 w-3.5" />
-                      <span>Scan QRIS Toko</span>
+                    <div className="flex items-center gap-2 font-bold text-xs text-purple-400 mb-1">
+                      <QrCode className="h-4 w-4" />
+                      <span>Scan QRIS Toko Langsung</span>
                     </div>
-                    <p className="text-[10px] text-slate-400">
-                      Scan barcode via BCA/GoPay/DANA
+                    <p className="text-[11px] text-slate-400 leading-snug">
+                      Scan barcode QRIS via BCA, GoPay, OVO, DANA, dll.
                     </p>
                   </button>
                 </div>
               </div>
 
-              {/* Total Summary */}
-              <div className="rounded-xl bg-slate-950 p-3 border border-slate-800 space-y-1">
+              {/* Total Summary Breakdown */}
+              <div className="rounded-2xl bg-slate-950 p-4 border border-slate-800 space-y-2">
                 <div className="flex justify-between text-slate-400">
-                  <span>Subtotal:</span>
-                  <span>{formatRupiah(cartSubtotal)}</span>
+                  <span>Subtotal Barang:</span>
+                  <span className="font-mono text-slate-200">{formatRupiah(cartSubtotal)}</span>
                 </div>
                 <div className="flex justify-between text-slate-400">
-                  <span>Ongkos Kirim:</span>
-                  <span>{formatRupiah(shippingCost)}</span>
+                  <span>Ongkos Kirim ({courierName}):</span>
+                  <span className="font-mono text-slate-200">{formatRupiah(shippingCost)}</span>
                 </div>
-                <div className="flex justify-between font-bold text-sm text-white pt-1 border-t border-slate-800">
-                  <span>Total yang Harus Dibayar:</span>
-                  <span className="text-emerald-400">{formatRupiah(grandTotal)}</span>
+                <div className="flex justify-between font-bold text-sm text-white pt-2 border-t border-slate-800">
+                  <span>Total Bayar:</span>
+                  <span className="text-emerald-400 font-mono text-base font-black">{formatRupiah(grandTotal)}</span>
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-500 shadow-lg shadow-emerald-600/20 active:scale-95"
+                disabled={isSubmitting}
+                className="w-full py-3.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black hover:bg-emerald-400 shadow-xl shadow-emerald-500/25 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                Konfirmasi Pesanan Sekarang
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Memproses Pesanan...</span>
+                  </>
+                ) : (
+                  <span>Konfirmasi & Selesaikan Pesanan</span>
+                )}
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Order Success Modal (Shows WhatsApp CTA or QRIS Barcode) */}
+      {/* 8. Order Success Modal (Shows WhatsApp CTA, QRIS, & Live Tracking Link) */}
       {completedOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl text-center space-y-4 my-8">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-7 shadow-2xl text-center space-y-4 my-8">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-lg shadow-emerald-500/20">
               <CheckCircle2 className="h-8 w-8" />
             </div>
 
-            <div className="space-y-1">
-              <h3 className="text-lg font-bold text-white">Pesanan Berhasil Dibuat!</h3>
-              <div className="font-mono text-xs text-emerald-400 font-semibold">
-                No Pesanan: #{completedOrder.orderNumber}
+            <div className="space-y-1.5">
+              <h3 className="text-xl font-black text-white">Pesanan Berhasil Dibuat!</h3>
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-slate-950 px-3 py-1 border border-slate-800">
+                <span className="font-mono text-xs text-emerald-400 font-bold">
+                  #{completedOrder.orderNumber}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyOrderNumber}
+                  className="text-slate-400 hover:text-white"
+                  title="Salin nomor pesanan"
+                >
+                  {copiedOrderNumber ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                </button>
               </div>
-              <p className="text-xs text-slate-400">
-                Total yang harus dibayar: <strong className="text-white">{formatRupiah(completedOrder.grandTotal)}</strong>
+              <p className="text-xs text-slate-400 pt-1">
+                Total yang harus dibayar: <strong className="text-white font-mono">{formatRupiah(completedOrder.grandTotal)}</strong>
               </p>
             </div>
 
-            {/* If QRIS TOKO chosen */}
-            {completedOrder.paymentMethod === "QRIS_TOKO" ? (
+            {/* QRIS Toko Card */}
+            {completedOrder.paymentMethod === "QRIS_TOKO" && (
               <div className="rounded-2xl bg-white p-4 space-y-2 text-slate-900 shadow-inner">
-                <span className="text-[10px] font-bold block text-slate-700">
-                  SCAN QRIS TOKO UNTUK BAYAR
+                <span className="text-[10px] font-black block text-slate-700 uppercase tracking-wider">
+                  Scan QRIS Toko untuk Bayar
                 </span>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={store.qrisImageUrl}
                   alt="QRIS Toko"
-                  className="mx-auto h-44 w-44 object-contain rounded-lg border border-slate-200"
+                  className="mx-auto h-44 w-44 object-contain rounded-xl border border-slate-200"
                 />
-                <div className="text-[11px] text-slate-600 font-medium">
+                <div className="text-[11px] text-slate-700 font-medium">
                   Atau Transfer Bank: <strong>{store.bankName} {store.bankAccountNumber}</strong>
                 </div>
-                <div className="text-[10px] text-slate-500">
-                  a/n {store.bankAccountName}
+                <div className="flex items-center justify-center gap-2 text-[10px] text-slate-500">
+                  <span>a/n {store.bankAccountName}</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyRekening}
+                    className="text-emerald-600 font-bold hover:underline inline-flex items-center gap-0.5"
+                  >
+                    {copiedRekening ? <span>Tersalin!</span> : <span>Salin Rekening</span>}
+                  </button>
                 </div>
               </div>
-            ) : null}
+            )}
 
             {/* Action Buttons */}
-            <div className="space-y-2 pt-2">
+            <div className="space-y-2.5 pt-2">
               <button
+                type="button"
                 onClick={handleOpenWhatsAppOrder}
-                className="w-full py-3 rounded-xl bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-500 flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 active:scale-95"
+                className="w-full py-3.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-black hover:bg-emerald-400 flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/25 active:scale-95 transition-all"
               >
                 <MessageSquare className="h-4 w-4" />
                 <span>Kirim Bukti / Chat WhatsApp Penjual</span>
               </button>
 
-              <button
-                onClick={() => setCompletedOrder(null)}
-                className="w-full py-2.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-300 hover:text-white"
+              <Link
+                href={`/lacak/${completedOrder.orderNumber}`}
+                className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 border border-slate-700 flex items-center justify-center gap-1.5 transition-colors block"
               >
-                Kembali ke Toko
+                <Truck className="h-4 w-4 text-emerald-400" />
+                <span>Lacak Status Pesanan Saya (/lacak)</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => setCompletedOrder(null)}
+                className="w-full py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+              >
+                Kembali Belanja di Toko
               </button>
             </div>
           </div>
