@@ -8,8 +8,15 @@ interface PixelTrackerProps {
 }
 
 export function PixelTracker({ metaPixelId, tiktokPixelId }: PixelTrackerProps) {
-  const cleanMetaId = metaPixelId?.trim();
-  const cleanTiktokId = tiktokPixelId?.trim();
+  // Audit P1.2: Validasi ketat format Pixel ID untuk mencegah Stored XSS
+  const rawMeta = metaPixelId?.trim() || "";
+  const rawTiktok = tiktokPixelId?.trim() || "";
+
+  const isValidMeta = /^\d{10,20}$/.test(rawMeta);
+  const isValidTiktok = /^[A-Za-z0-9]{15,25}$/.test(rawTiktok);
+
+  const cleanMetaId = isValidMeta ? rawMeta : undefined;
+  const cleanTiktokId = isValidTiktok ? rawTiktok : undefined;
 
   return (
     <>

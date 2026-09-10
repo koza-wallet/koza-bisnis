@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
+import { createClient } from "@/lib/supabase/client";
 import { formatRupiah, generateOrderNumber } from "@/lib/utils";
 import { destinationOptions } from "@/lib/mock-data";
-import { Product, OrderItem } from "@/types";
+import { Store, Product, OrderItem } from "@/types";
 import { 
   ShoppingBag, 
   MapPin, 
@@ -24,12 +25,105 @@ import {
   Copy,
   Check,
   ShieldCheck,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from "lucide-react";
 
 export default function StorefrontPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
-  const { store, products, createOrder } = useStore();
+  const slug = resolvedParams.slug;
+  const { store: localStore, products: localProducts, createOrder } = useStore();
+  const supabase = createClient();
+
+  // Active Store & Products (Fetched by Slug from Supabase)
+  const [store, setStore] = useState<Store>(localStore);
+  const [products, setProducts] = useState<Product[]>(localProducts);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isNotFound, setIsNotFound] = useState(false);
+
+  // Fetch Store & Products from Supabase (P0 & P1 Security Fix)
+  useEffect(() => {
+    async function loadStoreBySlug() {
+      setIsLoading(true);
+      try {
+        const { data: storeRow, error: storeErr } = await supabase
+          .from("stores")
+          .select("*")
+          .eq("slug", slug)
+          .single();
+
+        if (storeRow && !storeErr) {
+          setStore({
+            id: storeRow.id,
+            slug: storeRow.slug,
+            name: storeRow.name,
+            description: storeRow.description || "",
+            logoUrl: storeRow.logo_url || "https://images.unsplash.com/photo-1544717305-2782549b5136?w=150&auto=format&fit=crop&q=80",
+            whatsappNumber: storeRow.whatsapp_number,
+            originCity: storeRow.origin_city || "Kota Jakarta Selatan",
+            originDistrict: storeRow.origin_district || "Kebayoran Baru",
+            quotaBalance: storeRow.quota_balance ?? 10,
+            plan: storeRow.plan || "NON_PRO",
+            bankName: storeRow.bank_name,
+            bankAccountNumber: storeRow.bank_account_number,
+            bankAccountName: storeRow.bank_account_name,
+            qrisImageUrl: storeRow.qris_image_url,
+            createdAt: storeRow.created_at,
+          });
+
+          // P1 Audit Fix: Query from public_products VIEW so cost_price (HPP) is NEVER exposed to client!
+          const { data: prodsRows } = await supabase
+            .from("public_products")
+            .select("*")
+            .eq("store_id", storeRow.id);
+
+          if (prodsRows && prodsRows.length > 0) {
+            setProducts(
+              prodsRows.map((p: any) => ({
+                id: p.id,
+                storeId: p.store_id,
+                name: p.name,
+                slug: p.slug,
+                description: p.description || "",
+                sellingPrice: Number(p.selling_price),
+                costPrice: 0, // P1 Audit: zeroed out on client, HPP is strictly hidden
+                weightGrams: p.weight_grams || 300,
+                stock: p.stock ?? 0,
+                imageUrl: p.image_url || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80",
+                category: p.category || "Umum",
+                isActive: p.is_active ?? true,
+                createdAt: p.created_at,
+              }))
+            );
+          } else {
+            setProducts([]);
+          }
+        } else {
+          // Fallback to local store if matches slug or local mock
+          if (localStore.slug === slug || slug === "toko-cantik") {
+            setStore(localStore);
+            setProducts(localProducts);
+          } else {
+            setIsNotFound(true);
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase store lookup failed, using local context:", err);
+        if (localStore.slug === slug || slug === "toko-cantik") {
+          setStore(localStore);
+          setProducts(localProducts);
+        } else {
+          setIsNotFound(true);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (slug) {
+      loadStoreBySlug();
+    }
+  }, [slug, localStore, localProducts]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("SEMUA");
@@ -61,21 +155,23 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
     return matchCat && matchSearch;
   });
 
-  // Cart Calculations
+  // Cart Calculations (P1 Audit: costPrice is zeroed out to prevent HPP exposure)
   const cartItems: OrderItem[] = Object.entries(cart)
     .filter(([_, qty]) => qty > 0)
     .map(([id, qty]) => {
-      const prod = products.find((p) => p.id === id)!;
+      const prod = products.find((p) => p.id === id);
+      if (!prod) return null as any;
       return {
         productId: prod.id,
         productName: prod.name,
         quantity: qty,
         unitPrice: prod.sellingPrice,
-        unitCost: prod.costPrice,
+        unitCost: 0, // P1 Audit: zeroed out on client, HPP is strictly hidden
         weightGrams: prod.weightGrams,
         subtotal: prod.sellingPrice * qty,
       };
-    });
+    })
+    .filter(Boolean);
 
   const cartTotalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartSubtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
@@ -83,8 +179,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
   const weightKgRounded = Math.max(1, Math.ceil(totalWeightGrams / 1000));
   const shippingCost = selectedDestination.baseRate * weightKgRounded;
   const grandTotal = cartSubtotal + shippingCost;
-  const totalCostPrice = cartItems.reduce((sum, item) => sum + item.unitCost * item.quantity, 0);
-  const netProfit = cartSubtotal - totalCostPrice;
+  const totalCostPrice = 0;
+  const netProfit = 0;
 
   const addToCart = (prodId: string) => {
     setCart((prev) => ({
@@ -106,7 +202,7 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
     });
   };
 
-  const handleCheckoutSubmit = (e: React.FormEvent) => {
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName || !customerPhone || !customerAddress) {
       alert("Mohon lengkapi Nama, No WhatsApp, dan Alamat Pengiriman Anda.");
@@ -115,6 +211,59 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
 
     const orderNumber = generateOrderNumber();
 
+    // 1. Direct Supabase Insert (P0 Multi-Tenant & Server Order)
+    try {
+      const { data: dbOrder, error: dbErr } = await supabase
+        .from("orders")
+        .insert({
+          order_number: orderNumber,
+          store_id: store.id,
+          customer_name: customerName,
+          customer_phone: customerPhone,
+          customer_address: customerAddress,
+          destination_city: selectedDestination.city,
+          destination_district: selectedDestination.district,
+          courier_name: courierName,
+          courier_service: "Reguler (1-2 Hari)",
+          shipping_cost: shippingCost,
+          items_total: cartSubtotal,
+          grand_total: grandTotal,
+          total_cost_price: 0,
+          net_profit: 0,
+          status: paymentMethod === "QRIS_TOKO" ? "DIPROSES" : "MENUNGGU_BAYAR",
+          payment_method: paymentMethod,
+          items: cartItems,
+        })
+        .select()
+        .single();
+
+      if (dbOrder && !dbErr) {
+        setCompletedOrder({
+          orderNumber: dbOrder.order_number,
+          storeId: dbOrder.store_id,
+          customerName: dbOrder.customer_name,
+          customerPhone: dbOrder.customer_phone,
+          customerAddress: dbOrder.customer_address,
+          destinationCity: dbOrder.destination_city,
+          destinationDistrict: dbOrder.destination_district,
+          courierName: dbOrder.courier_name,
+          courierService: dbOrder.courier_service,
+          shippingCost: Number(dbOrder.shipping_cost),
+          itemsTotal: Number(dbOrder.items_total),
+          grandTotal: Number(dbOrder.grand_total),
+          status: dbOrder.status,
+          paymentMethod: dbOrder.payment_method,
+          items: dbOrder.items,
+        });
+        setCart({});
+        setIsCartOpen(false);
+        return;
+      }
+    } catch (err) {
+      console.warn("Supabase order insert failed, using fallback:", err);
+    }
+
+    // Fallback: local store
     const result = createOrder({
       orderNumber,
       storeId: store.id,
@@ -128,8 +277,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
       shippingCost,
       itemsTotal: cartSubtotal,
       grandTotal,
-      totalCostPrice,
-      netProfit,
+      totalCostPrice: 0,
+      netProfit: 0,
       status: paymentMethod === "QRIS_TOKO" ? "DIPROSES" : "MENUNGGU_BAYAR",
       paymentMethod,
       items: cartItems,
@@ -168,6 +317,35 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
 
     window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-2" />
+        <p className="text-xs text-slate-400">Memuat katalog toko...</p>
+      </div>
+    );
+  }
+
+  if (isNotFound) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center text-white">
+        <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mb-4">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+        <h1 className="text-xl font-bold">Toko Tidak Ditemukan</h1>
+        <p className="text-xs text-slate-400 mt-1 max-w-sm">
+          Alamat toko <code>/toko/{slug}</code> tidak terdaftar atau belum aktif di KoZa Bisnis.
+        </p>
+        <Link
+          href="/"
+          className="mt-5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-colors"
+        >
+          Kembali ke Beranda
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-24">

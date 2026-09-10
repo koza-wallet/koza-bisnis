@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store-context";
+import { createClient } from "@/lib/supabase/client";
 import { 
   Home, 
   Package, 
@@ -11,11 +12,13 @@ import {
   ExternalLink,
   Store as StoreIcon,
   Sparkles,
-  Zap
+  Zap,
+  LogOut
 } from "lucide-react";
 
 export function DashboardNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { store, orders } = useStore();
 
   const pendingOrdersCount = orders.filter(
@@ -132,6 +135,21 @@ export function DashboardNav() {
             <span className="sm:hidden">Toko</span>
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Link>
+
+          {/* Logout Button */}
+          <button
+            type="button"
+            onClick={async () => {
+              const supabase = createClient();
+              await supabase.auth.signOut();
+              router.push("/login");
+              router.refresh();
+            }}
+            title="Keluar dari Dashboard"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 border border-slate-800 hover:border-rose-500/30 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
       </div>
 

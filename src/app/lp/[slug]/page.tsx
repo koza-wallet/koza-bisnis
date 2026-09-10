@@ -4,6 +4,8 @@ import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { destinationOptions } from "@/lib/mock-data";
+import { createClient } from "@/lib/supabase/client";
+import { LandingPage } from "@/types";
 import { PixelTracker, trackPixelInitiateCheckout, trackPixelPurchase } from "@/components/pixel-tracker";
 import { BlockRenderer } from "@/components/builder/block-renderer";
 import { 
@@ -22,15 +24,85 @@ import {
   ArrowRight,
   Flame,
   Check,
-  Store as StoreIcon
+  Store as StoreIcon,
+  Loader2
 } from "lucide-react";
 
 export default function PublicLandingPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = use(params);
   const slug = resolvedParams.slug;
-  const { getLandingPageBySlug, recordLandingPageView, createOrder, store } = useStore();
+  const { getLandingPageBySlug, recordLandingPageView, createOrder, store: localStore } = useStore();
+  const supabase = createClient();
 
-  const lp = getLandingPageBySlug(slug);
+  const [lp, setLp] = useState<LandingPage | null>(null);
+  const [store, setStore] = useState<any>(localStore);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch Landing Page from Supabase (P0 Multi-Tenant)
+  useEffect(() => {
+    async function loadLandingPage() {
+      setIsLoading(true);
+      try {
+        const { data: lpRow, error: lpErr } = await supabase
+          .from("landing_pages")
+          .select("*, stores(*)")
+          .eq("slug", slug)
+          .eq("is_active", true)
+          .single();
+
+        if (lpRow && !lpErr) {
+          setLp({
+            id: lpRow.id,
+            storeId: lpRow.store_id,
+            productId: lpRow.product_id,
+            slug: lpRow.slug,
+            title: lpRow.title,
+            theme: lpRow.theme,
+            tone: lpRow.tone,
+            builderMode: lpRow.builder_mode,
+            hero: lpRow.hero,
+            problemSection: lpRow.problem_section,
+            solutionSection: lpRow.solution_section,
+            features: lpRow.features,
+            testimonials: lpRow.testimonials,
+            pricing: lpRow.pricing,
+            faq: lpRow.faqs || lpRow.faq || { title: "FAQ", items: [] },
+            blocks: lpRow.blocks,
+            design: lpRow.design,
+            seo: lpRow.seo,
+            pixels: lpRow.pixels,
+            guarantee: lpRow.guarantee || { title: "Garansi 100% Original", description: "Jaminan kepuasan pelanggan" },
+            analytics: lpRow.analytics || { viewsCount: 0, ordersCount: 0, conversionRate: 0 },
+            isPublished: lpRow.is_active ?? true,
+            createdAt: lpRow.created_at || new Date().toISOString(),
+          });
+
+          if (lpRow.stores) {
+            setStore({
+              id: lpRow.stores.id,
+              name: lpRow.stores.name,
+              whatsappNumber: lpRow.stores.whatsapp_number,
+              originCity: lpRow.stores.origin_city,
+              originDistrict: lpRow.stores.origin_district,
+            });
+          }
+        } else {
+          const fallbackLp = getLandingPageBySlug(slug);
+          if (fallbackLp) setLp(fallbackLp);
+        }
+      } catch (err) {
+        console.warn("Supabase LP load failed, using local context:", err);
+        const fallbackLp = getLandingPageBySlug(slug);
+        if (fallbackLp) setLp(fallbackLp);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (slug) {
+      loadLandingPage();
+    }
+  }, [slug]);
 
   // Countdown timer state (hours, minutes, seconds)
   const [timeLeft, setTimeLeft] = useState({ hours: 7, minutes: 48, seconds: 15 });
@@ -68,6 +140,15 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
+        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-2" />
+        <p className="text-xs text-slate-400">Memuat landing page...</p>
+      </div>
+    );
+  }
 
   if (!lp) {
     return (
@@ -169,6 +250,43 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     const totalCostPrice = unitCost * quantity;
     const netProfit = itemsTotal - totalCostPrice;
 
+    // 1. Direct Supabase Order Insertion (P0 Multi-Tenant)
+    try {
+      supabase.from("orders").insert({
+        order_number: orderNumber,
+        store_id: lp.storeId,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_address: customerAddress,
+        destination_city: selectedDestination.city,
+        destination_district: selectedDestination.district,
+        courier_name: selectedCourier,
+        courier_service: "Reguler",
+        shipping_cost: shippingCost,
+        items_total: itemsTotal,
+        grand_total: grandTotal,
+        total_cost_price: 0,
+        net_profit: 0,
+        status: paymentMethod === "QRIS_TOKO" ? "MENUNGGU_BAYAR" : "DIPROSES",
+        payment_method: paymentMethod,
+        items: [
+          {
+            productId: lp.productId || "prod-lp",
+            productName: lp.title,
+            quantity,
+            unitPrice: itemPrice,
+            unitCost: 0,
+            weightGrams: 300,
+            subtotal: itemsTotal,
+          },
+        ],
+      }).then(({ error }) => {
+        if (error) console.warn("Supabase LP order insert:", error);
+      });
+    } catch (e) {
+      console.warn("Supabase order insert error:", e);
+    }
+
     const res = createOrder({
       orderNumber,
       storeId: lp.storeId,
@@ -259,6 +377,43 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
                 const unitCost = 50000;
                 const totalCostPrice = unitCost * (orderData.quantity || 1);
                 const netProfit = (orderData.itemsTotal || 0) - totalCostPrice;
+
+                // 1. Direct Supabase Order Insertion (P0 Multi-Tenant)
+                try {
+                  supabase.from("orders").insert({
+                    order_number: orderNumber,
+                    store_id: lp.storeId,
+                    customer_name: orderData.customerName,
+                    customer_phone: orderData.customerPhone,
+                    customer_address: orderData.customerAddress,
+                    destination_city: orderData.destination,
+                    destination_district: "",
+                    courier_name: orderData.courier,
+                    courier_service: "Reguler",
+                    shipping_cost: orderData.shippingCost,
+                    items_total: orderData.itemsTotal,
+                    grand_total: orderData.grandTotal,
+                    total_cost_price: 0,
+                    net_profit: 0,
+                    status: orderData.paymentMethod === "QRIS_TOKO" ? "MENUNGGU_BAYAR" : "DIPROSES",
+                    payment_method: orderData.paymentMethod,
+                    items: [
+                      {
+                        productId: lp.productId || "prod-lp",
+                        productName: lp.title,
+                        quantity: orderData.quantity || 1,
+                        unitPrice: orderData.promoPrice || 149000,
+                        unitCost: 0,
+                        weightGrams: 300,
+                        subtotal: orderData.itemsTotal,
+                      },
+                    ],
+                  }).then(({ error }) => {
+                    if (error) console.warn("Supabase modular order insert:", error);
+                  });
+                } catch (e) {
+                  console.warn("Supabase modular order insert error:", e);
+                }
 
                 createOrder({
                   orderNumber,

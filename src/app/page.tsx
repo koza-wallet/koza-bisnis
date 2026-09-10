@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ShoppingBag, Wallet, Zap, ArrowRight, ShieldCheck, TrendingUp, Truck,
@@ -9,11 +9,24 @@ import {
   MessageSquare, HelpCircle, BarChart3, Flame, Award, Crown, Percent
 } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LandingPage() {
   const [monthlyOrders, setMonthlyOrders] = useState(200);
   const [averageOrderValue, setAverageOrderValue] = useState(120000);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    try {
+      const supabase = createClient();
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user) setIsLoggedIn(true);
+      });
+    } catch {
+      // pass through if client not ready
+    }
+  }, []);
 
   // Kalkulasi Finansial
   const totalMonthlyGMV = monthlyOrders * averageOrderValue;
@@ -77,24 +90,43 @@ export default function LandingPage() {
             <a href="#faq" className="hover:text-emerald-400 transition-colors">Tanya Jawab</a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <Link
               href="/toko/hijabcantik"
               target="_blank"
-              className="text-xs font-semibold text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-900 border border-slate-800 transition-colors hidden sm:flex items-center gap-1.5"
+              className="text-xs font-semibold text-slate-300 hover:text-white px-3 py-2 rounded-lg hover:bg-slate-900 border border-slate-800 transition-colors hidden md:flex items-center gap-1.5"
             >
               <Store className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Demo Toko Bio Link</span>
+              <span>Demo Toko</span>
               <ExternalLink className="h-3 w-3 opacity-60" />
             </Link>
 
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow-lg shadow-emerald-500/25 hover:brightness-110 transition-all active:scale-95"
-            >
-              <span>Dashboard Penjual</span>
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-2 text-xs font-extrabold text-slate-950 shadow-lg shadow-emerald-500/25 hover:brightness-110 transition-all active:scale-95"
+              >
+                <span>Dashboard Penjual</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-xs font-bold text-slate-200 hover:text-white px-3 sm:px-4 py-2 rounded-xl hover:bg-slate-800/80 border border-slate-700/80 transition-all"
+                >
+                  Masuk
+                </Link>
+
+                <Link
+                  href="/register"
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-3.5 sm:px-4 py-2 text-xs font-extrabold text-slate-950 shadow-lg shadow-emerald-500/25 hover:brightness-110 transition-all active:scale-95"
+                >
+                  <span>Daftar Toko</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -127,21 +159,40 @@ export default function LandingPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2">
-          <Link
-            href="/dashboard"
-            className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 px-7 py-4 text-sm font-extrabold text-slate-950 shadow-xl shadow-emerald-500/30 hover:brightness-110 transition-all active:scale-95"
-          >
-            <span>Mulai Gratis (Dapat 10 Order Uji Coba)</span>
-            <ArrowRight className="h-4 w-4" />
-          </Link>
+          {isLoggedIn ? (
+            <Link
+              href="/dashboard"
+              className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 px-7 py-4 text-sm font-extrabold text-slate-950 shadow-xl shadow-emerald-500/30 hover:brightness-110 transition-all active:scale-95"
+            >
+              <span>Buka Dashboard Penjual</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <>
+              <Link
+                href="/register"
+                className="w-full sm:w-auto flex items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 px-7 py-4 text-sm font-extrabold text-slate-950 shadow-xl shadow-emerald-500/30 hover:brightness-110 transition-all active:scale-95"
+              >
+                <span>Daftar Toko Gratis (10 Order Uji Coba)</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+
+              <Link
+                href="/login"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-6 py-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
+              >
+                <span>Sudah Punya Akun? Masuk</span>
+              </Link>
+            </>
+          )}
 
           <Link
             href="/toko/hijabcantik"
             target="_blank"
-            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-6 py-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900/80 px-6 py-4 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
           >
             <Store className="h-4 w-4 text-emerald-400" />
-            <span>Lihat Contoh Toko Baju</span>
+            <span>Lihat Contoh Toko</span>
           </Link>
         </div>
 
@@ -364,10 +415,10 @@ export default function LandingPage() {
             </div>
 
             <Link
-              href="/dashboard"
+              href={isLoggedIn ? "/dashboard" : "/register"}
               className="w-full py-3 rounded-xl bg-slate-800 text-white text-xs font-bold text-center hover:bg-slate-700 transition-colors shadow-sm block"
             >
-              Mulai Gratis (Non-Pro)
+              {isLoggedIn ? "Buka Dashboard (Non-Pro)" : "Mulai Gratis (Daftar Toko)"}
             </Link>
           </div>
 
@@ -546,18 +597,37 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-            <Link
-              href="/dashboard"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-8 py-4 text-sm font-extrabold text-slate-950 shadow-xl shadow-emerald-500/30 hover:brightness-110 transition-all active:scale-95"
-            >
-              <span>Daftar Sekarang (10 Order Uji Coba Gratis)</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-8 py-4 text-sm font-extrabold text-slate-950 shadow-xl shadow-emerald-500/30 hover:brightness-110 transition-all active:scale-95"
+              >
+                <span>Buka Dashboard Toko Anda</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  href="/register"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 px-8 py-4 text-sm font-extrabold text-slate-950 shadow-xl shadow-emerald-500/30 hover:brightness-110 transition-all active:scale-95"
+                >
+                  <span>Daftar Toko Gratis Sekarang</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+
+                <Link
+                  href="/login"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-6 py-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
+                >
+                  <span>Sudah Punya Akun? Masuk</span>
+                </Link>
+              </>
+            )}
 
             <Link
               href="/toko/hijabcantik"
               target="_blank"
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-6 py-4 text-sm font-semibold text-white hover:bg-slate-800 transition-all"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-6 py-4 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition-all"
             >
               <span>Lihat Demo Toko</span>
             </Link>
