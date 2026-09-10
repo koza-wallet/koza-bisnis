@@ -250,42 +250,34 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     const totalCostPrice = unitCost * quantity;
     const netProfit = itemsTotal - totalCostPrice;
 
-    // 1. Direct Supabase Order Insertion (P0 Multi-Tenant)
-    try {
-      supabase.from("orders").insert({
-        order_number: orderNumber,
-        store_id: lp.storeId,
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        customer_address: customerAddress,
-        destination_city: selectedDestination.city,
-        destination_district: selectedDestination.district,
-        courier_name: selectedCourier,
-        courier_service: "Reguler",
-        shipping_cost: shippingCost,
-        items_total: itemsTotal,
-        grand_total: grandTotal,
-        total_cost_price: 0,
-        net_profit: 0,
-        status: paymentMethod === "QRIS_TOKO" ? "MENUNGGU_BAYAR" : "DIPROSES",
-        payment_method: paymentMethod,
+    // 1. P1 Security: Panggil endpoint server-side dengan sanitasi & rate limiting
+    fetch("/api/orders/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        storeId: lp.storeId,
+        customerName,
+        customerPhone,
+        customerAddress,
+        destinationCity: selectedDestination.city,
+        destinationDistrict: selectedDestination.district,
+        courierName: selectedCourier,
+        courierService: "Reguler",
+        shippingCost,
         items: [
           {
             productId: lp.productId || "prod-lp",
             productName: lp.title,
             quantity,
             unitPrice: itemPrice,
-            unitCost: 0,
-            weightGrams: 300,
             subtotal: itemsTotal,
           },
         ],
-      }).then(({ error }) => {
-        if (error) console.warn("Supabase LP order insert:", error);
-      });
-    } catch (e) {
-      console.warn("Supabase order insert error:", e);
-    }
+        paymentMethod,
+      }),
+    }).catch((e) => {
+      console.warn("Server order creation error, using local fallback:", e);
+    });
 
     const res = createOrder({
       orderNumber,
@@ -378,42 +370,34 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
                 const totalCostPrice = unitCost * (orderData.quantity || 1);
                 const netProfit = (orderData.itemsTotal || 0) - totalCostPrice;
 
-                // 1. Direct Supabase Order Insertion (P0 Multi-Tenant)
-                try {
-                  supabase.from("orders").insert({
-                    order_number: orderNumber,
-                    store_id: lp.storeId,
-                    customer_name: orderData.customerName,
-                    customer_phone: orderData.customerPhone,
-                    customer_address: orderData.customerAddress,
-                    destination_city: orderData.destination,
-                    destination_district: "",
-                    courier_name: orderData.courier,
-                    courier_service: "Reguler",
-                    shipping_cost: orderData.shippingCost,
-                    items_total: orderData.itemsTotal,
-                    grand_total: orderData.grandTotal,
-                    total_cost_price: 0,
-                    net_profit: 0,
-                    status: orderData.paymentMethod === "QRIS_TOKO" ? "MENUNGGU_BAYAR" : "DIPROSES",
-                    payment_method: orderData.paymentMethod,
+                // 1. P1 Security: Panggil endpoint server-side dengan sanitasi & rate limiting
+                fetch("/api/orders/create", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    storeId: lp.storeId,
+                    customerName: orderData.customerName,
+                    customerPhone: orderData.customerPhone,
+                    customerAddress: orderData.customerAddress,
+                    destinationCity: orderData.destination,
+                    destinationDistrict: "",
+                    courierName: orderData.courier,
+                    courierService: "Reguler",
+                    shippingCost: orderData.shippingCost,
                     items: [
                       {
                         productId: lp.productId || "prod-lp",
                         productName: lp.title,
                         quantity: orderData.quantity || 1,
                         unitPrice: orderData.promoPrice || 149000,
-                        unitCost: 0,
-                        weightGrams: 300,
                         subtotal: orderData.itemsTotal,
                       },
                     ],
-                  }).then(({ error }) => {
-                    if (error) console.warn("Supabase modular order insert:", error);
-                  });
-                } catch (e) {
-                  console.warn("Supabase modular order insert error:", e);
-                }
+                    paymentMethod: orderData.paymentMethod,
+                  }),
+                }).catch((e) => {
+                  console.warn("Server modular order creation error:", e);
+                });
 
                 createOrder({
                   orderNumber,

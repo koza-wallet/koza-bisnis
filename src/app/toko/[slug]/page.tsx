@@ -211,56 +211,41 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
 
     const orderNumber = generateOrderNumber();
 
-    // 1. Direct Supabase Insert (P0 Multi-Tenant & Server Order)
+    // 1. P1 Security: Panggil endpoint server-side dengan validasi, sanitasi & rate limiting
     try {
-      const { data: dbOrder, error: dbErr } = await supabase
-        .from("orders")
-        .insert({
-          order_number: orderNumber,
-          store_id: store.id,
-          customer_name: customerName,
-          customer_phone: customerPhone,
-          customer_address: customerAddress,
-          destination_city: selectedDestination.city,
-          destination_district: selectedDestination.district,
-          courier_name: courierName,
-          courier_service: "Reguler (1-2 Hari)",
-          shipping_cost: shippingCost,
-          items_total: cartSubtotal,
-          grand_total: grandTotal,
-          total_cost_price: 0,
-          net_profit: 0,
-          status: paymentMethod === "QRIS_TOKO" ? "DIPROSES" : "MENUNGGU_BAYAR",
-          payment_method: paymentMethod,
+      const res = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId: store.id,
+          customerName,
+          customerPhone,
+          customerAddress,
+          destinationCity: selectedDestination.city,
+          destinationDistrict: selectedDestination.district,
+          courierName,
+          courierService: "Reguler (1-2 Hari)",
+          shippingCost,
           items: cartItems,
-        })
-        .select()
-        .single();
+          paymentMethod,
+        }),
+      });
 
-      if (dbOrder && !dbErr) {
-        setCompletedOrder({
-          orderNumber: dbOrder.order_number,
-          storeId: dbOrder.store_id,
-          customerName: dbOrder.customer_name,
-          customerPhone: dbOrder.customer_phone,
-          customerAddress: dbOrder.customer_address,
-          destinationCity: dbOrder.destination_city,
-          destinationDistrict: dbOrder.destination_district,
-          courierName: dbOrder.courier_name,
-          courierService: dbOrder.courier_service,
-          shippingCost: Number(dbOrder.shipping_cost),
-          itemsTotal: Number(dbOrder.items_total),
-          grandTotal: Number(dbOrder.grand_total),
-          status: dbOrder.status,
-          paymentMethod: dbOrder.payment_method,
-          items: dbOrder.items,
-        });
+      const resData = await res.json();
+
+      if (!res.ok) {
+        alert(resData.error || "Gagal membuat pesanan. Silakan coba lagi.");
+        return;
+      }
+
+      if (resData.success && resData.order) {
+        setCompletedOrder(resData.order);
         setCart({});
         setIsCartOpen(false);
         return;
       }
     } catch (err) {
-      console.warn("Supabase order insert failed, using fallback:", err);
+      console.warn("Server order creation failed, using local fallback:", err);
     }
 
     // Fallback: local store
