@@ -138,7 +138,7 @@ export default function KebijakanPrivasiPage() {
               6. Hubungi Kami
             </h2>
             <p>
-              Jika Anda memiliki pertanyaan mengenai kebijakan privasi ini atau ingin mengajukan permohonan terkait data pribadi Anda, silakan hubungi tim kami melalui email resmi: <span className="text-emerald-400 font-mono">support@kozabisnis.id</span>.
+              Jika Anda memiliki pertanyaan mengenai kebijakan privasi ini atau ingin mengajukan permohonan terkait data pribadi Anda, silakan hubungi tim kami melalui email resmi: <span className="text-emerald-400 font-mono">support@kozabisnis.com</span>.
             </p>
           </section>
         </div>
