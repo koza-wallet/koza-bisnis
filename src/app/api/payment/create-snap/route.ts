@@ -115,9 +115,9 @@ export async function POST(req: NextRequest) {
         },
       ],
       callbacks: {
-        finish: `${req.nextUrl.origin}/dashboard/topup?payment=success&order_id=${orderId}`,
-        error: `${req.nextUrl.origin}/dashboard/topup?payment=error&order_id=${orderId}`,
-        pending: `${req.nextUrl.origin}/dashboard/topup?payment=pending&order_id=${orderId}`,
+        finish: `${req.nextUrl.origin}/dashboard/topup`,
+        error: `${req.nextUrl.origin}/dashboard/topup`,
+        pending: `${req.nextUrl.origin}/dashboard/topup`,
       },
       usage_limit: 1,
     };

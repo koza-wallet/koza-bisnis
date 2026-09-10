@@ -318,11 +318,16 @@ function QuotaTopupContent() {
   );
 
   useEffect(() => {
-    const paymentStatus = searchParams.get("payment");
     const orderIdParam = searchParams.get("order_id");
+    const txStatusParam = searchParams.get("transaction_status");
+    const statusCodeParam = searchParams.get("status_code");
     const txIdParam = searchParams.get("transaction_id");
 
-    if (orderIdParam && paymentStatus === "success") {
+    // Jika kembali dari redirect Midtrans (Finish URL)
+    if (
+      orderIdParam &&
+      (txStatusParam || statusCodeParam || searchParams.get("payment") === "success")
+    ) {
       handleVerifyOrder(orderIdParam, txIdParam || undefined);
     }
   }, [searchParams, handleVerifyOrder]);
