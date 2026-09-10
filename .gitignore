@@ -53,3 +53,6 @@ CATATAN_AUDIT_DAN_TUGAS_ENGINEER.md
 # referensi & screenshot eksternal
 /referensi-berdu/
 
+# local agent rules, workflows & guidelines
+/.agents/
+/AGENTS.md
