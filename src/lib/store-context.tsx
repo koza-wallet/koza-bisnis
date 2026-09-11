@@ -106,6 +106,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         enabledCouriers: Array.isArray(storeRow.enabled_couriers) && storeRow.enabled_couriers.length > 0
           ? storeRow.enabled_couriers
           : ["JNT", "JNE", "SICEPAT"],
+        whatsappBotSettings: storeRow.whatsapp_bot_settings || undefined,
         createdAt: storeRow.created_at,
       };
       setStore(activeStore);
@@ -314,6 +315,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (updates.enabledCouriers !== undefined) payload.enabled_couriers = updates.enabledCouriers;
       if (updates.aiCreditsBalance !== undefined) payload.ai_credits_balance = updates.aiCreditsBalance;
       if (updates.customDomain !== undefined) payload.custom_domain = updates.customDomain;
+      if (updates.whatsappBotSettings !== undefined) payload.whatsapp_bot_settings = updates.whatsappBotSettings;
 
       supabase.from("stores").update(payload).eq("id", store.id).then();
     }

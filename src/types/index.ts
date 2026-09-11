@@ -9,6 +9,18 @@ export interface CourierOption {
   defaultRateOffset?: number;
 }
 
+export interface WhatsAppBotSettings {
+  provider: 'fonnte' | 'wablas' | 'custom';
+  deviceToken?: string;
+  deviceId?: string;
+  status: 'DISCONNECTED' | 'CONNECTING' | 'CONNECTED';
+  isActive: boolean;
+  autoReplyGreeting?: string;
+  connectedNumber?: string;
+  connectedAt?: string;
+  serverUrl?: string;
+}
+
 export interface Store {
   id: string;
   slug: string;
@@ -28,6 +40,7 @@ export interface Store {
   bankAccountName?: string;
   qrisImageUrl?: string;
   enabledCouriers?: string[]; // Daftar kode kurir aktif untuk toko
+  whatsappBotSettings?: WhatsAppBotSettings;
   createdAt: string;
 }
 

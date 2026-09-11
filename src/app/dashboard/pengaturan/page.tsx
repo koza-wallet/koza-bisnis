@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { MASTER_COURIERS } from "@/lib/mock-data";
@@ -25,7 +25,13 @@ import {
   Globe,
   ExternalLink,
   RefreshCw,
-  Loader2
+  Loader2,
+  QrCode,
+  Smartphone,
+  Unlink,
+  Copy,
+  WifiOff,
+  X
 } from "lucide-react";
 
 export default function StoreSettingsPage() {
@@ -43,8 +49,7 @@ export default function StoreSettingsPage() {
   } | null>(null);
 
   const isStorePro = Boolean(
-    (store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL") &&
-    (!store.planExpiryDate || new Date(store.planExpiryDate).getTime() > Date.now())
+    store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL"
   );
   
   const currentEnabled = store.enabledCouriers && store.enabledCouriers.length > 0 
@@ -54,6 +59,117 @@ export default function StoreSettingsPage() {
   const [selectedCouriers, setSelectedCouriers] = useState<string[]>(currentEnabled);
   const [isSaved, setIsSaved] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // AI Bot / WhatsApp Gateway State
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState<string | null>(null);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [isCopiedWebhook, setIsCopiedWebhook] = useState(false);
+  const [qrSecondsRemaining, setQrSecondsRemaining] = useState(60);
+
+  const botSettings = useMemo(() => {
+    return store.whatsappBotSettings || {
+      provider: 'fonnte' as const,
+      status: 'DISCONNECTED' as const,
+      isActive: false,
+    };
+  }, [store.whatsappBotSettings]);
+
+  const handleOpenQrModal = async () => {
+    setIsQrModalOpen(true);
+    setQrLoading(true);
+    setQrError(null);
+    setQrSecondsRemaining(60);
+
+    try {
+      const res = await fetch("/api/whatsapp/device/qr");
+      const data = await res.json();
+      if (data.success && data.qrCodeUrl) {
+        setQrCodeUrl(data.qrCodeUrl);
+      } else {
+        setQrError(data.message || "Gagal membuat QR Code.");
+      }
+    } catch {
+      setQrError("Gagal menghubungi server pembuatan QR Code.");
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  const handleDisconnectWa = async () => {
+    if (!confirm("Apakah Anda yakin ingin memutuskan koneksi WhatsApp toko ini?")) return;
+    setIsDisconnecting(true);
+    try {
+      const res = await fetch("/api/whatsapp/device/disconnect", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        updateStore({
+          whatsappBotSettings: {
+            provider: "fonnte",
+            status: "DISCONNECTED",
+            isActive: false,
+          },
+        });
+      }
+    } catch {
+      alert("Gagal memutuskan koneksi WhatsApp.");
+    } finally {
+      setIsDisconnecting(false);
+    }
+  };
+
+  const handleToggleBotActive = () => {
+    const currentActive = Boolean(botSettings.isActive);
+    updateStore({
+      whatsappBotSettings: {
+        ...botSettings,
+        isActive: !currentActive,
+      },
+    });
+  };
+
+  const handleCopyWebhook = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://www.kozabisnis.com";
+    const webhookUrl = `${origin}/api/webhooks/whatsapp?store_id=${store.id}`;
+    navigator.clipboard.writeText(webhookUrl);
+    setIsCopiedWebhook(true);
+    setTimeout(() => setIsCopiedWebhook(false), 3000);
+  };
+
+  useEffect(() => {
+    if (!isQrModalOpen) return;
+
+    const timer = setInterval(() => {
+      setQrSecondsRemaining((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch("/api/whatsapp/device/status");
+        const data = await res.json();
+        if (data.success && data.connected) {
+          updateStore({
+            whatsappBotSettings: {
+              ...botSettings,
+              status: "CONNECTED",
+              isActive: true,
+              connectedNumber: data.connectedNumber,
+            },
+          });
+          setIsQrModalOpen(false);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 3000);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(pollInterval);
+    };
+  }, [isQrModalOpen, botSettings, updateStore]);
 
   const toggleCourier = (code: string) => {
     setIsSaved(false);
@@ -429,10 +545,15 @@ export default function StoreSettingsPage() {
           ) : (
             /* UNLOCKED SETTINGS FOR PRO USERS */
             <div className="space-y-6">
-              <div className="rounded-3xl border border-emerald-500/40 bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-8 space-y-6 shadow-xl">
+              {/* WhatsApp Live Device Connection Center */}
+              <div className="rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 p-6 sm:p-8 space-y-6 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-md">
+                    <div className={`h-12 w-12 rounded-2xl border flex items-center justify-center shadow-md ${
+                      botSettings.status === 'CONNECTED'
+                        ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                        : 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
+                    }`}>
                       <Bot className="h-6 w-6" />
                     </div>
                     <div>
@@ -440,24 +561,81 @@ export default function StoreSettingsPage() {
                         <span className="rounded-full bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-black text-emerald-400 uppercase tracking-wider flex items-center gap-1">
                           <CheckCircle2 className="h-3 w-3" /> PRO Member Aktif
                         </span>
+                        {botSettings.status === 'CONNECTED' ? (
+                          <span className="rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300 flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                            Online ({botSettings.connectedNumber || store.whatsappNumber})
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-bold text-amber-300 flex items-center gap-1.5">
+                            <WifiOff className="h-3 w-3 text-amber-400" />
+                            Belum Terhubung
+                          </span>
+                        )}
                       </div>
                       <h2 className="text-lg sm:text-xl font-black text-white mt-1">
-                        Status Asisten AI & Cost Guard: AKTIF
+                        Jaga AI CS WhatsApp 24/7 (Multi-Tenant)
                       </h2>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-xs font-bold">
-                      <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                      <span>5 Titik Guardrail Aktif</span>
-                    </span>
+                    {botSettings.status === 'CONNECTED' ? (
+                      <button
+                        onClick={handleDisconnectWa}
+                        disabled={isDisconnecting}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 text-xs font-bold transition-all"
+                      >
+                        {isDisconnecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Unlink className="h-3.5 w-3.5" />}
+                        <span>Putuskan Sambungan</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleOpenQrModal}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/20 transition-all active:scale-95"
+                      >
+                        <QrCode className="h-4 w-4" />
+                        <span>Tautkan WhatsApp Toko (Scan QR)</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Asisten AI WhatsApp terhubung dan siap membalas pertanyaan pembeli seputar katalog produk dan status pengiriman.
+                  Asisten AI yang menjaga WhatsApp toko Anda 24 jam nonstop, otomatis menjawab ketersediaan stok, harga produk, dan membagikan tautan etalase langsung ke calon pembeli.
                 </p>
+
+                {/* Switch Aktifkan Auto-Reply */}
+                {botSettings.status === 'CONNECTED' && (
+                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-4 flex items-center justify-between gap-4">
+                    <div className="space-y-0.5">
+                      <div className="text-sm font-bold text-white flex items-center gap-2">
+                        <span>Balas Otomatis Jaga AI</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          botSettings.isActive ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'
+                        }`}>
+                          {botSettings.isActive ? 'AKTIF' : 'NONAKTIF'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        Saat aktif, bot akan langsung merespons pertanyaan pembeli menggunakan katalog produk toko Anda.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleToggleBotActive}
+                      className={`w-12 h-7 flex items-center rounded-full p-1 transition-colors shrink-0 ${
+                        botSettings.isActive ? 'bg-emerald-500' : 'bg-slate-800'
+                      }`}
+                    >
+                      <div
+                        className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${
+                          botSettings.isActive ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )}
 
                 {/* Status Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
@@ -478,6 +656,26 @@ export default function StoreSettingsPage() {
                     <div className="text-lg font-black text-white">Normal (Healthy)</div>
                     <div className="text-[10px] text-emerald-400">Mencegah retry error storm</div>
                   </div>
+                </div>
+
+                {/* Webhook Endpoint Box */}
+                <div className="rounded-2xl border border-slate-800 bg-slate-950/50 p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-300">URL Webhook Toko (Multi-Tenant Ingestion)</span>
+                    <button
+                      onClick={handleCopyWebhook}
+                      className="flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 font-bold"
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      <span>{isCopiedWebhook ? "Tersalin!" : "Salin URL"}</span>
+                    </button>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 font-mono text-[11px] text-slate-400 select-all break-all">
+                    {typeof window !== "undefined" ? window.location.origin : "https://www.kozabisnis.com"}/api/webhooks/whatsapp?store_id={store.id}
+                  </div>
+                  <p className="text-[10px] text-slate-500">
+                    URL ini otomatis dikonfigurasi saat Anda menautkan WhatsApp melalui sistem KoZa Bisnis.
+                  </p>
                 </div>
 
                 {/* Magic Commands Guide */}
@@ -505,6 +703,97 @@ export default function StoreSettingsPage() {
                   </p>
                 </div>
               </div>
+
+              {/* MODAL SCAN QR CODE */}
+              {isQrModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200">
+                  <div className="relative w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 sm:p-7 space-y-5 shadow-2xl">
+                    <button
+                      onClick={() => setIsQrModalOpen(false)}
+                      className="absolute top-5 right-5 p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+
+                    <div className="space-y-1 text-center sm:text-left">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400">
+                        <Smartphone className="h-3 w-3" />
+                        <span>Tautkan Perangkat WhatsApp</span>
+                      </div>
+                      <h3 className="text-lg font-bold text-white">Scan QR Code dengan WhatsApp HP</h3>
+                      <p className="text-xs text-slate-400">
+                        Buka WhatsApp di HP Anda, masuk ke <strong>Perangkat Tertaut</strong>, lalu arahkan kamera ke QR di bawah ini.
+                      </p>
+                    </div>
+
+                    {/* Frame QR Code */}
+                    <div className="relative flex flex-col items-center justify-center p-6 rounded-2xl bg-white border border-slate-200 shadow-inner min-h-[260px]">
+                      {qrLoading ? (
+                        <div className="flex flex-col items-center gap-3 text-slate-800">
+                          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
+                          <span className="text-xs font-bold">Menyiapkan sesi QR Code...</span>
+                        </div>
+                      ) : qrError ? (
+                        <div className="text-center space-y-3">
+                          <AlertCircle className="h-8 w-8 text-rose-500 mx-auto" />
+                          <p className="text-xs text-rose-600 font-medium max-w-xs">{qrError}</p>
+                          <button
+                            onClick={handleOpenQrModal}
+                            className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800"
+                          >
+                            Coba Lagi
+                          </button>
+                        </div>
+                      ) : qrCodeUrl ? (
+                        <div className="space-y-3 flex flex-col items-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={qrCodeUrl}
+                            alt="WhatsApp Connect QR Code"
+                            className="w-52 h-52 object-contain"
+                          />
+                          <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                            <span>Menunggu scan... ({qrSecondsRemaining}d)</span>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {/* Panduan 3 Langkah */}
+                    <div className="rounded-xl bg-slate-950/60 border border-slate-800 p-3.5 space-y-1.5 text-xs text-slate-300">
+                      <div className="flex items-start gap-2">
+                        <span className="font-bold text-emerald-400">1.</span>
+                        <span>Buka WhatsApp di HP toko Anda</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="font-bold text-emerald-400">2.</span>
+                        <span>Ketuk Menu (titik 3 di Android) atau Pengaturan (iOS) &gt; Perangkat Tertaut</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="font-bold text-emerald-400">3.</span>
+                        <span>Ketuk <strong>Tautkan Perangkat</strong> dan scan QR di atas</span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <button
+                        onClick={handleOpenQrModal}
+                        className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white font-medium"
+                      >
+                        <RefreshCw className="h-3.5 w-3.5" />
+                        <span>Segarkan QR Code</span>
+                      </button>
+                      <button
+                        onClick={() => setIsQrModalOpen(false)}
+                        className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200"
+                      >
+                        Tutup
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
