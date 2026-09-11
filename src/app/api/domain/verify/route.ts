@@ -1,8 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import dns from "node:dns/promises";
+import { createClient } from "@/lib/supabase/server";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 10; // maksimal 10 cek DNS per menit per seller
 
 export async function GET(request: NextRequest) {
   try {
+    // Fitur verifikasi domain khusus seller yang login — bukan resource DNS-lookup publik bebas.
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized. Silakan login terlebih dahulu." },
+        { status: 401 }
+      );
+    }
+
+    const clientIp = getClientIp(request);
+    if (isRateLimited(`domain-verify:${user.id}:${clientIp}`, MAX_REQUESTS_PER_WINDOW, RATE_LIMIT_WINDOW_MS)) {
+      return NextResponse.json(
+        { error: "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const rawDomain = searchParams.get("domain");
 

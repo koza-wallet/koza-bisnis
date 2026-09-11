@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { TrackingEvent, PublicOrderTracking } from "@/types";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 10; // maksimal 10 lookup resi per menit per IP
 
 function generateSimulatedTimeline(courier: string, resi: string, createdAt: string, status: string): TrackingEvent[] {
   const baseDate = new Date(createdAt);
@@ -61,6 +65,14 @@ function generateSimulatedTimeline(courier: string, resi: string, createdAt: str
 
 export async function GET(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    if (isRateLimited(`tracking:${clientIp}`, MAX_REQUESTS_PER_WINDOW, RATE_LIMIT_WINDOW_MS)) {
+      return NextResponse.json(
+        { success: false, message: "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi." },
+        { status: 429 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const orderNumber = searchParams.get("orderNumber");
 

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 5; // maksimal 5 submit review per menit per IP
 
 // ==============================================================================
 // KOZA BISNIS — CUSTOMER REVIEW & RATING API ROUTE (PHASE 2)
@@ -17,6 +21,14 @@ interface ReviewPayload {
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = getClientIp(req);
+    if (isRateLimited(`tracking-review:${clientIp}`, MAX_REQUESTS_PER_WINDOW, RATE_LIMIT_WINDOW_MS)) {
+      return NextResponse.json(
+        { success: false, message: "Terlalu banyak permintaan. Silakan coba lagi sebentar lagi." },
+        { status: 429 }
+      );
+    }
+
     const body = (await req.json()) as ReviewPayload;
     const { orderNumber, rating, review = "", tags = [] } = body;
 
@@ -66,6 +78,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, message: "Pesanan dengan nomor tersebut tidak ditemukan." },
         { status: 404 }
+      );
+    }
+
+    if (order.status !== "SELESAI") {
+      return NextResponse.json(
+        { success: false, message: "Ulasan hanya bisa diberikan setelah pesanan berstatus Selesai." },
+        { status: 400 }
+      );
+    }
+
+    if (order.customer_rating !== null && order.customer_rating !== undefined) {
+      return NextResponse.json(
+        { success: false, message: "Pesanan ini sudah pernah diberi ulasan sebelumnya." },
+        { status: 409 }
       );
     }
 

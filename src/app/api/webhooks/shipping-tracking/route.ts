@@ -1,11 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { timingSafeEqual } from "node:crypto";
 import { TrackingEvent } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
+    // Verifikasi shared-secret dari provider pengiriman (Biteship) sebelum memproses apa pun.
+    // Tanpa ini, siapa pun bisa memaksa status order berubah & memicu notifikasi WA palsu ke pembeli.
+    const webhookSecret = process.env.SHIPPING_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error("SHIPPING_WEBHOOK_SECRET belum dikonfigurasi di environment server.");
+      return NextResponse.json(
+        { success: false, message: "Server misconfigured: SHIPPING_WEBHOOK_SECRET missing." },
+        { status: 500 }
+      );
+    }
+
+    const receivedSecret = req.headers.get("x-webhook-secret") || req.headers.get("x-callback-token") || "";
+    const expectedBuf = Buffer.from(webhookSecret);
+    const receivedBuf = Buffer.from(receivedSecret);
+    const isValidSecret =
+      expectedBuf.length === receivedBuf.length && timingSafeEqual(expectedBuf, receivedBuf);
+
+    if (!isValidSecret) {
+      console.warn("Shipping webhook ditolak: shared-secret tidak valid.");
+      return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
+    }
+
     const body = await req.json();
 
     // Biteship tracking webhook payload format

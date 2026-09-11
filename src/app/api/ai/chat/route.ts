@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { timingSafeEqual } from "node:crypto";
 import {
   evaluateIncomingMessage,
   recordLLMFailure,
@@ -24,6 +25,29 @@ interface RequestPayload {
 
 export async function POST(req: NextRequest) {
   try {
+    // Verifikasi shared-secret dari WhatsApp Gateway resmi sebelum memproses apa pun.
+    // Tanpa ini, siapa pun bisa memicu pemanggilan Gemini API berbayar (denial-of-wallet)
+    // dan menyuntikkan riwayat chat palsu ke chat_sessions toko manapun.
+    const gatewaySecret = process.env.WHATSAPP_GATEWAY_SECRET;
+    if (!gatewaySecret) {
+      console.error("WHATSAPP_GATEWAY_SECRET belum dikonfigurasi di environment server.");
+      return NextResponse.json(
+        { success: false, message: "Server misconfigured: WHATSAPP_GATEWAY_SECRET missing." },
+        { status: 500 }
+      );
+    }
+
+    const receivedSecret = req.headers.get("x-gateway-secret") || "";
+    const expectedBuf = Buffer.from(gatewaySecret);
+    const receivedBuf = Buffer.from(receivedSecret);
+    const isValidSecret =
+      expectedBuf.length === receivedBuf.length && timingSafeEqual(expectedBuf, receivedBuf);
+
+    if (!isValidSecret) {
+      console.warn("AI chat request ditolak: shared-secret gateway tidak valid.");
+      return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
+    }
+
     const body = (await req.json()) as RequestPayload;
     const {
       storeId,
