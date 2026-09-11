@@ -391,9 +391,43 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin mb-2" />
-        <p className="text-xs text-slate-400">Memuat katalog toko...</p>
+      <div className="min-h-screen bg-slate-950 text-white animate-pulse">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-900">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-slate-800" />
+            <div className="space-y-2">
+              <div className="h-4 w-32 rounded bg-slate-800" />
+              <div className="h-3 w-20 rounded bg-slate-800/70" />
+            </div>
+          </div>
+          <div className="h-8 w-20 rounded-lg bg-slate-800" />
+        </div>
+
+        <div className="px-4 sm:px-6 py-5 space-y-4 max-w-5xl mx-auto">
+          <div className="h-3 w-2/3 rounded bg-slate-800/70" />
+          <div className="h-11 w-full rounded-xl bg-slate-900 border border-slate-800" />
+          <div className="flex gap-2">
+            {[16, 20, 16, 20, 16].map((w, i) => (
+              <div key={i} className="h-7 rounded-full bg-slate-800" style={{ width: `${w * 4}px` }} />
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <div className="aspect-square rounded-xl bg-slate-900 border border-slate-800" />
+                <div className="h-3.5 w-4/5 rounded bg-slate-800" />
+                <div className="h-3.5 w-1/3 rounded bg-slate-800/70" />
+                <div className="h-8 w-full rounded-lg bg-slate-900 border border-slate-800" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[11px] text-slate-500">
+          <Loader2 className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
+          <span>Memuat katalog toko...</span>
+        </div>
       </div>
     );
   }

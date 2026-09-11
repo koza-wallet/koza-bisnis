@@ -328,7 +328,7 @@ export default function LandingPage() {
         </div>
 
         {/* Realita Finansial: Marketplace vs KoZa Bisnis */}
-        <div id="realita" className="mt-8 rounded-3xl border border-slate-800/80 bg-slate-900/50 p-4 sm:p-7 shadow-2xl backdrop-blur-sm space-y-6">
+        <div id="realita" className="mt-8 scroll-mt-20 rounded-3xl border border-slate-800/80 bg-slate-900/50 p-4 sm:p-7 shadow-2xl backdrop-blur-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-slate-800/80">
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-rose-500" />
@@ -527,7 +527,7 @@ export default function LandingPage() {
       </section>
 
       {/* 2.5 Keunggulan & Fitur Unggulan — Anti-Slop Editorial */}
-      <section id="keunggulan" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto space-y-12">
+      <section id="keunggulan" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto space-y-12 scroll-mt-20">
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
             <Sparkles className="h-3.5 w-3.5" />
@@ -660,7 +660,7 @@ export default function LandingPage() {
       </section>
 
       {/* 3. Interactive Financial Savings Calculator */}
-      <section id="kalkulator" className="py-20 px-4 sm:px-6 bg-slate-900/30 border-y border-slate-800/80">
+      <section id="kalkulator" className="py-20 px-4 sm:px-6 bg-slate-900/30 border-y border-slate-800/80 scroll-mt-20">
         <div className="max-w-4xl mx-auto space-y-10">
           <div className="text-center space-y-2">
             <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
@@ -810,7 +810,7 @@ export default function LandingPage() {
       </section>
 
       {/* 4. Pricing & Plans Section */}
-      <section id="harga" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto space-y-10">
+      <section id="harga" className="py-20 px-4 sm:px-6 max-w-6xl mx-auto space-y-10 scroll-mt-20">
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
             <DollarSign className="h-3.5 w-3.5" />
@@ -1172,7 +1172,7 @@ export default function LandingPage() {
       </section>
 
       {/* 5. FAQ Accordion Section */}
-      <section id="faq" className="py-20 px-4 sm:px-6 bg-slate-900/30 border-t border-slate-800">
+      <section id="faq" className="py-20 px-4 sm:px-6 bg-slate-900/30 border-t border-slate-800 scroll-mt-20">
         <div className="max-w-3xl mx-auto space-y-10">
           <div className="text-center space-y-2">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Pertanyaan yang Sering Diajukan (FAQ)</h2>
