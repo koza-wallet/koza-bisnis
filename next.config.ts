@@ -2,9 +2,13 @@ import type { NextConfig } from "next";
 
 // Daftar origin eksternal yang benar-benar dipakai aplikasi (Meta/TikTok Pixel,
 // Midtrans Snap, Supabase, Gemini) — dasar penyusunan Content-Security-Policy di bawah.
+// Next.js Fast Refresh (dev mode) butuh eval() untuk hot-reload — hanya
+// diizinkan saat development, production tetap strict tanpa 'unsafe-eval'.
+const isDev = process.env.NODE_ENV === "development";
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://connect.facebook.net https://analytics.tiktok.com https://app.midtrans.com https://app.sandbox.midtrans.com",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://connect.facebook.net https://analytics.tiktok.com https://app.midtrans.com https://app.sandbox.midtrans.com`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: https:",
   "font-src 'self' data:",
