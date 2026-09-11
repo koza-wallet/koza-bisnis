@@ -45,6 +45,9 @@ export default function CreateLandingPage() {
 
   // User Pro Status (Termasuk Pro AI atau pemilik token AI)
   const isUserPro = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL" || (store.aiCreditsBalance !== undefined && store.aiCreditsBalance > 0);
+  // Fitur AI Landing Page Generator eksklusif Pro AI (bulanan/tahunan) — Basic & Free/Trial dikunci,
+  // sengaja TIDAK ikut aiCreditsBalance seperti isUserPro di atas.
+  const hasAiLandingPageAccess = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
 
   // State for AI Generator (minimal input, AI decides layout/copywriting/design)
   const [productName, setProductName] = useState("");
@@ -401,9 +404,16 @@ export default function CreateLandingPage() {
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-white">⚡ AI Generator</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                15 Detik Jadi
-              </span>
+              {hasAiLandingPageAccess ? (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  15 Detik Jadi
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  <Lock className="h-2.5 w-2.5" />
+                  PRO
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
               Ketik nama produk, AI menulis copywriting formula AIDA dan merakit layout otomatis.
@@ -467,7 +477,28 @@ export default function CreateLandingPage() {
       {/* ========================================================================= */}
       {/* MODE 1: AI GENERATOR */}
       {/* ========================================================================= */}
-      {creationMode === "AI" && (
+      {creationMode === "AI" && !hasAiLandingPageAccess && (
+        <div className="max-w-lg mx-auto rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-500/10 to-slate-900/80 p-8 text-center space-y-4">
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <Lock className="h-7 w-7" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-white">Fitur Eksklusif Pro AI</h2>
+            <p className="text-sm text-slate-400 mt-1.5">
+              AI Landing Page Generator hanya tersedia untuk member Pro AI (25x generate/bulan, atau 350x/tahun untuk paket Pro Tahunan). Upgrade paket Anda untuk mulai membuat halaman jualan dengan AI.
+            </p>
+          </div>
+          <Link
+            href="/dashboard/topup"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 px-5 py-2.5 text-sm font-bold text-slate-950 transition-all active:scale-95"
+          >
+            <Crown className="h-4 w-4" />
+            <span>Upgrade ke Pro AI</span>
+          </Link>
+        </div>
+      )}
+
+      {creationMode === "AI" && hasAiLandingPageAccess && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Minimal Input Form */}
           <div className="lg:col-span-5 space-y-6">

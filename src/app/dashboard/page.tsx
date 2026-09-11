@@ -276,7 +276,7 @@ export default function DashboardOverviewPage() {
               </div>
               <h3 className="text-sm font-bold text-white">Bikin Halaman Jualan AI</h3>
               <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Buat sales page 1-produk instan dalam 15 detik. Dirancang khusus untuk konversi tinggi iklan TikTok & Instagram Ads.
+                Buat sales page 1-produk instan dengan AI. Eksklusif member Pro AI — 25x generate/bulan (350x/tahun untuk Pro Tahunan).
               </p>
             </div>
             <Link

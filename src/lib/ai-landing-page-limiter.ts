@@ -1,7 +1,6 @@
-// Rate limiting khusus endpoint AI Landing Page Generator.
-// Mengikuti pola sliding-window yang sudah ada di src/app/api/orders/create/route.ts,
-// plus kuota harian per toko, supaya panggilan OpenAI berbayar tidak bisa disalahgunakan
-// (denial-of-wallet) — pola proteksi yang sama dipakai di seluruh endpoint AI lain di repo ini.
+// Rate limiting & kuota fitur AI Landing Page Generator.
+// Fitur ini eksklusif member Pro AI (bulanan/tahunan) — Basic & Free/Trial
+// tidak dapat kuota sama sekali (0), digabung dengan cek plan di route.ts.
 
 interface RateLimitEntry {
   count: number;
@@ -9,7 +8,7 @@ interface RateLimitEntry {
 }
 
 const SLIDING_WINDOW_MS = 60 * 1000; // 1 menit
-const MAX_REQUESTS_PER_WINDOW = 3; // Maksimal 3 generate per menit per toko
+const MAX_REQUESTS_PER_WINDOW = 3; // Maksimal 3 generate per menit per toko (anti spam-klik)
 
 const slidingWindowMap = new Map<string, RateLimitEntry>();
 
@@ -30,24 +29,41 @@ export function isSlidingWindowLimited(storeId: string): boolean {
   return false;
 }
 
-const DAILY_QUOTA_NON_PRO = 10;
-const DAILY_QUOTA_PRO = 30;
+// Kuota bulanan Pro AI (langganan bulanan Rp329rb)
+export const MONTHLY_QUOTA_PRO = 25;
+// Kuota tahunan Pro Annual: 25 x 12 bulan + bonus 50 = 350
+export const ANNUAL_QUOTA_PRO = 350;
 
-const dailyUsageMap = new Map<string, number>();
+const usageMap = new Map<string, number>();
 
-function todayKey(storeId: string): string {
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  return `${storeId}_${today}`;
+function monthKey(storeId: string): string {
+  const ym = new Date().toISOString().slice(0, 7); // YYYY-MM
+  return `${storeId}_month_${ym}`;
 }
 
-export function isDailyQuotaExceeded(storeId: string, isPro: boolean): boolean {
-  const key = todayKey(storeId);
-  const used = dailyUsageMap.get(key) || 0;
-  const limit = isPro ? DAILY_QUOTA_PRO : DAILY_QUOTA_NON_PRO;
-  return used >= limit;
+function yearKey(storeId: string): string {
+  const y = new Date().getFullYear();
+  return `${storeId}_year_${y}`;
 }
 
-export function recordDailyUsage(storeId: string): void {
-  const key = todayKey(storeId);
-  dailyUsageMap.set(key, (dailyUsageMap.get(key) || 0) + 1);
+/**
+ * Cek apakah kuota generate AI sudah habis untuk toko ini bulan/tahun ini.
+ * planTier "ANNUAL" pakai kuota tahunan (350), selain itu pakai kuota bulanan (25).
+ * Pemanggil WAJIB memastikan toko benar-benar berlangganan Pro AI sebelum
+ * memanggil fungsi ini — fungsi ini murni soal kuota, bukan soal akses fitur.
+ */
+export function isUsageQuotaExceeded(storeId: string, planTier: "MONTHLY" | "ANNUAL"): boolean {
+  if (planTier === "ANNUAL") {
+    const key = yearKey(storeId);
+    const used = usageMap.get(key) || 0;
+    return used >= ANNUAL_QUOTA_PRO;
+  }
+  const key = monthKey(storeId);
+  const used = usageMap.get(key) || 0;
+  return used >= MONTHLY_QUOTA_PRO;
+}
+
+export function recordUsage(storeId: string, planTier: "MONTHLY" | "ANNUAL"): void {
+  const key = planTier === "ANNUAL" ? yearKey(storeId) : monthKey(storeId);
+  usageMap.set(key, (usageMap.get(key) || 0) + 1);
 }

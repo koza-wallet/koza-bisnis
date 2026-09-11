@@ -5,7 +5,7 @@ import { zodResponseFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import { generatedLandingPageSchema } from "@/lib/ai-landing-page-schema";
 import { isCircuitBreakerOpen, recordLLMFailure, recordLLMSuccess } from "@/lib/ai-cost-guard";
-import { isSlidingWindowLimited, isDailyQuotaExceeded, recordDailyUsage } from "@/lib/ai-landing-page-limiter";
+import { isSlidingWindowLimited, isUsageQuotaExceeded, recordUsage, MONTHLY_QUOTA_PRO, ANNUAL_QUOTA_PRO } from "@/lib/ai-landing-page-limiter";
 
 const OPENAI_MODEL = "gpt-4o-mini";
 
@@ -70,10 +70,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isPro = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
-    if (isDailyQuotaExceeded(store.id, isPro)) {
+    // Fitur AI Landing Page eksklusif member Pro AI (bulanan/tahunan) — Basic & Free/Trial tidak dapat akses sama sekali.
+    const isProAnnual = store.plan === "PRO_ANNUAL";
+    const isProMonthly = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY";
+    if (!isProAnnual && !isProMonthly) {
       return NextResponse.json(
-        { success: false, error: "Batas maksimal pembuatan halaman AI harian tercapai. Coba lagi besok atau upgrade ke PRO.", code: "RATE_LIMITED" },
+        { success: false, error: "Fitur AI Landing Page khusus untuk member Pro AI. Silakan upgrade paket Anda terlebih dahulu.", code: "INVALID_INPUT" },
+        { status: 403 }
+      );
+    }
+
+    const planTier = isProAnnual ? "ANNUAL" : "MONTHLY";
+    if (isUsageQuotaExceeded(store.id, planTier)) {
+      const quota = isProAnnual ? ANNUAL_QUOTA_PRO : MONTHLY_QUOTA_PRO;
+      const periodLabel = isProAnnual ? "tahun ini" : "bulan ini";
+      return NextResponse.json(
+        { success: false, error: `Kuota ${quota}x generate AI Landing Page Anda untuk ${periodLabel} sudah habis.`, code: "RATE_LIMITED" },
         { status: 429 }
       );
     }
@@ -155,7 +167,7 @@ Info tambahan dari seller: ${input.otherInfo || "(tidak ada)"}`;
     });
 
     recordLLMSuccess(store.id);
-    recordDailyUsage(store.id);
+    recordUsage(store.id, planTier);
 
     return NextResponse.json({
       success: true,
