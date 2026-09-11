@@ -97,15 +97,12 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 py-3.5 flex items-center justify-between sm:px-6">
           {/* Brand Mark */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 text-slate-950 font-black text-sm shadow-sm transition-transform group-hover:scale-105">
-              K
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-base tracking-tight text-white">KoZa</span>
-              <span className="font-mono text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Bisnis
-              </span>
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/koza-logo-white.svg"
+              alt="KoZa Bisnis"
+              className="h-9 w-auto object-contain transition-transform group-hover:scale-[1.02]"
+            />
           </Link>
 
           {/* Desktop Nav Links */}
@@ -1252,8 +1249,9 @@ export default function LandingPage() {
       {/* 7. Minimalist Footer */}
       <footer className="border-t border-slate-800/80 py-8 px-4 text-center text-xs text-slate-500">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs flex items-center justify-center">K</div>
+          <div className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/koza-icon.svg" alt="KoZa Bisnis" className="h-6 w-6 object-contain" />
             <span className="font-bold text-slate-300">KoZa Bisnis</span>
             <span>• Solusi Toko Bio Link Mandiri & Pembukuan Kas</span>
           </div>

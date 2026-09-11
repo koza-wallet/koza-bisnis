@@ -58,12 +58,14 @@ export default function LoginPage() {
 
         {/* Brand Header */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 text-slate-950 font-black text-xs shadow-sm">
-              K
-            </div>
-            <span className="font-bold text-sm tracking-tight text-white">KoZa Bisnis</span>
-          </div>
+          <Link href="/" className="inline-block group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/koza-logo-white.svg"
+              alt="KoZa Bisnis"
+              className="h-9 w-auto object-contain transition-transform group-hover:scale-105"
+            />
+          </Link>
           <h1 className="text-2xl font-black tracking-tight text-white pt-1">
             Masuk ke Dashboard
           </h1>

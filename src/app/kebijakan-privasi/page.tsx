@@ -21,7 +21,8 @@ export default function KebijakanPrivasiPage() {
             <span>Kembali ke Beranda</span>
           </Link>
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs flex items-center justify-center">K</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/koza-icon.svg" alt="KoZa Bisnis" className="h-6 w-6 object-contain" />
             <span className="font-bold text-sm text-slate-200">KoZa Bisnis</span>
           </div>
         </div>

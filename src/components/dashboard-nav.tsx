@@ -64,15 +64,16 @@ export function DashboardNav() {
         {/* Brand & Store Name */}
         <div className="flex items-center gap-3">
           <Link href="/dashboard" className="flex items-center gap-2 group">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 font-black shadow-lg shadow-emerald-500/20">
-              K
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0D7377]/20 border border-[#0D7377]/40 shadow-sm p-1">
+              <img src="/brand/koza-icon.svg" alt="KoZa Icon" className="h-full w-full object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold tracking-tight text-white group-hover:text-emerald-400 transition-colors text-sm sm:text-base">
+                <span className="font-bold tracking-tight text-white group-hover:text-[#2dd4bf] transition-colors text-sm sm:text-base">
                   KoZa
                 </span>
-                <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 border border-emerald-500/30">
+                <span className="rounded bg-[#0D7377]/25 px-1.5 py-0.5 text-[9px] font-bold text-[#2dd4bf] border border-[#0D7377]/40">
                   BISNIS
                 </span>
               </div>

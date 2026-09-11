@@ -16,6 +16,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "KoZa Bisnis — Toko Online Mikro & Buku Kas Otomatis",
   description: "Bikin toko online ber-QRIS dalam 30 detik dari HP, bebas potongan fee marketplace, hitung ongkir otomatis, dan pembukuan laba bersih seketika.",
+  icons: {
+    icon: [
+      { url: "/brand/koza-icon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/koza-icon-48.png", sizes: "48x48", type: "image/png" },
+      { url: "/brand/koza-icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/brand/koza-icon.png",
+  },
 };
 
 export default function RootLayout({
