@@ -40,7 +40,7 @@ export default function CreateLandingPage() {
   const router = useRouter();
   const { products, createLandingPage, store } = useStore();
 
-  // Mode Selection: AI, Kanvas Kosong (Berdu), or Template Library
+  // Mode Selection: AI, Kanvas Kosong (Modular), or Template Library
   const [creationMode, setCreationMode] = useState<CreationMode>("AI");
 
   // User Pro Status (Termasuk Pro AI atau pemilik token AI)
@@ -367,23 +367,22 @@ export default function CreateLandingPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-slate-950/95 backdrop-blur-md border-b border-slate-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-white/95 dark:bg-[#0E1420]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-colors">
         <div>
           <Link
             href="/dashboard/landing-pages"
-            className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors mb-2"
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors mb-2"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Kembali ke Daftar Halaman</span>
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             Buat Halaman Jualan Baru
           </h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
             Pilih metode yang paling sesuai: otomatis kilat dengan AI, kanvas kosong modular, atau pilih dari template siap pakai.
           </p>
         </div>
-
       </div>
 
       {/* 3-Mode Selector Tabs */}
@@ -394,28 +393,28 @@ export default function CreateLandingPage() {
           onClick={() => setCreationMode("AI")}
           className={`flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all ${
             creationMode === "AI"
-              ? "bg-gradient-to-br from-emerald-950/60 to-slate-900 border-emerald-500/50 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/30"
-              : "bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
+              ? "bg-gradient-to-br from-emerald-50 via-white to-white dark:from-emerald-950/60 dark:to-slate-900 border-emerald-400/80 dark:border-emerald-500/50 shadow-sm ring-1 ring-emerald-500/30"
+              : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/80 dark:hover:bg-slate-900"
           }`}
         >
-          <div className={`p-2.5 rounded-xl ${creationMode === "AI" ? "bg-emerald-500 text-slate-950" : "bg-slate-800 text-emerald-400"}`}>
+          <div className={`p-2.5 rounded-xl ${creationMode === "AI" ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950" : "bg-slate-100 dark:bg-slate-800 text-emerald-700 dark:text-emerald-400"}`}>
             <Sparkles className="h-5 w-5" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-white">⚡ AI Generator</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">⚡ AI Generator</span>
               {hasAiLandingPageAccess ? (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
                   15 Detik Jadi
                 </span>
               ) : (
-                <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
                   <Lock className="h-2.5 w-2.5" />
                   PRO
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
               Ketik nama produk, AI menulis copywriting formula AIDA dan merakit layout otomatis.
             </p>
           </div>
@@ -427,21 +426,21 @@ export default function CreateLandingPage() {
           onClick={() => setCreationMode("MANUAL")}
           className={`flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all ${
             creationMode === "MANUAL"
-              ? "bg-gradient-to-br from-blue-950/60 to-slate-900 border-blue-500/50 shadow-lg shadow-blue-500/10 ring-1 ring-blue-500/30"
-              : "bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
+              ? "bg-gradient-to-br from-blue-50 via-white to-white dark:from-blue-950/60 dark:to-slate-900 border-blue-400/80 dark:border-blue-500/50 shadow-sm ring-1 ring-blue-500/30"
+              : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/80 dark:hover:bg-slate-900"
           }`}
         >
-          <div className={`p-2.5 rounded-xl ${creationMode === "MANUAL" ? "bg-blue-500 text-slate-950" : "bg-slate-800 text-blue-400"}`}>
+          <div className={`p-2.5 rounded-xl ${creationMode === "MANUAL" ? "bg-blue-600 text-white dark:bg-blue-500 dark:text-slate-950" : "bg-slate-100 dark:bg-slate-800 text-blue-700 dark:text-blue-400"}`}>
             <Palette className="h-5 w-5" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-white">🎨 Kanvas Kosong</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                Ala Berdu
+              <span className="text-sm font-bold text-slate-900 dark:text-white">🎨 Kanvas Kosong</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+                Modular
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
               Mulai dari nol dengan kanvas fleksibel, bebas tambah, geser, dan edit blok sesuka hati.
             </p>
           </div>
@@ -453,21 +452,21 @@ export default function CreateLandingPage() {
           onClick={() => setCreationMode("TEMPLATE")}
           className={`flex items-start gap-3.5 p-4 rounded-2xl border text-left transition-all ${
             creationMode === "TEMPLATE"
-              ? "bg-gradient-to-br from-amber-950/60 to-slate-900 border-amber-500/50 shadow-lg shadow-amber-500/10 ring-1 ring-amber-500/30"
-              : "bg-slate-900/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900"
+              ? "bg-gradient-to-br from-amber-50 via-white to-white dark:from-amber-950/60 dark:to-slate-900 border-amber-400/80 dark:border-amber-500/50 shadow-sm ring-1 ring-amber-500/30"
+              : "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50/80 dark:hover:bg-slate-900"
           }`}
         >
-          <div className={`p-2.5 rounded-xl ${creationMode === "TEMPLATE" ? "bg-amber-500 text-slate-950" : "bg-slate-800 text-amber-400"}`}>
+          <div className={`p-2.5 rounded-xl ${creationMode === "TEMPLATE" ? "bg-amber-600 text-white dark:bg-amber-500 dark:text-slate-950" : "bg-slate-100 dark:bg-slate-800 text-amber-700 dark:text-amber-400"}`}>
             <Layers className="h-5 w-5" />
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-white">📚 Pustaka Template</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              <span className="text-sm font-bold text-slate-900 dark:text-white">📚 Pustaka Template</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
                 10 Template
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
               Pilih desain siap jualan per kategori industri (5 Gratis + 5 Eksklusif Member PRO).
             </p>
           </div>
@@ -478,19 +477,19 @@ export default function CreateLandingPage() {
       {/* MODE 1: AI GENERATOR */}
       {/* ========================================================================= */}
       {creationMode === "AI" && !hasAiLandingPageAccess && (
-        <div className="max-w-lg mx-auto rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-500/10 to-slate-900/80 p-8 text-center space-y-4">
-          <div className="mx-auto h-14 w-14 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+        <div className="max-w-lg mx-auto rounded-2xl border border-amber-300/80 dark:border-amber-500/30 bg-gradient-to-b from-amber-50/80 via-white to-white dark:from-amber-500/10 dark:to-slate-900/80 p-8 text-center space-y-4 shadow-sm transition-colors">
+          <div className="mx-auto h-14 w-14 rounded-2xl bg-amber-100 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center text-amber-700 dark:text-amber-400">
             <Lock className="h-7 w-7" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">Fitur Eksklusif Pro AI</h2>
-            <p className="text-sm text-slate-400 mt-1.5">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Fitur Eksklusif Pro AI</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
               AI Landing Page Generator hanya tersedia untuk member Pro AI (25x generate/bulan, atau 350x/tahun untuk paket Pro Tahunan). Upgrade paket Anda untuk mulai membuat halaman jualan dengan AI.
             </p>
           </div>
           <Link
             href="/dashboard/topup"
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-110 px-5 py-2.5 text-sm font-bold text-slate-950 transition-all active:scale-95"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:brightness-105 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-xs transition-all active:scale-95"
           >
             <Crown className="h-4 w-4" />
             <span>Upgrade ke Pro AI</span>
@@ -502,32 +501,32 @@ export default function CreateLandingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Minimal Input Form */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-xl">
+            <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-6 shadow-xs transition-colors">
               <div className="flex items-center gap-2 mb-4">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
                   <Wand2 className="h-4 w-4" />
                 </div>
-                <h2 className="text-lg font-bold text-white">Buat dengan AI</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Buat dengan AI</h2>
               </div>
-              <p className="text-xs text-slate-400 mb-5">
+              <p className="text-xs text-slate-600 dark:text-slate-400 mb-5">
                 Isi informasi bisnis dasar — AI yang urus copywriting, layout, dan tampilan halamannya.
               </p>
 
               <div className="mb-4">
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Judul Halaman / Nama Produk <span className="text-rose-400">*</span>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Judul Halaman / Nama Produk <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
                   placeholder="Contoh: Serum Retinol Anti-Aging Glow"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   URL Gambar Produk
                 </label>
                 <input
@@ -535,46 +534,46 @@ export default function CreateLandingPage() {
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Deskripsi Produk <span className="text-rose-400">*</span>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Deskripsi Produk <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Contoh: Serum wajah berbahan retinol yang menyamarkan garis halus dalam 14 hari, cocok untuk kulit sensitif, bersertifikasi BPOM."
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none resize-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Harga Jual</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Harga Jual</label>
                   <input
                     type="number"
                     value={sellingPrice}
                     onChange={(e) => setSellingPrice(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Harga Coret (Opsional)</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Harga Coret (Opsional)</label>
                   <input
                     type="number"
                     value={normalPrice}
                     onChange={(e) => setNormalPrice(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Teks CTA (Opsional)
                 </label>
                 <input
@@ -582,12 +581,12 @@ export default function CreateLandingPage() {
                   value={ctaText}
                   onChange={(e) => setCtaText(e.target.value)}
                   placeholder="Contoh: Pesan Sekarang"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                 />
               </div>
 
               <div className="mb-6">
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   Info Tambahan (Opsional)
                 </label>
                 <textarea
@@ -595,12 +594,12 @@ export default function CreateLandingPage() {
                   value={otherInfo}
                   onChange={(e) => setOtherInfo(e.target.value)}
                   placeholder="Target pembeli, garansi, promo khusus, dll."
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none resize-none"
                 />
               </div>
 
               {generationError && (
-                <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-300">
+                <div className="mb-4 rounded-xl border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-700 dark:text-rose-300">
                   {generationError}
                 </div>
               )}
@@ -609,7 +608,7 @@ export default function CreateLandingPage() {
                 type="button"
                 disabled={isGenerating}
                 onClick={handleGenerate}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 active:scale-95 disabled:opacity-50 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 py-3.5 text-sm font-bold text-white shadow-md shadow-emerald-600/20 active:scale-95 disabled:opacity-50 transition-all cursor-pointer"
               >
                 {isGenerating ? (
                   <>
@@ -628,24 +627,24 @@ export default function CreateLandingPage() {
 
           {/* Right Column: Real Preview (BlockRenderer — sama persis dengan Canvas & halaman publik) */}
           <div className="lg:col-span-7 sticky top-32">
-            <div className="flex items-center justify-between mb-3 text-slate-400">
-              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <Eye className="h-4 w-4 text-emerald-400" />
+            <div className="flex items-center justify-between mb-3 text-slate-500 dark:text-slate-400">
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Eye className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 Preview
               </span>
 
               {generatedBlocks && (
-                <div className="flex items-center gap-1 rounded-lg bg-slate-900 border border-slate-800 p-1">
+                <div className="flex items-center gap-1 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-1">
                   <button
                     onClick={() => setDevicePreview("MOBILE")}
-                    className={`p-1.5 rounded ${devicePreview === "MOBILE" ? "bg-slate-800 text-emerald-400" : "text-slate-400"}`}
+                    className={`p-1.5 rounded-lg transition-colors ${devicePreview === "MOBILE" ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs" : "text-slate-500 dark:text-slate-400"}`}
                     title="Mobile View"
                   >
                     <Smartphone className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setDevicePreview("DESKTOP")}
-                    className={`p-1.5 rounded ${devicePreview === "DESKTOP" ? "bg-slate-800 text-emerald-400" : "text-slate-400"}`}
+                    className={`p-1.5 rounded-lg transition-colors ${devicePreview === "DESKTOP" ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs" : "text-slate-500 dark:text-slate-400"}`}
                     title="Desktop View"
                   >
                     <Monitor className="h-4 w-4" />
@@ -655,13 +654,13 @@ export default function CreateLandingPage() {
             </div>
 
             {publishedUrl ? (
-              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center space-y-4">
-                <div className="mx-auto h-14 w-14 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 p-8 text-center space-y-4">
+                <div className="mx-auto h-14 w-14 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center text-emerald-700 dark:text-emerald-400">
                   <Check className="h-7 w-7" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Halaman Sudah Live!</h3>
-                  <p className="text-xs text-slate-400 mt-1 break-all">{publishedUrl}</p>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">Halaman Sudah Live!</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 break-all">{publishedUrl}</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
                   <button
@@ -675,15 +674,15 @@ export default function CreateLandingPage() {
                     href={publishedUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-4 py-2.5 text-xs font-semibold text-slate-200 transition-colors"
+                    className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors"
                   >
                     Buka Halaman
                   </a>
                 </div>
               </div>
             ) : (
-              <div className={`mx-auto rounded-3xl border-[10px] border-slate-800 bg-slate-950 shadow-2xl relative overflow-hidden ${devicePreview === "MOBILE" ? "max-w-[380px]" : "max-w-full"}`}>
-                <div className="h-[620px] overflow-y-auto bg-slate-900 text-left">
+              <div className={`mx-auto rounded-3xl border-[10px] border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-2xl relative overflow-hidden ${devicePreview === "MOBILE" ? "max-w-[380px]" : "max-w-full"}`}>
+                <div className="h-[620px] overflow-y-auto bg-slate-50 dark:bg-slate-900 text-left">
                   {generatedBlocks ? (
                     <>
                       <div className={devicePreview === "MOBILE" ? "" : "max-w-3xl mx-auto"}>
@@ -693,17 +692,17 @@ export default function CreateLandingPage() {
                             <BlockRenderer key={block.id} block={block} design={generatedDesign || undefined} isPreview />
                           ))}
                       </div>
-                      <div className="sticky bottom-0 p-3 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 flex items-center gap-2">
+                      <div className="sticky bottom-0 p-3 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
                         <button
                           onClick={handleEditInCanvas}
-                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 py-2.5 text-xs font-bold text-white transition-colors"
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 py-2.5 text-xs font-bold text-slate-800 dark:text-white transition-colors"
                         >
                           <Layers className="h-3.5 w-3.5" />
                           <span>Edit di Canvas</span>
                         </button>
                         <button
                           onClick={handlePublish}
-                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 transition-all"
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-2.5 text-xs font-bold text-white shadow-md shadow-emerald-600/20 transition-all"
                         >
                           <Check className="h-3.5 w-3.5" />
                           <span>Publish</span>
@@ -712,11 +711,11 @@ export default function CreateLandingPage() {
                     </>
                   ) : (
                     <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-500 space-y-3">
-                      <div className="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
+                      <div className="h-12 w-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                         <Sparkles className="h-6 w-6" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-slate-300">Preview Belum Digenerate</h4>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-300">Preview Belum Digenerate</h4>
                         <p className="text-xs text-slate-500 mt-1">
                           Isi form di samping dan klik Generate untuk melihat halaman jadi secara instan.
                         </p>
@@ -731,18 +730,18 @@ export default function CreateLandingPage() {
       )}
 
       {/* ========================================================================= */}
-      {/* MODE 2: KANVAS KOSONG (MANUAL BUILDER ALA BERDU) */}
+      {/* MODE 2: KANVAS KOSONG (MANUAL BUILDER MODULAR) */}
       {/* ========================================================================= */}
       {creationMode === "MANUAL" && (
         <div className="max-w-2xl mx-auto">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 md:p-8 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-800">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500/20 text-blue-400 border border-blue-500/30">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-6 md:p-8 shadow-xs transition-colors">
+            <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-100 dark:border-white/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
                 <Palette className="h-6 w-6" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-white">Mulai dari Kanvas Kosong (Ala Berdu)</h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Mulai dari Kanvas Kosong Modular</h2>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                   Anda akan masuk ke antarmuka editor visual untuk menambahkan blok modular satu per satu.
                 </p>
               </div>
@@ -752,7 +751,7 @@ export default function CreateLandingPage() {
               {/* Product link (optional) */}
               {products.length > 0 && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Hubungkan ke Produk Toko (Opsional):
                   </label>
                   <select
@@ -762,7 +761,7 @@ export default function CreateLandingPage() {
                       const prod = products.find((p) => p.id === e.target.value);
                       if (prod) handleManualTitleChange(prod.name);
                     }}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                   >
                     <option value="">-- Pilih Produk Toko (Opsional) --</option>
                     {products.map((p) => (
@@ -776,8 +775,8 @@ export default function CreateLandingPage() {
 
               {/* Title */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Nama Halaman Landing Page <span className="text-rose-400">*</span>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+                  Nama Halaman Landing Page <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -785,23 +784,23 @@ export default function CreateLandingPage() {
                   value={manualTitle}
                   onChange={(e) => handleManualTitleChange(e.target.value)}
                   placeholder="Contoh: Promo Spesial Gamis Silk Premium"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                 />
               </div>
 
               {/* URL Slug */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                   URL Path / Slug
                 </label>
-                <div className="flex items-center rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-slate-400">
-                  <span className="text-slate-500 mr-1 select-none">kozabisnis.com/lp/</span>
+                <div className="flex items-center rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-sm text-slate-500 dark:text-slate-400">
+                  <span className="text-slate-400 dark:text-slate-500 mr-1 select-none">kozabisnis.com/lp/</span>
                   <input
                     type="text"
                     required
                     value={manualSlug}
                     onChange={(e) => setManualSlug(e.target.value)}
-                    className="flex-1 bg-transparent text-white focus:outline-none"
+                    className="flex-1 bg-transparent text-slate-900 dark:text-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -809,13 +808,13 @@ export default function CreateLandingPage() {
               {/* Theme & Font */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Warna Tema Utama:
                   </label>
                   <select
                     value={manualTheme}
                     onChange={(e) => setManualTheme(e.target.value as LandingPageTheme)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                   >
                     <option value="EMERALD">Emerald Modern (Hijau Segar)</option>
                     <option value="MIDNIGHT">Midnight Luxe (Hitam Emas)</option>
@@ -825,13 +824,13 @@ export default function CreateLandingPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                     Jenis Font Tipografi:
                   </label>
                   <select
                     value={manualFont}
                     onChange={(e) => setManualFont(e.target.value as any)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-blue-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
                   >
                     <option value="Plus Jakarta Sans">Plus Jakarta Sans (Modern)</option>
                     <option value="Outfit">Outfit (Clean & Premium)</option>
@@ -842,33 +841,33 @@ export default function CreateLandingPage() {
               </div>
 
               {/* Default included sections info */}
-              <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-2">
-                <span className="text-xs font-bold text-slate-300 block">
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 space-y-2">
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-300 block">
                   📦 Blok Permulaan yang Otomatis Disiapkan:
                 </span>
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-400">
+                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400">
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Bar Pengumuman Urgensi</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Hero Banner Headline</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Grid 4 Keunggulan</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Ulasan Bintang 5</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Form Checkout 1-Klik</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                     <span>Sticky Bottom Mobile CTA</span>
                   </div>
                 </div>
@@ -880,9 +879,9 @@ export default function CreateLandingPage() {
               {/* Submit CTA */}
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 hover:from-blue-500 hover:to-indigo-500 active:scale-95 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 py-3.5 text-sm font-bold text-white shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
               >
-                <span>Mulai Rancang di Dapur Editor Berdu</span>
+                <span>Mulai Rancang di Editor Visual</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             </form>
@@ -914,8 +913,8 @@ export default function CreateLandingPage() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                     selectedCategory === cat.id
-                      ? "bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20"
-                      : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
+                      ? "bg-amber-500 text-slate-950 shadow-sm shadow-amber-500/20 font-bold"
+                      : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
                   {cat.label}
@@ -931,7 +930,7 @@ export default function CreateLandingPage() {
                 value={templateSearch}
                 onChange={(e) => setTemplateSearch(e.target.value)}
                 placeholder="Cari template industri..."
-                className="w-full pl-9 pr-3.5 py-1.5 rounded-xl border border-slate-800 bg-slate-900 text-xs text-white placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
+                className="w-full pl-9 pr-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-amber-500 focus:outline-none"
               />
             </div>
           </div>
@@ -941,10 +940,10 @@ export default function CreateLandingPage() {
             {filteredTemplates.map((tpl) => (
               <div
                 key={tpl.id}
-                className="group relative flex flex-col rounded-2xl border border-slate-800 bg-slate-900/70 overflow-hidden hover:border-slate-700 hover:shadow-2xl transition-all"
+                className="group relative flex flex-col rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] overflow-hidden hover:border-slate-300 dark:hover:border-white/20 hover:shadow-lg transition-all"
               >
                 {/* Thumbnail */}
-                <div className="relative h-48 w-full overflow-hidden bg-slate-950">
+                <div className="relative h-48 w-full overflow-hidden bg-slate-100 dark:bg-slate-950">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={tpl.thumbnailUrl}
@@ -987,26 +986,26 @@ export default function CreateLandingPage() {
 
                 {/* Body Details */}
                 <div className="p-4 flex-1 flex flex-col justify-between space-y-4">
-                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-2">
                     {tpl.description}
                   </p>
 
-                  <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-                    <div className="text-[11px] text-slate-400">
-                      <span className="font-semibold text-slate-200">{tpl.blocks.length} Blok</span> siap pakai
+                  <div className="pt-2 border-t border-slate-100 dark:border-white/10 flex items-center justify-between">
+                    <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold text-slate-900 dark:text-slate-200">{tpl.blocks.length} Blok</span> siap pakai
                     </div>
 
                     <button
                       onClick={() => handleUseTemplate(tpl)}
-                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 ${
+                      className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer ${
                         tpl.isPro && !isUserPro
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30"
-                          : "bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20"
+                          ? "bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-500/40 hover:bg-amber-200 dark:hover:bg-amber-500/30"
+                          : "bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/20"
                       }`}
                     >
                       {tpl.isPro && !isUserPro ? (
                         <>
-                          <Lock className="h-3.5 w-3.5 text-amber-400" />
+                          <Lock className="h-3.5 w-3.5 text-amber-700 dark:text-amber-400" />
                           <span>Gunakan (PRO)</span>
                         </>
                       ) : (
@@ -1028,12 +1027,12 @@ export default function CreateLandingPage() {
       {/* PRO PAYWALL MODAL */}
       {/* ========================================================================= */}
       {showProModal && proModalTargetTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-md rounded-3xl border border-amber-500/40 bg-gradient-to-b from-slate-900 to-slate-950 p-6 shadow-2xl ring-1 ring-amber-500/20">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md rounded-3xl border border-amber-300 dark:border-amber-500/40 bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 p-6 shadow-2xl ring-1 ring-amber-500/20">
             {/* Close button */}
             <button
               onClick={() => setShowProModal(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1045,32 +1044,32 @@ export default function CreateLandingPage() {
             </div>
 
             <div className="text-center space-y-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+              <span className="text-[11px] font-black uppercase tracking-wider text-amber-800 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/10 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-500/30">
                 Fitur Eksklusif Member PRO
               </span>
-              <h3 className="text-lg font-black text-white">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white">
                 Buka Akses Template &quot;{proModalTargetTemplate.name}&quot;
               </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                 Template ini dirancang dengan formula konversi tinggi untuk pengiklan profesional TikTok &amp; Meta Ads. Upgrade ke paket PRO untuk membuka seluruh 10+ template tanpa batas!
               </p>
             </div>
 
-            <div className="my-5 p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2.5 text-xs text-slate-300">
+            <div className="my-5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
               <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-amber-400 shrink-0" />
+                <Check className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Akses seluruh template sales page premium</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-amber-400 shrink-0" />
+                <Check className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Bonus kuota order pesanan toko</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-amber-400 shrink-0" />
+                <Check className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Pelacakan otomatis Meta &amp; TikTok Pixel Runner</span>
               </div>
               <div className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-amber-400 shrink-0" />
+                <Check className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Dukungan prioritas tim KoZa Bisnis</span>
               </div>
             </div>
@@ -1081,14 +1080,14 @@ export default function CreateLandingPage() {
                   setShowProModal(false);
                   router.push("/dashboard/topup");
                 }}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 hover:brightness-110 active:scale-95 transition-all"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 hover:brightness-105 active:scale-95 transition-all cursor-pointer"
               >
                 <Crown className="h-4 w-4" />
                 <span>Upgrade ke KoZa PRO Sekarang ➔</span>
               </button>
               <button
                 onClick={() => setShowProModal(false)}
-                className="w-full py-2.5 text-xs font-semibold text-slate-400 hover:text-white"
+                className="w-full py-2.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
               >
                 Nanti Saja, Gunakan Template Gratis
               </button>
@@ -1101,11 +1100,11 @@ export default function CreateLandingPage() {
       {/* TEMPLATE DETAIL PREVIEW MODAL */}
       {/* ========================================================================= */}
       {previewTemplate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-2xl rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-2xl rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setPreviewTemplate(null)}
-              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1115,23 +1114,23 @@ export default function CreateLandingPage() {
               <img
                 src={previewTemplate.thumbnailUrl}
                 alt={previewTemplate.name}
-                className="h-20 w-28 rounded-xl object-cover border border-slate-800 shrink-0"
+                className="h-20 w-28 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shrink-0"
               />
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold text-white">{previewTemplate.name}</h3>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">{previewTemplate.name}</h3>
                   {previewTemplate.isPro ? (
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
                       👑 PRO
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
                       GRATIS
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400 mt-1">{previewTemplate.description}</p>
-                <div className="flex items-center gap-3 mt-2 text-xs text-slate-300">
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{previewTemplate.description}</p>
+                <div className="flex items-center gap-3 mt-2 text-xs text-slate-600 dark:text-slate-300">
                   <span>🎨 Tema: <strong>{previewTemplate.design.themePreset}</strong></span>
                   <span>✍️ Font: <strong>{previewTemplate.design.fontFamily}</strong></span>
                 </div>
@@ -1140,22 +1139,22 @@ export default function CreateLandingPage() {
 
             {/* Block Stack Preview */}
             <div className="space-y-2 mb-6">
-              <span className="text-xs font-bold text-slate-300 block">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-300 block">
                 Susunan Blok Seksi ({previewTemplate.blocks.length} Blok):
               </span>
               <div className="space-y-1.5">
                 {previewTemplate.blocks.map((b, idx) => (
                   <div
                     key={b.id || idx}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-xs"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/50 text-xs"
                   >
-                    <div className="flex items-center gap-2 text-white">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-slate-700 text-[10px] font-bold text-slate-300">
+                    <div className="flex items-center gap-2 text-slate-900 dark:text-white">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-300">
                         {idx + 1}
                       </span>
                       <span className="font-semibold">{b.title}</span>
                     </div>
-                    <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-mono">
                       {b.type}
                     </span>
                   </div>
@@ -1164,10 +1163,10 @@ export default function CreateLandingPage() {
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
               <button
                 onClick={() => setPreviewTemplate(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white cursor-pointer"
               >
                 Tutup
               </button>
@@ -1177,10 +1176,10 @@ export default function CreateLandingPage() {
                   setPreviewTemplate(null);
                   handleUseTemplate(t);
                 }}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer ${
                   previewTemplate.isPro && !isUserPro
                     ? "bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black"
-                    : "bg-emerald-500 text-white hover:bg-emerald-400"
+                    : "bg-emerald-600 text-white hover:bg-emerald-500"
                 }`}
               >
                 {previewTemplate.isPro && !isUserPro ? (

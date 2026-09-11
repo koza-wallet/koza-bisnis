@@ -173,16 +173,16 @@ function renderBlockContent(
 // 1. HERO BANNER
 function HeroBannerBlock({ settings, ctx }: { settings: any; ctx: any }) {
   return (
-    <section className="relative overflow-hidden py-8 px-4 md:py-16 md:px-8 text-center md:text-left">
-      <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-8">
-        <div className="flex-1 space-y-4">
+    <section className="relative overflow-hidden py-8 px-4 md:py-14 md:px-6 lg:px-8 text-center md:text-left">
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-6 lg:gap-10">
+        <div className="flex-1 min-w-0 space-y-4">
           {settings.badge && (
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Sparkles className="w-3.5 h-3.5" />
               <span>{settings.badge}</span>
             </div>
           )}
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-white">
+          <h1 className="text-2xl sm:text-3xl lg:text-4.5xl xl:text-5xl font-black tracking-tight leading-tight text-white break-words">
             {settings.headline || "Headline Menarik Produk Anda"}
           </h1>
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
@@ -209,7 +209,7 @@ function HeroBannerBlock({ settings, ctx }: { settings: any; ctx: any }) {
         </div>
 
         {settings.heroImageUrl && (
-          <div className="flex-1 w-full max-w-md">
+          <div className="w-full max-w-xs sm:max-w-sm md:max-w-md shrink-0 flex-1 min-w-0">
             <div className={`relative aspect-square overflow-hidden ${ctx.radiusClass} border border-slate-800 shadow-2xl group`}>
               <img
                 src={settings.heroImageUrl}

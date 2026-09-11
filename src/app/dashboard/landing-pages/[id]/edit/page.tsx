@@ -97,7 +97,7 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
       <div className="flex items-center justify-between">
         <Link
           href="/dashboard/landing-pages"
-          className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+          className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           <span>Kembali ke Daftar</span>
@@ -107,8 +107,8 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
           <span
             className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${
               lp.isPublished
-                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20"
+                : "bg-amber-100 dark:bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-200 dark:border-amber-500/20"
             }`}
           >
             {lp.isPublished ? "Terbit" : "Draft"}
@@ -117,10 +117,10 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
           <button
             type="button"
             onClick={() => updateLandingPage(id, { isPublished: !lp.isPublished })}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
+            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors cursor-pointer ${
               lp.isPublished
-                ? "border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
-                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+                ? "border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700"
+                : "border-emerald-300 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
             }`}
           >
             <span>{lp.isPublished ? "Jadikan Draft" : "Terbitkan Sekarang"}</span>
@@ -129,9 +129,9 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
           <Link
             href={`/lp/${lp.slug}`}
             target="_blank"
-            className="flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
+            className="flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-xs"
           >
-            <Eye className="h-3.5 w-3.5 text-emerald-400" />
+            <Eye className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Lihat Halaman Publik</span>
             <ExternalLink className="h-3 w-3 opacity-60" />
           </Link>
@@ -143,7 +143,7 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
                 router.push("/dashboard/landing-pages");
               }
             }}
-            className="p-2 text-slate-400 hover:text-rose-400 rounded-xl hover:bg-rose-500/10 transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors cursor-pointer"
             title="Hapus"
           >
             <Trash2 className="h-4 w-4" />
@@ -153,17 +153,17 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
 
       <form onSubmit={handleSave} className="space-y-6">
         {/* Main Card */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 space-y-5">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-6 space-y-5 shadow-xs transition-colors">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
             <div>
-              <h1 className="text-xl font-bold text-white">Edit Landing Page</h1>
-              <p className="text-xs text-slate-400 mt-0.5">
-                URL: <span className="font-mono text-emerald-400">/lp/{lp.slug}</span>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white">Edit Landing Page</h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                URL: <span className="font-mono text-emerald-600 dark:text-emerald-400">/lp/{lp.slug}</span>
               </p>
             </div>
 
             {isSaved && (
-              <span className="flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+              <span className="flex items-center gap-1 text-xs font-semibold text-emerald-800 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20">
                 <Check className="h-3.5 w-3.5" />
                 Tersimpan!
               </span>
@@ -172,85 +172,85 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Judul Internal Landing Page
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
             />
           </div>
 
           {/* Hero Headline */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Headline Utama (Hook Penjualan)
             </label>
             <textarea
               rows={2}
               value={headline}
               onChange={(e) => setHeadline(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
             />
           </div>
 
           {/* Subheadline */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Subheadline (Deskripsi Pembuka)
             </label>
             <textarea
               rows={2}
               value={subheadline}
               onChange={(e) => setSubheadline(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
             />
           </div>
 
           {/* Pricing */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Harga Promo (Rp)
               </label>
               <input
                 type="number"
                 value={promoPrice}
                 onChange={(e) => setPromoPrice(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Harga Coret Normal (Rp)
               </label>
               <input
                 type="number"
                 value={normalPrice}
                 onChange={(e) => setNormalPrice(Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
               />
             </div>
           </div>
 
           {/* Hero Image */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Link Foto Utama (URL Gambar)
             </label>
             <input
               type="text"
               value={heroImageUrl}
               onChange={(e) => setHeroImageUrl(e.target.value)}
-              className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-sm text-slate-900 dark:text-white focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
             />
           </div>
 
           {/* Theme */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
               Tema Visual
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -264,10 +264,10 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
                   key={th.id}
                   type="button"
                   onClick={() => setTheme(th.id as LandingPageTheme)}
-                  className={`flex items-center gap-2 rounded-xl border p-2 text-xs font-medium transition-all ${
+                  className={`flex items-center gap-2 rounded-xl border p-2 text-xs font-medium transition-all cursor-pointer ${
                     theme === th.id
-                      ? "border-emerald-500 bg-emerald-500/15 text-white"
-                      : "border-slate-800 bg-slate-800/40 text-slate-400"
+                      ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-white"
+                      : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
                   <span className={`h-3.5 w-3.5 rounded-full ${th.color}`} />
@@ -279,18 +279,18 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
         </div>
 
         {/* Tracking Pixels Card */}
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 space-y-4">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-6 space-y-4 shadow-xs transition-colors">
           <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4 text-emerald-400" />
-            <h2 className="text-sm font-bold text-white">Tracking Pixel Iklan (TikTok & Meta Ads)</h2>
+            <Tag className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">Tracking Pixel Iklan (TikTok & Meta Ads)</h2>
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-600 dark:text-slate-400">
             Otomatis mentrack event <code>PageView</code>, <code>InitiateCheckout</code>, dan <code>Purchase</code> untuk optimasi algoritma iklan Anda.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Meta Pixel ID (Facebook / Instagram)
               </label>
               <input
@@ -298,12 +298,12 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
                 value={metaPixelId}
                 onChange={(e) => setMetaPixelId(e.target.value)}
                 placeholder="Contoh: 123456789012345"
-                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 TikTok Pixel ID
               </label>
               <input
@@ -311,7 +311,7 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
                 value={tiktokPixelId}
                 onChange={(e) => setTiktokPixelId(e.target.value)}
                 placeholder="Contoh: C8ABCDEF12345678"
-                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 px-3.5 py-2.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-emerald-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none"
               />
             </div>
           </div>
@@ -321,13 +321,13 @@ export default function EditLandingPage({ params }: { params: Promise<{ id: stri
         <div className="flex justify-end gap-3">
           <Link
             href="/dashboard/landing-pages"
-            className="rounded-xl border border-slate-700 bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-700 transition-colors"
+            className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2.5 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-xs"
           >
             Batal
           </Link>
           <button
             type="submit"
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 active:scale-95 transition-all"
+            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 px-6 py-2.5 text-sm font-bold text-white shadow-md shadow-emerald-600/20 active:scale-95 transition-all cursor-pointer"
           >
             <Save className="h-4 w-4" />
             <span>Simpan Perubahan</span>

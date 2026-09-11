@@ -1,15 +1,43 @@
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #030712;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --border: #e2e8f0;
+  --primary: #0d7377;
+  --primary-foreground: #ffffff;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  color-scheme: light;
+}
+
+.dark {
+  --background: #0b0f17;
   --foreground: #f8fafc;
+  --card: #161e2e;
+  --card-foreground: #f8fafc;
+  --border: #1e293b;
+  --primary: #10b981;
+  --primary-foreground: #022c22;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  color-scheme: dark;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 * {
@@ -19,47 +47,72 @@
 
 html {
   scroll-behavior: smooth;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
   overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* Tactile Range Slider for Mobile & Touch */
+/* Tactile Range Slider for Mobile & Touch (Adaptive Light/Dark) */
 input[type="range"] {
   height: 8px;
   border-radius: 9999px;
+  background: #e2e8f0;
+  accent-color: #0d7377;
+}
+
+.dark input[type="range"] {
   background: #1e293b;
+  accent-color: #10b981;
 }
 
 input[type="range"]::-webkit-slider-thumb {
   width: 22px;
   height: 22px;
   border-radius: 9999px;
-  background: #10b981;
-  border: 2px solid #030712;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  background: #0d7377;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 6px rgba(13, 115, 119, 0.35);
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
+}
+
+.dark input[type="range"]::-webkit-slider-thumb {
+  background: #10b981;
+  border: 2px solid #0b0f17;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
 input[type="range"]::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 9999px;
-  background: #10b981;
-  border: 2px solid #030712;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  background: #0d7377;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 6px rgba(13, 115, 119, 0.35);
   cursor: pointer;
 }
 
+.dark input[type="range"]::-moz-range-thumb {
+  background: #10b981;
+  border: 2px solid #0b0f17;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
+
 ::selection {
-  background-color: #10b981;
-  color: #022c22;
+  background-color: rgba(13, 115, 119, 0.2);
+  color: #0f172a;
+}
+
+.dark ::selection {
+  background-color: rgba(16, 185, 129, 0.35);
+  color: #f8fafc;
 }
 
 /* Minimalist Scrollbar */
@@ -69,14 +122,65 @@ input[type="range"]::-moz-range-thumb {
 }
 
 ::-webkit-scrollbar-track {
-  background: #030712;
+  background: #f8fafc;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0b0f17;
 }
 
 ::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   background: #334155;
+}
+
+/* Privacy Shield Mode (HPP & Sensitive Profit Blurring) */
+body.privacy-active .privacy-sensitive {
+  filter: blur(5.5px);
+  user-select: none;
+  transition: filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.privacy-sensitive {
+  transition: filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Glow Accent Utilities */
+.glow-emerald {
+  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.15);
+}
+
+.dark .glow-emerald {
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.25);
+}
+
+/* Thermal Label Print Media Query */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .thermal-print-area, .thermal-print-area * {
+    visibility: visible;
+  }
+  .thermal-print-area {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100mm;
+    margin: 0;
+    padding: 4mm;
+  }
 }

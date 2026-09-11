@@ -72,27 +72,27 @@ export function AddSectionModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-black/80 backdrop-blur-sm animate-fade-in">
+      <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] transition-colors">
         {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Layout className="w-5 h-5 text-emerald-400" />
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Layout className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
               <span>Tambah Seksi Baru</span>
             </h2>
-            <p className="text-xs text-slate-400">Pilih komponen siap pakai untuk dipasang pada landing page Anda</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Pilih komponen siap pakai untuk dipasang pada landing page Anda</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Search Bar & Category Filters */}
-        <div className="p-4 border-b border-slate-800 bg-slate-950/50 space-y-3">
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-3">
           <div className="relative">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -100,7 +100,7 @@ export function AddSectionModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Cari jenis seksi (contoh: Hero, Checkout, Testimoni, Video)..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 transition-colors"
             />
           </div>
 
@@ -112,8 +112,8 @@ export function AddSectionModal({
                 onClick={() => setActiveCategory(tab.id)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   activeCategory === tab.id
-                    ? "bg-emerald-500 text-slate-950 shadow-md"
-                    : "bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800"
+                    ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 shadow-xs font-bold"
+                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
                 }`}
               >
                 {tab.label}
@@ -131,28 +131,28 @@ export function AddSectionModal({
                 onSelectBlockType(item.type);
                 onClose();
               }}
-              className="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 hover:border-emerald-500/60 hover:bg-slate-800/60 transition-all cursor-pointer group flex items-start gap-3.5"
+              className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 hover:border-emerald-500/60 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-all cursor-pointer group flex items-start gap-3.5 shadow-2xs"
             >
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 group-hover:bg-emerald-500 group-hover:text-slate-950 transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 group-hover:bg-emerald-500 group-hover:text-white dark:group-hover:text-slate-950 transition-colors">
                 {getIcon(item.iconName)}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <h3 className="font-bold text-sm text-white group-hover:text-emerald-400 transition-colors truncate">
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
                     {item.name}
                   </h3>
                   {item.badge && (
-                    <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 text-[9px] font-bold shrink-0">
+                    <span className="px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 text-[9px] font-bold shrink-0">
                       {item.badge}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
                   {item.description}
                 </p>
               </div>
               <div className="shrink-0 self-center">
-                <div className="w-7 h-7 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 flex items-center justify-center group-hover:border-emerald-500 group-hover:text-emerald-400 transition-colors">
+                <div className="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 flex items-center justify-center group-hover:border-emerald-500 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                   <Plus className="w-4 h-4" />
                 </div>
               </div>
@@ -160,7 +160,7 @@ export function AddSectionModal({
           ))}
 
           {filteredItems.length === 0 && (
-            <div className="col-span-2 py-12 text-center text-slate-500 text-xs">
+            <div className="col-span-2 py-12 text-center text-slate-400 text-xs">
               Tidak ada seksi yang cocok dengan pencarian "{search}".
             </div>
           )}

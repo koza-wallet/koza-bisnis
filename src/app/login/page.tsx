@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { ArrowRight, Lock, Mail, AlertCircle, ArrowLeft } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -43,17 +44,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center px-4 py-12 font-sans selection:bg-emerald-500 selection:text-slate-950">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B0F17] text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center px-4 py-12 font-sans selection:bg-emerald-500 selection:text-slate-950 transition-colors">
       <div className="w-full max-w-sm space-y-7">
-        {/* Back link */}
-        <div>
+        {/* Top Action Bar */}
+        <div className="flex items-center justify-between">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span>Kembali ke Beranda</span>
           </Link>
+          <ThemeToggle />
         </div>
 
         {/* Brand Header */}
@@ -61,23 +63,29 @@ export default function LoginPage() {
           <Link href="/" className="inline-block group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              src="/brand/koza-logo.svg"
+              alt="KoZa Bisnis"
+              className="h-9 w-auto object-contain block dark:hidden transition-transform group-hover:scale-105"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
               src="/brand/koza-logo-white.svg"
               alt="KoZa Bisnis"
-              className="h-9 w-auto object-contain transition-transform group-hover:scale-105"
+              className="h-9 w-auto object-contain hidden dark:block transition-transform group-hover:scale-105"
             />
           </Link>
-          <h1 className="text-2xl font-black tracking-tight text-white pt-1">
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white pt-1">
             Masuk ke Dashboard
           </h1>
-          <p className="text-xs text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
             Kelola katalog produk, pantau pesanan kurir, dan lihat rekap laba bersih toko Anda.
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="rounded-2xl border border-slate-800/90 bg-slate-900/60 p-6 sm:p-7 shadow-xl space-y-5">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800/90 bg-white dark:bg-slate-900/60 p-6 sm:p-7 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-5">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
+            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
@@ -85,35 +93,35 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@tokoanda.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                 Kata Sandi
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <input
                   type="password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs sm:text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
                 />
               </div>
             </div>
@@ -121,7 +129,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3 rounded-xl bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-500 dark:hover:bg-emerald-400 text-white dark:text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
             >
               {isLoading ? (
                 <span>Memverifikasi Akun...</span>
@@ -134,12 +142,12 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="pt-3 text-center border-t border-slate-800">
-            <p className="text-xs text-slate-400">
+          <div className="pt-3 text-center border-t border-slate-100 dark:border-slate-800">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Belum punya toko?{" "}
               <Link
                 href="/register"
-                className="text-emerald-400 font-semibold hover:underline underline-offset-4"
+                className="text-emerald-600 dark:text-emerald-400 font-semibold hover:underline underline-offset-4"
               >
                 Daftar Toko Gratis
               </Link>
@@ -148,7 +156,7 @@ export default function LoginPage() {
         </div>
 
         {/* Security badge */}
-        <p className="text-center text-[11px] text-slate-600">
+        <p className="text-center text-[11px] text-slate-400 dark:text-slate-600">
           Dilindungi oleh Row Level Security & Enkripsi Data Multi-Tenant
         </p>
       </div>

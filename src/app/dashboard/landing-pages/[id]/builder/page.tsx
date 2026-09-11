@@ -22,7 +22,12 @@ import {
   Trash2, 
   Sparkles, 
   Copy,
-  Layout
+  Layout,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Edit3,
+  Columns,
+  ArrowUpDown
 } from "lucide-react";
 import { BuilderBlock, BuilderPageDesign, BuilderPageSEO, BlockType } from "@/types/builder";
 import { createDefaultBlock } from "@/lib/builder-templates";
@@ -67,6 +72,13 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
 
   // Modal for adding sections
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
+
+  // Editor Sidebar Collapse state
+  const [isEditorSidebarOpen, setIsEditorSidebarOpen] = useState(true);
+
+  // Mobile responsive layout states
+  const [mobileViewMode, setMobileViewMode] = useState<"EDITOR" | "PREVIEW" | "SPLIT">("EDITOR");
+  const [splitPreviewPosition, setSplitPreviewPosition] = useState<"TOP" | "BOTTOM">("TOP");
 
   // Save feedback state
   const [isSaved, setIsSaved] = useState(false);
@@ -243,45 +255,65 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
   };
 
   return (
-    <div className="flex flex-col h-screen bg-slate-950 text-white overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-white dark:bg-slate-950 text-slate-900 dark:text-white overflow-hidden transition-colors">
       {/* 1. TOP HEADER NAVIGATION */}
-      <header className="h-14 border-b border-slate-800 bg-slate-950 px-4 flex items-center justify-between z-30 shrink-0">
-        <div className="flex items-center gap-3">
+      <header className="h-14 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-4 flex items-center justify-between z-30 shrink-0 transition-colors">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <Link
             href="/dashboard/landing-pages"
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors shrink-0"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
 
-          <div>
+          {/* Toggle Editor Panel Sidebar Button */}
+          <button
+            type="button"
+            onClick={() => setIsEditorSidebarOpen(!isEditorSidebarOpen)}
+            title={isEditorSidebarOpen ? "Sembunyikan Panel Editor" : "Tampilkan Panel Editor"}
+            className="hidden sm:flex px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold items-center gap-1.5 transition-colors shrink-0"
+          >
+            {isEditorSidebarOpen ? (
+              <>
+                <PanelLeftClose className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                <span className="hidden md:inline">Tutup Panel</span>
+              </>
+            ) : (
+              <>
+                <PanelLeftOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="hidden md:inline font-bold text-emerald-600 dark:text-emerald-400">Buka Panel</span>
+              </>
+            )}
+          </button>
+
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-sm font-bold text-white truncate max-w-[200px] sm:max-w-xs">
+              <h1 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[150px] sm:max-w-xs">
                 {lp.title}
               </h1>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
-                Builder Berdu
+              <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-bold shrink-0">
+                Editor Visual
               </span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
                   lp.isPublished
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                    ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                    : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20"
                 }`}
               >
                 {lp.isPublished ? "Terbit" : "Draft"}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 truncate max-w-[250px]">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px] sm:max-w-[250px]">
               /lp/{lp.slug}
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {hasUnsavedChanges && (
-            <span className="hidden sm:inline-block text-[11px] text-amber-400 animate-pulse font-medium">
+            <span className="hidden sm:inline-block text-[11px] text-amber-500 dark:text-amber-400 animate-pulse font-medium">
               • Belum disimpan
             </span>
           )}
@@ -291,8 +323,8 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
             onClick={handleTogglePublish}
             className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors ${
               lp.isPublished
-                ? "border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white"
-                : "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+                ? "border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                : "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
             }`}
           >
             <Globe className="w-3.5 h-3.5" />
@@ -303,7 +335,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
             href={`/lp/${lp.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Preview Halaman</span>
@@ -312,7 +344,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
           <button
             type="button"
             onClick={handleSave}
-            className={`px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-lg ${
+            className={`px-4 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
               isSaved
                 ? "bg-emerald-500 text-slate-950"
                 : "bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95"
@@ -333,10 +365,78 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
         </div>
       </header>
 
+      {/* MOBILE RESPONSIVE SUBHEADER / VIEW SWITCHER */}
+      <div className="sm:hidden border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 px-3 py-2 flex items-center justify-between gap-2 shrink-0 z-20 transition-colors">
+        {/* Segmented Mode Switcher: Editor | Preview | Split */}
+        <div className="flex items-center gap-1 bg-white dark:bg-slate-950 p-1 rounded-xl border border-slate-200 dark:border-slate-800 flex-1">
+          <button
+            type="button"
+            onClick={() => setMobileViewMode("EDITOR")}
+            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              mobileViewMode === "EDITOR"
+                ? "bg-emerald-600 text-white shadow-xs font-bold"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span>Editor</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileViewMode("PREVIEW")}
+            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              mobileViewMode === "PREVIEW"
+                ? "bg-emerald-600 text-white shadow-xs font-bold"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Preview</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileViewMode("SPLIT")}
+            className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              mobileViewMode === "SPLIT"
+                ? "bg-emerald-600 text-white shadow-xs font-bold"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+            }`}
+          >
+            <Columns className="w-3.5 h-3.5" />
+            <span>Split</span>
+          </button>
+        </div>
+
+        {/* Position Toggle for Split Mode: Top vs Bottom */}
+        {mobileViewMode === "SPLIT" && (
+          <button
+            type="button"
+            onClick={() => setSplitPreviewPosition((prev) => (prev === "TOP" ? "BOTTOM" : "TOP"))}
+            className="px-2.5 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors"
+            title="Tukar posisi live preview (Atas / Bawah)"
+          >
+            <ArrowUpDown className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-bold">{splitPreviewPosition === "TOP" ? "Preview Atas" : "Preview Bawah"}</span>
+          </button>
+        )}
+      </div>
+
       {/* 2. MAIN 2-COLUMN WORKSPACE */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* LEFT COLUMN: BERDU EDITOR SIDEBAR (380px) */}
-        <aside className="w-full sm:w-[380px] lg:w-[400px] border-r border-slate-800 bg-slate-950 flex flex-col shrink-0 z-20">
+      <div className="flex-1 flex flex-col sm:flex-row overflow-hidden relative">
+        {/* LEFT COLUMN: EDITOR SIDEBAR (380px) */}
+        <aside
+          className={`bg-white dark:bg-slate-950 flex flex-col z-20 transition-all duration-200 ${
+            isEditorSidebarOpen
+              ? "sm:flex sm:flex-none sm:w-[380px] lg:w-[400px] sm:h-full sm:order-1 sm:border-r border-slate-200 dark:border-slate-800"
+              : "sm:hidden"
+          } ${
+            mobileViewMode === "EDITOR"
+              ? "flex flex-1 w-full h-full order-1 overflow-hidden"
+              : mobileViewMode === "PREVIEW"
+              ? "hidden"
+              : `flex flex-1 w-full min-h-0 ${splitPreviewPosition === "TOP" ? "order-2" : "order-1"}`
+          }`}
+        >
           {selectedBlock ? (
             /* Sub-Drawer: Block Settings Form */
             <BlockSettingsForm
@@ -349,14 +449,14 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
             /* Main Sidebar with 3 Tabs: Konten, Desain, SEO */
             <>
               {/* 3 Tab Navigation Header */}
-              <div className="grid grid-cols-3 border-b border-slate-800 bg-slate-950/80 p-1.5 gap-1 shrink-0">
+              <div className="grid grid-cols-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 p-1.5 gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={() => setActiveTab("KONTEN")}
                   className={`py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                     activeTab === "KONTEN"
-                      ? "bg-slate-800 text-emerald-400 shadow-sm"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/80 dark:border-transparent"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-900"
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
@@ -368,8 +468,8 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                   onClick={() => setActiveTab("DESAIN")}
                   className={`py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                     activeTab === "DESAIN"
-                      ? "bg-slate-800 text-emerald-400 shadow-sm"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/80 dark:border-transparent"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-900"
                   }`}
                 >
                   <Palette className="w-3.5 h-3.5" />
@@ -381,8 +481,8 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                   onClick={() => setActiveTab("SEO")}
                   className={`py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                     activeTab === "SEO"
-                      ? "bg-slate-800 text-emerald-400 shadow-sm"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/80 dark:border-transparent"
+                      : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-900"
                   }`}
                 >
                   <Globe className="w-3.5 h-3.5" />
@@ -390,13 +490,13 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                 </button>
               </div>
 
-              {/* Tab 1: KONTEN (Daftar Seksi ala Berdu) */}
+              {/* Tab 1: KONTEN (Daftar Seksi Modular) */}
               {activeTab === "KONTEN" && (
                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Susunan Seksi ({blocks.length})</h2>
-                      <p className="text-[11px] text-slate-500">Klik seksi untuk mengedit konten teks & gambar</p>
+                      <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-400">Susunan Seksi ({blocks.length})</h2>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">Klik seksi untuk mengedit konten teks & gambar</p>
                     </div>
                   </div>
 
@@ -408,18 +508,18 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                         onClick={() => setSelectedBlockId(block.id)}
                         className={`group p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
                           !block.isVisible
-                            ? "bg-slate-950/40 border-slate-900 opacity-50"
-                            : "bg-slate-900/80 border-slate-800 hover:border-emerald-500/50 hover:bg-slate-850"
+                            ? "bg-slate-100/60 dark:bg-slate-950/40 border-slate-200 dark:border-slate-900 opacity-50"
+                            : "bg-slate-50 dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 hover:bg-slate-100 dark:hover:bg-slate-850"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           {/* Reorder Buttons */}
-                          <div className="flex flex-col gap-0.5 text-slate-500" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex flex-col gap-0.5 text-slate-400 dark:text-slate-500" onClick={(e) => e.stopPropagation()}>
                             <button
                               type="button"
                               disabled={index === 0}
                               onClick={() => moveBlock(index, "UP")}
-                              className="p-0.5 hover:text-white disabled:opacity-20 transition-colors"
+                              className="p-0.5 hover:text-slate-900 dark:hover:text-white disabled:opacity-20 transition-colors"
                             >
                               <ChevronUp className="w-3.5 h-3.5" />
                             </button>
@@ -427,17 +527,17 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                               type="button"
                               disabled={index === blocks.length - 1}
                               onClick={() => moveBlock(index, "DOWN")}
-                              className="p-0.5 hover:text-white disabled:opacity-20 transition-colors"
+                              className="p-0.5 hover:text-slate-900 dark:hover:text-white disabled:opacity-20 transition-colors"
                             >
                               <ChevronDown className="w-3.5 h-3.5" />
                             </button>
                           </div>
 
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors truncate">
+                            <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
                               {block.title}
                             </p>
-                            <p className="text-[10px] text-slate-500 font-mono truncate">
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate">
                               {block.type}
                             </p>
                           </div>
@@ -449,7 +549,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                             type="button"
                             onClick={() => duplicateBlock(block)}
                             title="Duplikat Seksi"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
                           >
                             <Copy className="w-3.5 h-3.5" />
                           </button>
@@ -457,15 +557,15 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                             type="button"
                             onClick={() => toggleBlockVisibility(block.id)}
                             title={block.isVisible ? "Sembunyikan" : "Tampilkan"}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-slate-800 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
                           >
-                            <Eye className={`w-3.5 h-3.5 ${!block.isVisible ? "line-through text-rose-400" : ""}`} />
+                            <Eye className={`w-3.5 h-3.5 ${!block.isVisible ? "line-through text-rose-500" : ""}`} />
                           </button>
                           <button
                             type="button"
                             onClick={() => deleteBlock(block.id)}
                             title="Hapus Seksi"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -478,10 +578,10 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                   <button
                     type="button"
                     onClick={() => setIsAddSectionOpen(true)}
-                    className="w-full py-3 px-4 rounded-xl border border-dashed border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-400 text-xs font-bold flex items-center justify-center gap-2 transition-all mt-4"
+                    className="w-full py-3 px-4 rounded-xl border border-dashed border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold flex items-center justify-center gap-2 transition-all mt-4"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>+ Tambah Seksi Baru (Ala Berdu)</span>
+                    <span>+ Tambah Seksi Baru</span>
                   </button>
                 </div>
               )}
@@ -491,7 +591,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                 <div className="flex-1 overflow-y-auto p-4 space-y-6 text-xs">
                   {/* Preset Themes */}
                   <div>
-                    <label className="block font-bold text-slate-300 mb-2">Preset Tema Warna</label>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-2">Preset Tema Warna</label>
                     <div className="grid grid-cols-2 gap-2">
                       {[
                         { id: "EMERALD", name: "Emerald Pro", color: "#10b981" },
@@ -505,12 +605,12 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           onClick={() => applyThemePreset(t.id as any)}
                           className={`p-2.5 rounded-xl border text-left flex items-center gap-2.5 transition-all ${
                             design.themePreset === t.id
-                              ? "border-emerald-500 bg-slate-900"
-                              : "border-slate-800 bg-slate-950 hover:bg-slate-900"
+                              ? "border-emerald-500 bg-emerald-50/60 dark:bg-slate-900 shadow-xs"
+                              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-900"
                           }`}
                         >
-                          <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: t.color }} />
-                          <span className="font-semibold text-white">{t.name}</span>
+                          <div className="w-4 h-4 rounded-full shrink-0 shadow-xs" style={{ backgroundColor: t.color }} />
+                          <span className="font-semibold text-slate-900 dark:text-white">{t.name}</span>
                         </button>
                       ))}
                     </div>
@@ -518,14 +618,14 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
 
                   {/* Font Selector */}
                   <div>
-                    <label className="block font-bold text-slate-300 mb-2">Pilihan Font Halaman</label>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-2">Pilihan Font Halaman</label>
                     <select
                       value={design.fontFamily}
                       onChange={(e: any) => {
                         setDesign((prev) => ({ ...prev, fontFamily: e.target.value }));
                         setHasUnsavedChanges(true);
                       }}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                     >
                       <option value="Outfit">Outfit (Modern Luxury - Default)</option>
                       <option value="Plus Jakarta Sans">Plus Jakarta Sans (Clean & Tech)</option>
@@ -536,12 +636,12 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
 
                   {/* Color Customization */}
                   <div className="space-y-3">
-                    <label className="block font-bold text-slate-300">Warna Kustom</label>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300">Warna Kustom</label>
 
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                       <div>
-                        <p className="font-semibold text-white">Warna Primer / Tombol</p>
-                        <p className="text-[11px] text-slate-400">Digunakan pada tombol CTA & highlight</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">Warna Primer / Tombol</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Digunakan pada tombol CTA & highlight</p>
                       </div>
                       <input
                         type="color"
@@ -550,14 +650,14 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           setDesign((prev) => ({ ...prev, primaryColor: e.target.value, themePreset: "CUSTOM" }));
                           setHasUnsavedChanges(true);
                         }}
-                        className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                        className="w-8 h-8 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                       <div>
-                        <p className="font-semibold text-white">Warna Latar Belakang</p>
-                        <p className="text-[11px] text-slate-400">Warna dasar landing page</p>
+                        <p className="font-semibold text-slate-900 dark:text-white">Warna Latar Belakang</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Warna dasar landing page</p>
                       </div>
                       <input
                         type="color"
@@ -566,14 +666,14 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           setDesign((prev) => ({ ...prev, backgroundColor: e.target.value, themePreset: "CUSTOM" }));
                           setHasUnsavedChanges(true);
                         }}
-                        className="w-8 h-8 rounded border border-slate-700 bg-transparent cursor-pointer"
+                        className="w-8 h-8 rounded border border-slate-300 dark:border-slate-700 bg-transparent cursor-pointer"
                       />
                     </div>
                   </div>
 
                   {/* Card Radius */}
                   <div>
-                    <label className="block font-bold text-slate-300 mb-2">Kelengkungan Sudut Kartu (Border Radius)</label>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-2">Kelengkungan Sudut Kartu (Border Radius)</label>
                     <div className="grid grid-cols-5 gap-1.5">
                       {(["sm", "md", "lg", "xl", "2xl"] as const).map((r) => (
                         <button
@@ -585,8 +685,8 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           }}
                           className={`py-2 rounded-lg border text-center font-bold text-xs uppercase transition-all ${
                             design.cardRadius === r
-                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-400"
-                              : "border-slate-800 bg-slate-950 text-slate-400 hover:text-white"
+                              ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                           }`}
                         >
                           {r}
@@ -601,7 +701,7 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
               {activeTab === "SEO" && (
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Meta Title (Judul Tab Browser & Google)</label>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Meta Title (Judul Tab Browser & Google)</label>
                     <input
                       type="text"
                       value={seo.metaTitle}
@@ -610,12 +710,12 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                         setHasUnsavedChanges(true);
                       }}
                       placeholder="Judul SEO menarik..."
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Meta Description (Snippet Pencarian)</label>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Meta Description (Snippet Pencarian)</label>
                     <textarea
                       rows={3}
                       value={seo.metaDescription}
@@ -624,21 +724,21 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                         setHasUnsavedChanges(true);
                       }}
                       placeholder="Deskripsi ringkas yang muncul di Google atau saat link dibagikan di WhatsApp..."
-                      className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white outline-none focus:border-emerald-500"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white outline-none focus:border-emerald-500"
                     />
                   </div>
 
-                  <div className="h-px bg-slate-800" />
+                  <div className="h-px bg-slate-200 dark:bg-slate-800" />
 
                   {/* Tracking Pixel */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-emerald-400" />
-                      <h3 className="font-bold text-white text-xs uppercase tracking-wider">Tracking Iklan Berbayar</h3>
+                      <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                      <h3 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider">Tracking Iklan Berbayar</h3>
                     </div>
 
                     <div>
-                      <label className="block font-bold text-slate-300 mb-1">Meta Pixel ID (Facebook / Instagram Ads)</label>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Meta Pixel ID (Facebook / Instagram Ads)</label>
                       <input
                         type="text"
                         value={lp.pixels?.metaPixelId || ""}
@@ -649,12 +749,12 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           setHasUnsavedChanges(true);
                         }}
                         placeholder="Contoh: 123456789012345"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono outline-none focus:border-emerald-500"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono outline-none focus:border-emerald-500"
                       />
                     </div>
 
                     <div>
-                      <label className="block font-bold text-slate-300 mb-1">TikTok Pixel ID</label>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">TikTok Pixel ID</label>
                       <input
                         type="text"
                         value={lp.pixels?.tiktokPixelId || ""}
@@ -665,25 +765,25 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           setHasUnsavedChanges(true);
                         }}
                         placeholder="Contoh: C1234567890ABC"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono outline-none focus:border-emerald-500"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono outline-none focus:border-emerald-500"
                       />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Bottom Viewport Switcher Bar ala Berdu */}
-              <div className="p-3 border-t border-slate-800 bg-slate-950 flex items-center justify-between shrink-0">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Viewport Preview</span>
-                <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+              {/* Bottom Viewport Switcher Bar */}
+              <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-between shrink-0">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Viewport Preview</span>
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => setViewport("DESKTOP")}
                     title="Desktop Preview (100%)"
                     className={`p-1.5 rounded-lg transition-colors ${
                       viewport === "DESKTOP"
-                        ? "bg-emerald-500 text-slate-950 font-bold"
-                        : "text-slate-400 hover:text-white"
+                        ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 font-bold shadow-xs"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     <Monitor className="w-4 h-4" />
@@ -694,8 +794,8 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                     title="Tablet Preview (768px)"
                     className={`p-1.5 rounded-lg transition-colors ${
                       viewport === "TABLET"
-                        ? "bg-emerald-500 text-slate-950 font-bold"
-                        : "text-slate-400 hover:text-white"
+                        ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 font-bold shadow-xs"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     <Tablet className="w-4 h-4" />
@@ -706,8 +806,8 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                     title="Mobile iPhone Preview (390px)"
                     className={`p-1.5 rounded-lg transition-colors ${
                       viewport === "MOBILE"
-                        ? "bg-emerald-500 text-slate-950 font-bold"
-                        : "text-slate-400 hover:text-white"
+                        ? "bg-emerald-600 text-white dark:bg-emerald-500 dark:text-slate-950 font-bold shadow-xs"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                     }`}
                   >
                     <Smartphone className="w-4 h-4" />
@@ -719,14 +819,44 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
         </aside>
 
         {/* RIGHT COLUMN: LIVE WYSIWYG PREVIEW CANVAS */}
-        <main className="flex-1 bg-slate-900/60 overflow-y-auto flex items-start justify-center p-4 sm:p-6 relative">
+        <main
+          className={`bg-slate-100/90 dark:bg-[#07090E] transition-colors relative ${
+            // Desktop styling
+            viewport === "DESKTOP"
+              ? "sm:flex sm:flex-1 sm:h-full sm:order-2 sm:p-0 sm:overflow-y-auto sm:items-start sm:justify-center"
+              : "sm:flex sm:flex-1 sm:h-full sm:order-2 sm:p-6 sm:overflow-y-auto sm:items-start sm:justify-center"
+          } ${
+            // Mobile styling
+            mobileViewMode === "EDITOR"
+              ? "hidden"
+              : mobileViewMode === "PREVIEW"
+              ? "flex flex-1 w-full h-full p-0 order-1 overflow-y-auto items-start justify-center"
+              : `flex w-full h-[45vh] sm:h-auto overflow-y-auto p-2 items-start justify-center shrink-0 ${
+                  splitPreviewPosition === "TOP"
+                    ? "order-1 border-b border-slate-200 dark:border-slate-800"
+                    : "order-2 border-t border-slate-200 dark:border-slate-800"
+                }`
+          }`}
+        >
+          {/* Floating Button to re-open Editor Panel if closed */}
+          {!isEditorSidebarOpen && (
+            <button
+              type="button"
+              onClick={() => setIsEditorSidebarOpen(true)}
+              className="hidden sm:flex absolute top-4 left-4 z-20 px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-emerald-600 dark:hover:text-emerald-400 items-center gap-1.5 transition-all animate-fade-in"
+            >
+              <PanelLeftOpen className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <span>Buka Panel Editor</span>
+            </button>
+          )}
+
           <div
             className={`transition-all duration-300 ${
               viewport === "DESKTOP"
-                ? "w-full max-w-5xl rounded-2xl border border-slate-800 shadow-2xl overflow-hidden my-2"
+                ? "w-full min-h-full rounded-none border-0 shadow-none my-0"
                 : viewport === "TABLET"
-                ? "w-[768px] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden my-4"
-                : "w-[390px] rounded-[44px] border-[10px] border-slate-800 shadow-2xl overflow-hidden my-4 ring-1 ring-slate-700/50"
+                ? "w-[768px] rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-xl overflow-hidden my-4"
+                : "w-full sm:w-[390px] rounded-none sm:rounded-[44px] border-0 sm:border-[10px] border-slate-800 shadow-none sm:shadow-2xl overflow-hidden my-0 sm:my-4 sm:ring-1 sm:ring-slate-700/50"
             }`}
             style={{
               backgroundColor: design.backgroundColor,
@@ -734,9 +864,9 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
               fontFamily: design.fontFamily,
             }}
           >
-            {/* iPhone Notch Simulator on Mobile Viewport */}
+            {/* iPhone Notch Simulator on Mobile Viewport (Only visible on desktop simulator) */}
             {viewport === "MOBILE" && (
-              <div className="h-6 bg-slate-950 flex items-center justify-center sticky top-0 z-30">
+              <div className="hidden sm:flex h-6 bg-slate-950 items-center justify-center sticky top-0 z-30">
                 <div className="w-24 h-3.5 bg-black rounded-full" />
               </div>
             )}
@@ -761,8 +891,8 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
                     <Layout className="w-6 h-6" />
                   </div>
-                  <h3 className="font-bold text-white text-base">Halaman Masih Kosong</h3>
-                  <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-base">Halaman Masih Kosong</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
                     Mulai tambahkan seksi pertama seperti Hero Banner atau Announcement Bar untuk membangun halaman Anda.
                   </p>
                   <button
@@ -778,6 +908,27 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
           </div>
         </main>
       </div>
+
+      {/* Floating Quick Action Pill for Mobile */}
+      {mobileViewMode === "EDITOR" ? (
+        <button
+          type="button"
+          onClick={() => setMobileViewMode("PREVIEW")}
+          className="sm:hidden fixed bottom-5 right-4 z-40 px-4 py-2.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xl flex items-center gap-2 border border-emerald-400/30 backdrop-blur-md active:scale-95 transition-all"
+        >
+          <Eye className="w-4 h-4" />
+          <span>Lihat Preview</span>
+        </button>
+      ) : mobileViewMode === "PREVIEW" ? (
+        <button
+          type="button"
+          onClick={() => setMobileViewMode("EDITOR")}
+          className="sm:hidden fixed bottom-5 right-4 z-40 px-4 py-2.5 rounded-full bg-slate-900/90 hover:bg-slate-800 text-white font-bold text-xs shadow-xl flex items-center gap-2 border border-slate-700/50 backdrop-blur-md active:scale-95 transition-all"
+        >
+          <Edit3 className="w-4 h-4" />
+          <span>Edit Konten</span>
+        </button>
+      ) : null}
 
       {/* Add Section Modal */}
       <AddSectionModal

@@ -8,19 +8,13 @@ import { Order } from "@/types";
 import { 
   ShoppingBag, 
   MessageSquare, 
-  Truck, 
-  CheckCircle2, 
-  Clock, 
-  AlertCircle, 
   Copy, 
   Check, 
   ExternalLink, 
   Star,
   Lock,
   Search,
-  Filter,
-  Inbox,
-  ArrowUpRight
+  Inbox
 } from "lucide-react";
 
 export default function OrderManagementPage() {
@@ -92,36 +86,36 @@ export default function OrderManagementPage() {
     switch (status) {
       case "SELESAI":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:text-emerald-400 border border-emerald-200/90 dark:border-emerald-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
             Selesai
           </span>
         );
       case "DIKIRIM":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold text-sky-400 border border-sky-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-50 dark:bg-sky-500/10 px-2.5 py-0.5 text-xs font-semibold text-sky-800 dark:text-sky-400 border border-sky-200/90 dark:border-sky-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-600 dark:bg-sky-400" />
             Dalam Pengiriman
           </span>
         );
       case "DIPROSES":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-400 border border-amber-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 dark:bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-800 dark:text-amber-400 border border-amber-200/90 dark:border-amber-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-600 dark:bg-amber-400" />
             Diproses
           </span>
         );
       case "TERKUNCI_KUOTA":
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-300 border border-amber-500/30">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 dark:bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-900 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30">
             <Lock className="h-3 w-3" />
             Terkunci Kuota
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-semibold text-rose-400 border border-rose-500/20">
-            <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 dark:bg-rose-500/10 px-2.5 py-0.5 text-xs font-semibold text-rose-800 dark:text-rose-400 border border-rose-200/90 dark:border-rose-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-rose-600 dark:bg-rose-400" />
             Menunggu Bayar
           </span>
         );
@@ -134,30 +128,30 @@ export default function OrderManagementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-400">
               <ShoppingBag className="h-5 w-5" />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
               Kelola Pesanan
             </h1>
-            <span className="rounded-full bg-slate-800/80 px-2.5 py-0.5 text-xs font-mono font-semibold text-slate-300 border border-slate-700">
+            <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-2.5 py-0.5 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
               {orders.length}
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 mt-1">
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1">
             Pesanan dari pembeli toko online & bio link Anda. Tandai selesai untuk sinkronisasi laba bersih ke buku kas.
           </p>
         </div>
 
         {/* Search Bar */}
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari no. order / nama pembeli..."
-            className="w-full rounded-xl border border-slate-800 bg-slate-900/80 pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-emerald-500 focus:outline-none transition-colors"
+            placeholder="Cari no. order / pembeli..."
+            className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/80 pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none transition-colors"
           />
         </div>
       </div>
@@ -177,15 +171,15 @@ export default function OrderManagementPage() {
             <button
               key={tab.key}
               onClick={() => setFilterStatus(tab.key)}
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                 isActive
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-white hover:bg-slate-850"
+                  ? "bg-emerald-600 text-white shadow-xs"
+                  : "bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-850"
               }`}
             >
               <span>{tab.label}</span>
               <span className={`rounded-full px-1.5 py-0.2 text-[10px] font-mono ${
-                isActive ? "bg-emerald-800/80 text-emerald-100" : "bg-slate-800 text-slate-400"
+                isActive ? "bg-emerald-800 text-emerald-100" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
               }`}>
                 {tab.count}
               </span>
@@ -197,13 +191,13 @@ export default function OrderManagementPage() {
       {/* 3. Orders List */}
       <div className="space-y-4">
         {filteredOrders.length === 0 ? (
-          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 py-16 px-4 text-center space-y-3">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#161E2E] py-16 px-4 text-center space-y-3 shadow-xs">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 border border-slate-200 dark:border-slate-700">
               <Inbox className="h-6 w-6" />
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-semibold text-white">Tidak ada pesanan pada filter ini</p>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">Tidak ada pesanan pada filter ini</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
                 {searchQuery 
                   ? "Tidak ada pesanan yang sesuai dengan kata kunci pencarian Anda." 
                   : "Belum ada pesanan masuk untuk kategori status ini."}
@@ -216,7 +210,7 @@ export default function OrderManagementPage() {
                   setFilterStatus("ALL");
                   setSearchQuery("");
                 }}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+                className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:underline cursor-pointer"
               >
                 Reset Filter & Pencarian
               </button>
@@ -226,22 +220,22 @@ export default function OrderManagementPage() {
           filteredOrders.map((order) => (
             <div
               key={order.id}
-              className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-5 shadow-lg space-y-4 hover:border-slate-700/80 transition-all backdrop-blur-md"
+              className="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#161E2E] p-5 shadow-xs space-y-4 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all"
             >
               {/* Card Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-800/80 gap-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80 gap-2">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="font-mono text-xs sm:text-sm font-bold text-white tracking-wide">
+                  <span className="font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-wide">
                     {order.orderNumber}
                   </span>
-                  <span className="text-xs text-slate-600">•</span>
-                  <span className="text-xs font-mono text-slate-400">
+                  <span className="text-xs text-slate-400">•</span>
+                  <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                     {formatDate(order.createdAt)}
                   </span>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded bg-slate-800/80 border border-slate-700 px-2 py-0.5 text-[11px] font-medium text-slate-300">
+                  <span className="rounded bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:text-slate-300">
                     {order.paymentMethod === "WHATSAPP" ? "Order via WA" : "QRIS Toko"}
                   </span>
                   {getStatusBadge(order.status)}
@@ -255,31 +249,31 @@ export default function OrderManagementPage() {
                   <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px] block">
                     Data Pembeli
                   </span>
-                  <div className="text-sm font-bold text-white truncate">{order.customerName}</div>
-                  <div className="font-mono text-slate-400">{order.customerPhone}</div>
+                  <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{order.customerName}</div>
+                  <div className="font-mono text-slate-600 dark:text-slate-400">{order.customerPhone}</div>
                   
                   <button
                     type="button"
                     onClick={() => openWhatsAppChat(order)}
-                    className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-semibold pt-1 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 font-semibold pt-1 transition-colors cursor-pointer"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
                     <span>Chat Pembeli di WhatsApp</span>
                   </button>
 
                   {order.customerRating ? (
-                    <div className="mt-2 rounded-xl bg-amber-500/10 border border-amber-500/20 p-2 space-y-1">
-                      <div className="flex items-center gap-1 text-amber-400 font-bold text-[11px]">
-                        <Star className="h-3 w-3 fill-amber-400" />
+                    <div className="mt-2 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 p-2 space-y-1">
+                      <div className="flex items-center gap-1 text-amber-800 dark:text-amber-400 font-bold text-[11px]">
+                        <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
                         <span>{order.customerRating}/5 Bintang dari Pembeli</span>
                       </div>
                       {order.customerReview && (
-                        <p className="text-slate-300 italic text-[10px] line-clamp-2">"{order.customerReview}"</p>
+                        <p className="text-slate-700 dark:text-slate-300 italic text-[10px] line-clamp-2">"{order.customerReview}"</p>
                       )}
                     </div>
                   ) : order.status === "SELESAI" ? (
-                    <div className="pt-1 text-[10px] text-slate-500 flex items-center gap-1">
-                      <Star className="h-3 w-3 text-slate-600" />
+                    <div className="pt-1 text-[10px] text-slate-400 flex items-center gap-1">
+                      <Star className="h-3 w-3 text-slate-300 dark:text-slate-600" />
                       <span>Belum ada ulasan pembeli</span>
                     </div>
                   ) : null}
@@ -290,70 +284,70 @@ export default function OrderManagementPage() {
                   <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px] block">
                     Pengiriman & Kurir
                   </span>
-                  <div className="font-semibold text-slate-200">
+                  <div className="font-semibold text-slate-800 dark:text-slate-200">
                     {order.courierName} — {order.courierService}
                   </div>
-                  <div className="text-slate-400 line-clamp-2 leading-relaxed">
+                  <div className="text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                     {order.customerAddress}, {order.destinationDistrict}, {order.destinationCity}
                   </div>
 
                   {order.trackingNumber ? (
                     <div className="space-y-1 pt-1">
-                      <div className="flex items-center gap-1.5 font-mono text-emerald-400">
+                      <div className="flex items-center gap-1.5 font-mono text-emerald-700 dark:text-emerald-400 font-semibold">
                         <span>Resi: {order.trackingNumber}</span>
                         <button
                           type="button"
                           onClick={() => handleCopyResi(order.trackingNumber!)}
-                          className="text-slate-400 hover:text-white transition-colors"
+                          className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
                           title="Salin Nomor Resi"
                         >
-                          {copiedResi === order.trackingNumber ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+                          {copiedResi === order.trackingNumber ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
                         </button>
                       </div>
                       <div className="flex items-center gap-2 pt-0.5">
                         <Link
                           href={`/lacak/${order.orderNumber}`}
                           target="_blank"
-                          className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium transition-colors"
+                          className="flex items-center gap-1 text-[11px] text-sky-600 dark:text-sky-400 hover:underline font-medium transition-colors"
                         >
                           <span>Lacak Kurir</span>
                           <ExternalLink className="h-3 w-3" />
                         </Link>
-                        <span className="text-slate-600">•</span>
+                        <span className="text-slate-300 dark:text-slate-600">•</span>
                         <button
                           type="button"
                           onClick={() => handleCopyTrackingLink(order.orderNumber)}
-                          className="text-[11px] text-slate-400 hover:text-slate-200 font-medium transition-colors"
+                          className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium transition-colors cursor-pointer"
                         >
                           {copiedLink === order.orderNumber ? "Link Tersalin!" : "Salin Link Lacak"}
                         </button>
                       </div>
                     </div>
                   ) : (
-                    <div className="text-[11px] text-slate-500 italic pt-1">
+                    <div className="text-[11px] text-slate-400 italic pt-1">
                       Nomor resi belum diinput
                     </div>
                   )}
                 </div>
 
                 {/* Col 3: Financial Summary Breakdown */}
-                <div className="space-y-1.5 rounded-xl bg-slate-950/60 p-3.5 border border-slate-800">
+                <div className="space-y-1.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 p-3.5 border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500 font-semibold uppercase tracking-wider text-[10px] block">
                     Rincian Finansial
                   </span>
-                  <div className="flex justify-between text-slate-300">
+                  <div className="flex justify-between text-slate-700 dark:text-slate-300">
                     <span>Subtotal Barang:</span>
-                    <span className="font-mono">{formatRupiah(order.itemsTotal)}</span>
+                    <span className="font-mono font-semibold">{formatRupiah(order.itemsTotal)}</span>
                   </div>
-                  <div className="flex justify-between text-slate-400">
+                  <div className="flex justify-between text-slate-500 dark:text-slate-400">
                     <span>Ongkos Kirim:</span>
                     <span className="font-mono">{formatRupiah(order.shippingCost)}</span>
                   </div>
-                  <div className="flex justify-between font-bold text-white pt-1.5 border-t border-slate-800">
+                  <div className="flex justify-between font-bold text-slate-900 dark:text-white pt-1.5 border-t border-slate-200 dark:border-slate-800">
                     <span>Total Bayar:</span>
-                    <span className="font-mono text-emerald-400">{formatRupiah(order.grandTotal)}</span>
+                    <span className="font-mono text-emerald-700 dark:text-emerald-400">{formatRupiah(order.grandTotal)}</span>
                   </div>
-                  <div className="flex justify-between font-semibold text-emerald-400 text-[11px] pt-1 border-t border-slate-850">
+                  <div className="flex justify-between font-semibold text-emerald-800 dark:text-emerald-400 text-[11px] pt-1 border-t border-slate-200/60 dark:border-slate-850">
                     <span>Laba Bersih Toko:</span>
                     <span className="font-mono">+{formatRupiah(order.netProfit)}</span>
                   </div>
@@ -361,24 +355,24 @@ export default function OrderManagementPage() {
               </div>
 
               {/* Items List Box */}
-              <div className="rounded-xl bg-slate-950/40 p-3 border border-slate-800/60 text-xs">
+              <div className="rounded-xl bg-slate-50/70 dark:bg-slate-950/40 p-3 border border-slate-200 dark:border-slate-800/60 text-xs">
                 <span className="text-slate-500 font-semibold text-[10px] uppercase tracking-wider block mb-1.5">
                   Daftar Item Belanjaan:
                 </span>
                 <div className="space-y-1.5">
                   {order.items.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-slate-300">
+                    <div key={idx} className="flex items-center justify-between text-slate-700 dark:text-slate-300">
                       <span className="truncate pr-2">
-                        <strong className="text-white font-mono">{item.quantity}x</strong> {item.productName} ({item.weightGrams}g)
+                        <strong className="text-slate-900 dark:text-white font-mono">{item.quantity}x</strong> {item.productName} ({item.weightGrams}g)
                       </span>
-                      <span className="font-mono shrink-0">{formatRupiah(item.subtotal)}</span>
+                      <span className="font-mono shrink-0 font-semibold">{formatRupiah(item.subtotal)}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Status Action Buttons Bar */}
-              <div className="flex flex-wrap items-center justify-between pt-3 border-t border-slate-800 gap-3">
+              <div className="flex flex-wrap items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 gap-3">
                 {/* Resi Input for DIPROSES status */}
                 {order.status === "DIPROSES" ? (
                   <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -387,19 +381,19 @@ export default function OrderManagementPage() {
                       placeholder="Input nomor resi kurir..."
                       value={trackingInputs[order.id] || ""}
                       onChange={(e) => setTrackingInputs({ ...trackingInputs, [order.id]: e.target.value })}
-                      className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none font-mono"
+                      className="rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-sky-500 focus:outline-none font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => handleUpdateResi(order.id)}
-                      className="rounded-lg bg-sky-600 hover:bg-sky-500 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-sm shrink-0"
+                      className="rounded-lg bg-sky-600 hover:bg-sky-700 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-xs shrink-0 cursor-pointer"
                     >
                       Kirim Resi
                     </button>
                   </div>
                 ) : (
                   <div className="text-xs text-slate-500">
-                    Status: <strong className="text-slate-300 font-mono">{order.status}</strong>
+                    Status: <strong className="text-slate-800 dark:text-slate-300 font-mono">{order.status}</strong>
                   </div>
                 )}
 
@@ -416,7 +410,7 @@ export default function OrderManagementPage() {
                           alert(res.message || "Gagal memproses pesanan.");
                         }
                       }}
-                      className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-sm disabled:opacity-50"
+                      className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-xs disabled:opacity-50 cursor-pointer"
                     >
                       {processingOrderId === order.id ? "Memproses..." : "Verifikasi Pembayaran"}
                     </button>
@@ -426,7 +420,7 @@ export default function OrderManagementPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <Link
                         href="/dashboard/topup"
-                        className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/30 transition-colors flex items-center gap-1.5 shadow-sm"
+                        className="rounded-lg bg-amber-50 dark:bg-amber-500/20 border border-amber-200 dark:border-amber-500/40 px-3 py-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition-colors flex items-center gap-1.5 shadow-xs"
                       >
                         <span>Kuota Habis — Top-Up Kuota</span>
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -442,7 +436,7 @@ export default function OrderManagementPage() {
                             alert(res.message || "Gagal memproses pesanan.");
                           }
                         }}
-                        className="rounded-lg bg-emerald-600/80 hover:bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50"
+                        className="rounded-lg bg-emerald-600/90 hover:bg-emerald-600 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {processingOrderId === order.id ? "Memproses..." : "Coba Proses Ulang"}
                       </button>
@@ -454,15 +448,15 @@ export default function OrderManagementPage() {
                       <Link
                         href={`/lacak/${order.orderNumber}`}
                         target="_blank"
-                        className="rounded-lg bg-slate-800 border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-700 transition-colors flex items-center gap-1.5"
+                        className="rounded-lg bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
                       >
                         <span>Lacak Kurir</span>
-                        <ExternalLink className="h-3 w-3 text-sky-400" />
+                        <ExternalLink className="h-3 w-3 text-sky-600 dark:text-sky-400" />
                       </Link>
                       <button
                         type="button"
                         onClick={() => updateOrderStatus(order.id, "SELESAI")}
-                        className="rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-sm"
+                        className="rounded-lg bg-emerald-600 hover:bg-emerald-700 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-xs cursor-pointer"
                       >
                         Tandai Selesai & Lunas
                       </button>
@@ -477,7 +471,7 @@ export default function OrderManagementPage() {
                           updateOrderStatus(order.id, "BATAL");
                         }
                       }}
-                      className="text-xs text-slate-500 hover:text-rose-400 transition-colors px-2 py-1"
+                      className="text-xs text-slate-400 hover:text-rose-600 transition-colors px-2 py-1 cursor-pointer"
                     >
                       Batalkan
                     </button>
@@ -491,4 +485,3 @@ export default function OrderManagementPage() {
     </div>
   );
 }
-
