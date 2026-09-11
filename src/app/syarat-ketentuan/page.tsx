@@ -22,7 +22,7 @@ export default function SyaratKetentuanPage() {
           </Link>
           <div className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/koza-icon.svg" alt="KoZa Bisnis" className="h-6 w-6 object-contain" />
+            <img src="/brand/koza-icon.png" alt="KoZa Bisnis" className="h-6 w-6 object-contain" />
             <span className="font-bold text-sm text-slate-200">KoZa Bisnis</span>
           </div>
         </div>

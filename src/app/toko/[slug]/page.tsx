@@ -650,7 +650,7 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-md group"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/koza-icon.svg" alt="KoZa" className="h-3.5 w-3.5 object-contain" />
+            <img src="/brand/koza-icon.png" alt="KoZa" className="h-3.5 w-3.5 object-contain" />
             <span>Dibuat dengan</span>
             <span className="font-extrabold text-slate-200 group-hover:text-white">KoZa Bisnis</span>
             <span className="text-slate-600">•</span>

@@ -66,7 +66,7 @@ export function DashboardNav() {
           <Link href="/dashboard" className="flex items-center gap-2 group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#0D7377]/20 border border-[#0D7377]/40 shadow-sm p-1">
-              <img src="/brand/koza-icon.svg" alt="KoZa Icon" className="h-full w-full object-contain" />
+              <img src="/brand/koza-icon.png" alt="KoZa Icon" className="h-full w-full object-contain" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">

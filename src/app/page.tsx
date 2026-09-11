@@ -1251,7 +1251,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/koza-icon.svg" alt="KoZa Bisnis" className="h-6 w-6 object-contain" />
+            <img src="/brand/koza-icon.png" alt="KoZa Bisnis" className="h-6 w-6 object-contain" />
             <span className="font-bold text-slate-300">KoZa Bisnis</span>
             <span>• Solusi Toko Bio Link Mandiri & Pembukuan Kas</span>
           </div>
