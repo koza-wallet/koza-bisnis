@@ -34,12 +34,15 @@ import { createDefaultBlock } from "@/lib/builder-templates";
 import { BlockRenderer } from "@/components/builder/block-renderer";
 import { BlockSettingsForm } from "@/components/builder/block-settings-form";
 import { AddSectionModal } from "@/components/builder/add-section-modal";
+import { DevicePreviewFrame } from "@/components/builder/device-preview-frame";
+import { useTheme } from "@/lib/theme-context";
 
 export default function BuilderPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const id = resolvedParams.id;
   const router = useRouter();
   const { landingPages, updateLandingPage, store } = useStore();
+  const { theme } = useTheme();
 
   const lp = landingPages.find((p) => p.id === id);
 
@@ -850,62 +853,84 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
             </button>
           )}
 
-          <div
-            className={`transition-all duration-300 ${
-              viewport === "DESKTOP"
-                ? "w-full min-h-full rounded-none border-0 shadow-none my-0"
-                : viewport === "TABLET"
-                ? "w-[768px] rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-xl overflow-hidden my-4"
-                : "w-full sm:w-[390px] rounded-none sm:rounded-[44px] border-0 sm:border-[10px] border-slate-800 shadow-none sm:shadow-2xl overflow-hidden my-0 sm:my-4 sm:ring-1 sm:ring-slate-700/50"
-            }`}
-            style={{
+          {(() => {
+            const previewContent = (
+              <div className="divide-y divide-slate-800/40">
+                {blocks.map((block) => (
+                  <BlockRenderer
+                    key={block.id}
+                    block={block}
+                    design={design}
+                    isPreview={true}
+                    isSelected={selectedBlockId === block.id}
+                    onSelect={(blockId) => setSelectedBlockId(blockId)}
+                    storeName={store?.name || "KoZa Store"}
+                    storePhone={store?.whatsappNumber || "6281234567890"}
+                  />
+                ))}
+
+                {blocks.length === 0 && (
+                  <div className="py-20 text-center px-4 space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
+                      <Layout className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-bold text-slate-900 dark:text-white text-base">Halaman Masih Kosong</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                      Mulai tambahkan seksi pertama seperti Hero Banner atau Announcement Bar untuk membangun halaman Anda.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setIsAddSectionOpen(true)}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500"
+                    >
+                      + Tambah Seksi
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+
+            const pageStyle: React.CSSProperties = {
               backgroundColor: design.backgroundColor,
               color: design.textColor,
               fontFamily: design.fontFamily,
-            }}
-          >
-            {/* iPhone Notch Simulator on Mobile Viewport (Only visible on desktop simulator) */}
-            {viewport === "MOBILE" && (
-              <div className="hidden sm:flex h-6 bg-slate-950 items-center justify-center sticky top-0 z-30">
-                <div className="w-24 h-3.5 bg-black rounded-full" />
-              </div>
-            )}
+            };
 
-            {/* Blocks Stream */}
-            <div className="divide-y divide-slate-800/40">
-              {blocks.map((block) => (
-                <BlockRenderer
-                  key={block.id}
-                  block={block}
-                  design={design}
-                  isPreview={true}
-                  isSelected={selectedBlockId === block.id}
-                  onSelect={(blockId) => setSelectedBlockId(blockId)}
-                  storeName={store?.name || "KoZa Store"}
-                  storePhone={store?.whatsappNumber || "6281234567890"}
-                />
-              ))}
-
-              {blocks.length === 0 && (
-                <div className="py-20 text-center px-4 space-y-3">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto">
-                    <Layout className="w-6 h-6" />
-                  </div>
-                  <h3 className="font-bold text-slate-900 dark:text-white text-base">Halaman Masih Kosong</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                    Mulai tambahkan seksi pertama seperti Hero Banner atau Announcement Bar untuk membangun halaman Anda.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddSectionOpen(true)}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-500"
-                  >
-                    + Tambah Seksi
-                  </button>
+            if (viewport === "DESKTOP") {
+              return (
+                <div className="transition-all duration-300 w-full min-h-full rounded-none border-0 shadow-none my-0" style={pageStyle}>
+                  {previewContent}
                 </div>
-              )}
-            </div>
-          </div>
+              );
+            }
+
+            return (
+              <div
+                className={`transition-all duration-300 ${
+                  viewport === "TABLET"
+                    ? "rounded-2xl border border-slate-300/80 dark:border-slate-800 shadow-xl overflow-hidden my-4"
+                    : "rounded-none sm:rounded-[44px] border-0 sm:border-[10px] border-slate-800 shadow-none sm:shadow-2xl overflow-hidden my-0 sm:my-4 sm:ring-1 sm:ring-slate-700/50"
+                }`}
+              >
+                {/* iPhone Notch Simulator on Mobile Viewport (Only visible on desktop simulator) */}
+                {viewport === "MOBILE" && (
+                  <div className="hidden sm:flex h-6 bg-slate-950 items-center justify-center sticky top-0 z-30">
+                    <div className="w-24 h-3.5 bg-black rounded-full" />
+                  </div>
+                )}
+
+                {/* Dirender di dalam iframe supaya breakpoint Tailwind (sm:/md:/lg:/xl:) dihitung
+                    terhadap lebar device simulasi (390/768px), bukan lebar browser asli */}
+                <DevicePreviewFrame
+                  width={viewport === "TABLET" ? 768 : 390}
+                  isDark={theme === "dark"}
+                  className="w-full block"
+                >
+                  <div style={pageStyle}>{previewContent}</div>
+                </DevicePreviewFrame>
+              </div>
+            );
+          })()}
         </main>
       </div>
 

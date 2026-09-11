@@ -8,6 +8,8 @@ import { BUILDER_TEMPLATES, createDefaultBlock } from "@/lib/builder-templates";
 import { BuilderTemplate, BuilderPageDesign, BuilderPageSEO, BuilderBlock } from "@/types/builder";
 import { LandingPageTheme, LandingPageTone } from "@/types";
 import { BlockRenderer } from "@/components/builder/block-renderer";
+import { DevicePreviewFrame } from "@/components/builder/device-preview-frame";
+import { useTheme } from "@/lib/theme-context";
 import { 
   Sparkles, 
   ArrowLeft, 
@@ -39,6 +41,7 @@ type CreationMode = "AI" | "MANUAL" | "TEMPLATE";
 export default function CreateLandingPage() {
   const router = useRouter();
   const { products, createLandingPage, store } = useStore();
+  const { theme } = useTheme();
 
   // Mode Selection: AI, Kanvas Kosong (Modular), or Template Library
   const [creationMode, setCreationMode] = useState<CreationMode>("AI");
@@ -685,13 +688,25 @@ export default function CreateLandingPage() {
                 <div className="h-[620px] overflow-y-auto bg-slate-50 dark:bg-slate-900 text-left">
                   {generatedBlocks ? (
                     <>
-                      <div className={devicePreview === "MOBILE" ? "" : "max-w-3xl mx-auto"}>
-                        {generatedBlocks
-                          .filter((b) => b.isVisible)
-                          .map((block) => (
-                            <BlockRenderer key={block.id} block={block} design={generatedDesign || undefined} isPreview />
-                          ))}
-                      </div>
+                      {devicePreview === "MOBILE" ? (
+                        <DevicePreviewFrame width={360} isDark={theme === "dark"} className="w-full block">
+                          <div>
+                            {generatedBlocks
+                              .filter((b) => b.isVisible)
+                              .map((block) => (
+                                <BlockRenderer key={block.id} block={block} design={generatedDesign || undefined} isPreview />
+                              ))}
+                          </div>
+                        </DevicePreviewFrame>
+                      ) : (
+                        <div className="max-w-3xl mx-auto">
+                          {generatedBlocks
+                            .filter((b) => b.isVisible)
+                            .map((block) => (
+                              <BlockRenderer key={block.id} block={block} design={generatedDesign || undefined} isPreview />
+                            ))}
+                        </div>
+                      )}
                       <div className="sticky bottom-0 p-3 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 flex items-center gap-2">
                         <button
                           onClick={handleEditInCanvas}

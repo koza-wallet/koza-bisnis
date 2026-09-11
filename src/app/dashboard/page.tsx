@@ -581,7 +581,7 @@ export default function DashboardOverviewPage() {
           </div>
           <div className="min-w-0">
             <div className="text-xs font-bold text-slate-900 dark:text-white truncate">Bikin Halaman AI</div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">15 detik siap iklan</div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">Pro AI • 25x/bulan (350x/thn)</div>
           </div>
         </Link>
 

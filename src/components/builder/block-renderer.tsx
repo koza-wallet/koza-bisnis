@@ -182,7 +182,7 @@ function HeroBannerBlock({ settings, ctx }: { settings: any; ctx: any }) {
               <span>{settings.badge}</span>
             </div>
           )}
-          <h1 className="text-2xl sm:text-3xl lg:text-4.5xl xl:text-5xl font-black tracking-tight leading-tight text-white break-words">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight text-white break-words">
             {settings.headline || "Headline Menarik Produk Anda"}
           </h1>
           <p className="text-sm sm:text-base text-slate-300 leading-relaxed max-w-xl">
