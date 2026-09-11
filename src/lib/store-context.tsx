@@ -640,11 +640,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         theme: lpData.theme,
         tone: lpData.tone,
         builder_mode: lpData.builderMode || "AI",
-        blocks: lpData,
-        meta_pixel_id: lpData.pixels?.metaPixelId || null,
-        tiktok_pixel_id: lpData.pixels?.tiktokPixelId || null,
-        views_count: 0,
-      }).then();
+        hero: lpData.hero,
+        problem_section: lpData.problemSection,
+        solution_section: lpData.solutionSection,
+        features: lpData.features,
+        testimonials: lpData.testimonials,
+        pricing: lpData.pricing,
+        faqs: lpData.faq,
+        blocks: lpData.blocks || [],
+        design: lpData.design,
+        seo: lpData.seo,
+        pixels: lpData.pixels || {},
+        analytics: lpData.analytics,
+        is_active: lpData.isPublished,
+      }).then(({ error }) => {
+        if (error) {
+          console.error("Gagal menyimpan landing page ke database:", error);
+        }
+      });
     }
 
     return newLp;
@@ -662,11 +675,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (updates.theme !== undefined) payload.theme = updates.theme;
       if (updates.tone !== undefined) payload.tone = updates.tone;
       if (updates.builderMode !== undefined) payload.builder_mode = updates.builderMode;
-      if (updates.pixels?.metaPixelId !== undefined) payload.meta_pixel_id = updates.pixels.metaPixelId;
-      if (updates.pixels?.tiktokPixelId !== undefined) payload.tiktok_pixel_id = updates.pixels.tiktokPixelId;
-      payload.blocks = updates;
+      if (updates.hero !== undefined) payload.hero = updates.hero;
+      if (updates.problemSection !== undefined) payload.problem_section = updates.problemSection;
+      if (updates.solutionSection !== undefined) payload.solution_section = updates.solutionSection;
+      if (updates.features !== undefined) payload.features = updates.features;
+      if (updates.testimonials !== undefined) payload.testimonials = updates.testimonials;
+      if (updates.pricing !== undefined) payload.pricing = updates.pricing;
+      if (updates.faq !== undefined) payload.faqs = updates.faq;
+      if (updates.blocks !== undefined) payload.blocks = updates.blocks;
+      if (updates.design !== undefined) payload.design = updates.design;
+      if (updates.seo !== undefined) payload.seo = updates.seo;
+      if (updates.pixels !== undefined) payload.pixels = updates.pixels;
+      if (updates.analytics !== undefined) payload.analytics = updates.analytics;
+      if (updates.isPublished !== undefined) payload.is_active = updates.isPublished;
 
-      supabase.from("landing_pages").update(payload).eq("id", id).then();
+      supabase.from("landing_pages").update(payload).eq("id", id).then(({ error }) => {
+        if (error) {
+          console.error("Gagal memperbarui landing page di database:", error);
+        }
+      });
     }
   };
 
