@@ -29,3 +29,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ### 4. Bahasa & Komunikasi
 * Gunakan **Bahasa Indonesia** untuk seluruh penjelasan masalah, pemaparan solusi, dan ringkasan perubahan.
 * Nama variabel, fungsi, nama file, dan komentar kode teknis tetap menggunakan istilah baku industri.
+### 5. Pemilihan Skill & Subagen Otomatis
+* Sebelum mengeksekusi tugas non-trivial (fitur baru, refactor, bugfix, testing, audit):
+  * **Evaluasi Skill**: Cek daftar skill yang tersedia (baik global maupun lokal di `.agents/skills/`). Jika ada yang relevan (misal `tdd-workflow`, `security-reviewer`, `e2e-testing`), pelajari dan terapkan sebelum menulis kode.
+  * **Delegasi Subagen**: Gunakan subagen spesialis yang sesuai (misal `react-reviewer`, `typescript-reviewer`, `database-reviewer`) untuk tahap perencanaan dan peninjauan hasil kerja.
