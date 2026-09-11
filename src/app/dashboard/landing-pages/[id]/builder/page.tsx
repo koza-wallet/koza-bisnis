@@ -135,6 +135,11 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
     setTimeout(() => setIsSaved(false), 2500);
   };
 
+  // Toggle status Draft <-> Terbit
+  const handleTogglePublish = () => {
+    updateLandingPage(id, { isPublished: !lp.isPublished });
+  };
+
   // Reordering helpers
   const moveBlock = (index: number, direction: "UP" | "DOWN") => {
     const newBlocks = [...blocks];
@@ -257,6 +262,15 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
                 Builder Berdu
               </span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  lp.isPublished
+                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                    : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                }`}
+              >
+                {lp.isPublished ? "Terbit" : "Draft"}
+              </span>
             </div>
             <p className="text-[11px] text-slate-500 truncate max-w-[250px]">
               /lp/{lp.slug}
@@ -271,6 +285,19 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
               • Belum disimpan
             </span>
           )}
+
+          <button
+            type="button"
+            onClick={handleTogglePublish}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              lp.isPublished
+                ? "border-slate-800 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white"
+                : "border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400"
+            }`}
+          >
+            <Globe className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{lp.isPublished ? "Jadikan Draft" : "Terbitkan Sekarang"}</span>
+          </button>
 
           <a
             href={`/lp/${lp.slug}`}

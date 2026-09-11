@@ -168,9 +168,20 @@ export default function LandingPagesDashboard() {
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-emerald-400 transition-colors">
-                        {lp.title}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-white text-sm line-clamp-1 group-hover:text-emerald-400 transition-colors">
+                          {lp.title}
+                        </h3>
+                        <span
+                          className={`shrink-0 px-1.5 py-0.5 rounded text-[9px] font-bold border ${
+                            lp.isPublished
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                              : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                          }`}
+                        >
+                          {lp.isPublished ? "TERBIT" : "DRAFT"}
+                        </span>
+                      </div>
                       <p className="text-xs text-slate-400 mt-1 line-clamp-2">
                         {lp.hero.subheadline}
                       </p>

@@ -35,7 +35,7 @@ export function generateAICopy(input: GenerateLandingPageInput): Omit<LandingPag
   if (tone === "URGENT") {
     badge = "🔥 FLASH SALE HARI INI • DISKON " + discountPercent + "%";
     headline = `Dapatkan ${input.productName} Asli Sekarang Sebelum Kehabisan Stok!`;
-    subheadline = `Telah dipercaya lebih dari 2.400+ pelanggan di seluruh Indonesia. Pesan sekarang dapatkan garansi tukar baru & gratis konsultasi!`;
+    subheadline = `Kualitas terjamin, siap dikirim hari ini juga. Pesan sekarang sebelum promo berakhir!`;
     ctaText = "KLAIM DISKON " + discountPercent + "% SEKARANG";
   } else if (tone === "LUXURY") {
     badge = "✨ PREMIUM SIGNATURE COLLECTION";
@@ -99,27 +99,27 @@ export function generateAICopy(input: GenerateLandingPageInput): Omit<LandingPag
   const testimonials = [
     {
       name: "Siti Rahmawati",
-      role: "Pembeli Terverifikasi • Jakarta Selatan",
+      role: "Jakarta Selatan",
       review: `Awalnya ragu beli ${input.productName} secara online, tapi pas paket datang beneran kaget sama kualitasnya! Bahannya halus banget dan rapi. Bakal repeat order lagi pasti!`,
       rating: 5,
       avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-      verified: true
+      verified: false
     },
     {
       name: "Dewi Anggraini",
-      role: "Pembeli Terverifikasi • Surabaya",
+      role: "Surabaya",
       review: `Pengirimannya cepet banget cuma 2 hari sampe Surabaya. Adminnya ramah waktu tanya-tanya di WA. Produknya pas banget sesuai ekspektasi. Makasih seller!`,
       rating: 5,
       avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-      verified: true
+      verified: false
     },
     {
       name: "Rina Kusuma",
-      role: "Pembeli Terverifikasi • Bandung",
+      role: "Bandung",
       review: `Worth it banget dengan harga segini dibanding beli di mall yang harganya bisa 2x lipat. Packing rapi ada bubble wrap tebal. Recommended seller bintang 5!`,
       rating: 5,
       avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
-      verified: true
+      verified: false
     }
   ];
 
@@ -184,7 +184,7 @@ export function generateAICopy(input: GenerateLandingPageInput): Omit<LandingPag
       normalPrice,
       promoPrice,
       discountPercent,
-      scarcityText: "🔥 Stok Terbatas: Sisa 14 Pcs Hari Ini",
+      scarcityText: "🔥 Promo Berlaku Selama Stok Masih Tersedia",
       bonusGift: "Gratis Pouch Eksklusif & E-Book Panduan Senilai Rp 50.000"
     },
     pixels: {
@@ -192,10 +192,10 @@ export function generateAICopy(input: GenerateLandingPageInput): Omit<LandingPag
       tiktokPixelId: ""
     },
     analytics: {
-      viewsCount: 142,
-      ordersCount: 9,
-      conversionRate: 6.3
+      viewsCount: 0,
+      ordersCount: 0,
+      conversionRate: 0
     },
-    isPublished: true
+    isPublished: false
   };
 }

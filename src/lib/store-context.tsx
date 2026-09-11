@@ -203,56 +203,50 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
       if (lpsRows) {
         setLandingPages(
-          lpsRows.map((lp: any) => {
-            const b = lp.blocks || {};
-            return {
-              id: lp.id,
-              storeId: lp.store_id,
-              productId: lp.product_id || undefined,
-              slug: lp.slug,
-              title: lp.title,
-              theme: lp.theme || "EMERALD",
-              tone: lp.tone || "URGENT",
-              builderMode: lp.builder_mode || "AI",
-              blocks: b.blocks || (Array.isArray(b) ? b : undefined),
-              design: b.design || undefined,
-              seo: b.seo || undefined,
-              hero: b.hero || {
-                badge: "PROMO TERBATAS",
-                headline: lp.title,
-                subheadline: "",
-                ctaText: "Pesan Sekarang",
-                heroImageUrl: "",
-                countdownHours: 24,
-              },
-              problemSection: b.problemSection || { title: "", subtitle: "", painPoints: [] },
-              solutionSection: b.solutionSection || { title: "", description: "", highlights: [] },
-              features: b.features || [],
-              testimonials: b.testimonials || [],
-              guarantee: b.guarantee || {
-                title: "Garansi 100% Kepuasan",
-                description: "Barang rusak atau tidak sesuai kami ganti baru tanpa ribet.",
-              },
-              faq: b.faq || [],
-              pricing: b.pricing || {
-                normalPrice: 0,
-                promoPrice: 0,
-                discountPercent: 0,
-                scarcityText: "",
-              },
-              pixels: {
-                metaPixelId: lp.meta_pixel_id || b.pixels?.metaPixelId || undefined,
-                tiktokPixelId: lp.tiktok_pixel_id || b.pixels?.tiktokPixelId || undefined,
-              },
-              analytics: {
-                viewsCount: lp.views_count || 0,
-                ordersCount: 0,
-                conversionRate: 0,
-              },
-              isPublished: lp.is_published ?? true,
-              createdAt: lp.created_at,
-            };
-          })
+          lpsRows.map((lp: any) => ({
+            id: lp.id,
+            storeId: lp.store_id,
+            productId: lp.product_id || undefined,
+            slug: lp.slug,
+            title: lp.title,
+            theme: lp.theme || "EMERALD",
+            tone: lp.tone || "URGENT",
+            builderMode: lp.builder_mode || "AI",
+            blocks: lp.blocks || [],
+            design: lp.design || undefined,
+            seo: lp.seo || undefined,
+            hero: lp.hero || {
+              badge: "PROMO TERBATAS",
+              headline: lp.title,
+              subheadline: "",
+              ctaText: "Pesan Sekarang",
+              heroImageUrl: "",
+              countdownHours: 24,
+            },
+            problemSection: lp.problem_section || { title: "", subtitle: "", painPoints: [] },
+            solutionSection: lp.solution_section || { title: "", description: "", highlights: [] },
+            features: lp.features || [],
+            testimonials: lp.testimonials || [],
+            guarantee: lp.guarantee || {
+              title: "Garansi 100% Kepuasan",
+              description: "Barang rusak atau tidak sesuai kami ganti baru tanpa ribet.",
+            },
+            faq: lp.faqs || [],
+            pricing: lp.pricing || {
+              normalPrice: 0,
+              promoPrice: 0,
+              discountPercent: 0,
+              scarcityText: "",
+            },
+            pixels: lp.pixels || {},
+            analytics: lp.analytics || {
+              viewsCount: 0,
+              ordersCount: 0,
+              conversionRate: 0,
+            },
+            isPublished: lp.is_active ?? true,
+            createdAt: lp.created_at,
+          }))
         );
       }
     } catch (err) {
@@ -720,7 +714,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
           if (isSupabaseUser && lp.id) {
             const supabase = createClient();
-            supabase.from("landing_pages").update({ views_count: viewsCount }).eq("id", lp.id).then();
+            supabase
+              .from("landing_pages")
+              .update({ analytics: { viewsCount, ordersCount, conversionRate } })
+              .eq("id", lp.id)
+              .then(({ error }) => {
+                if (error) {
+                  console.error("Gagal mencatat views landing page:", error);
+                }
+              });
           }
 
           return {

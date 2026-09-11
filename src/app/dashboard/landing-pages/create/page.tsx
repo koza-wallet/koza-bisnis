@@ -185,7 +185,7 @@ export default function CreateLandingPage() {
         metaTitle: manualTitle,
         metaDescription: `Halaman jualan resmi ${manualTitle}`,
         metaKeywords: "",
-        noIndex: false,
+        noIndex: true,
       },
       hero: {
         badge: "PROMO HARI INI",
@@ -208,7 +208,7 @@ export default function CreateLandingPage() {
         scarcityText: "Khusus Hari Ini",
       },
       analytics: { viewsCount: 0, ordersCount: 0, conversionRate: 0 },
-      isPublished: true,
+      isPublished: false,
     });
 
     router.push(`/dashboard/landing-pages/${newPage.id}/builder`);
@@ -241,7 +241,7 @@ export default function CreateLandingPage() {
         metaTitle: template.name,
         metaDescription: template.description,
         metaKeywords: "",
-        noIndex: false,
+        noIndex: true,
       },
       hero: {
         badge: "PROMO SPESIAL",
@@ -264,7 +264,7 @@ export default function CreateLandingPage() {
         scarcityText: "Hemat 48% Hari Ini",
       },
       analytics: { viewsCount: 0, ordersCount: 0, conversionRate: 0 },
-      isPublished: true,
+      isPublished: false,
     });
 
     router.push(`/dashboard/landing-pages/${newPage.id}/builder`);
@@ -325,7 +325,7 @@ export default function CreateLandingPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="sticky top-14 z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-slate-950/95 backdrop-blur-md border-b border-slate-900 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <Link
             href="/dashboard/landing-pages"
@@ -348,7 +348,7 @@ export default function CreateLandingPage() {
             className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 active:scale-95 transition-all"
           >
             <Check className="h-4 w-4" />
-            <span>Simpan & Publikasikan</span>
+            <span>Simpan sebagai Draft</span>
           </button>
         )}
       </div>

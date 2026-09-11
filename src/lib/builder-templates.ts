@@ -70,7 +70,7 @@ export const BLOCK_CATALOG: BlockCatalogItem[] = [
   {
     type: "TESTIMONIALS",
     name: "Ulasan Pembeli Bintang 5",
-    description: "Review pembeli autentik dengan foto profil dan badge 'Pembeli Terverifikasi'.",
+    description: "Contoh ulasan pembeli dengan foto profil — ganti dengan ulasan asli pelanggan Anda sebelum diterbitkan.",
     category: "TRUST_PROOF",
     iconName: "Star",
     badge: "Konversi Tinggi",
@@ -139,7 +139,7 @@ export function createDefaultBlock(type: BlockType): BuilderBlock {
         settings: {
           badge: "🔥 PROMO TERBATAS HARI INI",
           headline: "Tampil Percaya Diri dengan Produk Berkualitas Premium",
-          subheadline: "Solusi terbaik yang telah dipercaya lebih dari 8.500+ pelanggan di seluruh Indonesia.",
+          subheadline: "Solusi terbaik untuk kebutuhan Anda — kualitas premium dengan harga bersahabat.",
           ctaText: "Pesan Sekarang (Diskon 50%)",
           ctaLink: "#order-form",
           heroImageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80",
@@ -259,7 +259,7 @@ export function createDefaultBlock(type: BlockType): BuilderBlock {
               review: "Awalnya ragu karena sering kecewa beli online. Pas barang sampai beneran takjub, packing rapi dan kualitasnya melebihi harganya!",
               rating: 5,
               avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80",
-              verified: true,
+              verified: false,
             },
             {
               name: "Dimas Pratama",
@@ -267,7 +267,7 @@ export function createDefaultBlock(type: BlockType): BuilderBlock {
               review: "Pengiriman cepet banget cuma 2 hari. Barangnya awet dan pas banget dipakai harian. Sangat recommended!",
               rating: 5,
               avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-              verified: true,
+              verified: false,
             },
             {
               name: "Rina Kusuma",
@@ -275,7 +275,7 @@ export function createDefaultBlock(type: BlockType): BuilderBlock {
               review: "Adminnya ramah banget ngejelasinnya sabar. Barangnya original dan garansinya beneran amanah. Bintang 5 pokoknya!",
               rating: 5,
               avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&auto=format&fit=crop&q=80",
-              verified: true,
+              verified: false,
             },
           ],
         },

@@ -181,6 +181,33 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     return () => clearInterval(timer);
   }, []);
 
+  // All Available Courier Rates (hanya bergantung pada `store`, aman dipanggil
+  // sebelum data `lp` selesai dimuat — tidak boleh berada setelah early return
+  // di bawah karena akan melanggar Rules of Hooks)
+  const allMasterCouriers = [
+    { id: "SICEPAT", name: "SiCepat REG", rate: selectedDestination.baseRate, desc: "Estimasi 1-3 hari", tag: "Rekomendasi" },
+    { id: "JNT", name: "J&T Express", rate: selectedDestination.baseRate + 2000, desc: "Estimasi 1-3 hari" },
+    { id: "JNE", name: "JNE Reguler", rate: selectedDestination.baseRate + 1000, desc: "Estimasi 2-4 hari" },
+    { id: "ANTERAJA", name: "Anteraja", rate: selectedDestination.baseRate, desc: "Estimasi 1-3 hari" },
+    { id: "JTR", name: "JTR (JNE Trucking) Kargo", rate: Math.max(25000, Math.round(selectedDestination.baseRate * 1.5)), desc: "Kargo Barang Berat (3-5 hari)", tag: "Kargo Hemat" },
+    { id: "JNTCARGO", name: "J&T Cargo", rate: Math.max(28000, Math.round(selectedDestination.baseRate * 1.8)), desc: "Kargo Paket Besar (2-4 hari)", tag: "Kargo" },
+    { id: "INDAH", name: "Indah Logistik Cargo", rate: Math.max(26000, Math.round(selectedDestination.baseRate * 1.6)), desc: "Kargo Partai Besar (3-6 hari)", tag: "Kargo" },
+  ];
+
+  const allowedStoreCouriers = store.enabledCouriers && store.enabledCouriers.length > 0
+    ? store.enabledCouriers
+    : ["JNT", "JNE", "SICEPAT"];
+
+  const filteredCouriers = allMasterCouriers.filter((c) => allowedStoreCouriers.includes(c.id));
+  const couriers = filteredCouriers.length > 0 ? filteredCouriers : allMasterCouriers.slice(0, 3);
+
+  // Auto-sync selectedCourier jika kurir yang aktif di toko berubah
+  useEffect(() => {
+    if (couriers.length > 0 && !couriers.some((c) => c.id === selectedCourier)) {
+      setSelectedCourier(couriers[0].id);
+    }
+  }, [couriers, selectedCourier]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white">
@@ -238,31 +265,6 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
     ? Math.max(25000, Math.round(selectedDestination.baseRate * 1.5))
     : selectedDestination.baseRate;
   const grandTotal = itemsTotal + shippingCost;
-
-  // All Available Courier Rates
-  const allMasterCouriers = [
-    { id: "SICEPAT", name: "SiCepat REG", rate: selectedDestination.baseRate, desc: "Estimasi 1-3 hari", tag: "Rekomendasi" },
-    { id: "JNT", name: "J&T Express", rate: selectedDestination.baseRate + 2000, desc: "Estimasi 1-3 hari" },
-    { id: "JNE", name: "JNE Reguler", rate: selectedDestination.baseRate + 1000, desc: "Estimasi 2-4 hari" },
-    { id: "ANTERAJA", name: "Anteraja", rate: selectedDestination.baseRate, desc: "Estimasi 1-3 hari" },
-    { id: "JTR", name: "JTR (JNE Trucking) Kargo", rate: Math.max(25000, Math.round(selectedDestination.baseRate * 1.5)), desc: "Kargo Barang Berat (3-5 hari)", tag: "Kargo Hemat" },
-    { id: "JNTCARGO", name: "J&T Cargo", rate: Math.max(28000, Math.round(selectedDestination.baseRate * 1.8)), desc: "Kargo Paket Besar (2-4 hari)", tag: "Kargo" },
-    { id: "INDAH", name: "Indah Logistik Cargo", rate: Math.max(26000, Math.round(selectedDestination.baseRate * 1.6)), desc: "Kargo Partai Besar (3-6 hari)", tag: "Kargo" },
-  ];
-
-  const allowedStoreCouriers = store.enabledCouriers && store.enabledCouriers.length > 0
-    ? store.enabledCouriers
-    : ["JNT", "JNE", "SICEPAT"];
-
-  const filteredCouriers = allMasterCouriers.filter((c) => allowedStoreCouriers.includes(c.id));
-  const couriers = filteredCouriers.length > 0 ? filteredCouriers : allMasterCouriers.slice(0, 3);
-
-  // Auto-sync selectedCourier jika kurir yang aktif di toko berubah
-  useEffect(() => {
-    if (couriers.length > 0 && !couriers.some((c) => c.id === selectedCourier)) {
-      setSelectedCourier(couriers[0].id);
-    }
-  }, [couriers, selectedCourier]);
 
   // Theme configuration
   const getThemeClasses = () => {
@@ -637,7 +639,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
               Kata Mereka yang Sudah Mencoba
             </h2>
             <p className="text-xs opacity-70 mt-1">
-              Ulasan asli dari pembeli terverifikasi
+              Kata pelanggan tentang produk ini
             </p>
           </div>
 
@@ -652,10 +654,12 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
                   />
                   <div>
                     <p className="font-bold text-xs">{t.name}</p>
-                    <p className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
-                      <Check className="h-3 w-3" />
-                      Terverifikasi
-                    </p>
+                    {t.verified && (
+                      <p className="text-[10px] text-emerald-400 flex items-center gap-1 mt-0.5">
+                        <Check className="h-3 w-3" />
+                        Terverifikasi
+                      </p>
+                    )}
                   </div>
                 </div>
                 <p className="text-xs opacity-80 italic leading-relaxed">

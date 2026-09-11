@@ -352,7 +352,7 @@ export const initialLandingPages: LandingPage[] = [
     hero: {
       badge: "🔥 FLASH SALE HARI INI • DISKON 36%",
       headline: "Tampil Anggun & Berkelas dengan Gamis Silk Premium Floral Edition",
-      subheadline: "Material sutra premium super adem, jatuh anggun, dan tidak menerawang. Telah dipercaya 2.400+ muslimah di seluruh Indonesia.",
+      subheadline: "Material sutra premium super adem, jatuh anggun, dan tidak menerawang. Kualitas terjamin, siap dikirim hari ini juga.",
       ctaText: "KLAIM DISKON 36% SEKARANG",
       heroImageUrl: "https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=800&auto=format&fit=crop&q=80",
       countdownHours: 8
@@ -410,27 +410,27 @@ export const initialLandingPages: LandingPage[] = [
     testimonials: [
       {
         name: "Siti Rahmawati",
-        role: "Pembeli Terverifikasi • Jakarta",
+        role: "Jakarta",
         review: "Kaget banget pas barang dateng, bahannya lembuttt banget dan beneran gak nerawang! Dipake ke kondangan banyak yang muji. Rekomen parah!",
         rating: 5,
         avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-        verified: true
+        verified: false
       },
       {
         name: "Dewi Anggraini",
-        role: "Pembeli Terverifikasi • Surabaya",
+        role: "Surabaya",
         review: "Pengiriman cepat 2 hari nyampe Surabaya. Packing rapi wangi, ukurannya pas banget. Bakal koleksi warna lainnya!",
         rating: 5,
         avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-        verified: true
+        verified: false
       },
       {
         name: "Rina Marlina",
-        role: "Pembeli Terverifikasi • Bandung",
+        role: "Bandung",
         review: "Jahitannya sekelas butik mall yang harganya 400 ribuan keatas. Worth it parah cuma seratus ribuan di KoZa!",
         rating: 5,
         avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
-        verified: true
+        verified: false
       }
     ],
     guarantee: {
@@ -459,7 +459,7 @@ export const initialLandingPages: LandingPage[] = [
       normalPrice: 225000,
       promoPrice: 145000,
       discountPercent: 36,
-      scarcityText: "🔥 Stok Terbatas: Sisa 12 Pcs Hari Ini",
+      scarcityText: "🔥 Promo Berlaku Selama Stok Masih Tersedia",
       bonusGift: "Bonus Bros Jilbab Mutiara Eksklusif Senilai Rp 25.000"
     },
     pixels: {
