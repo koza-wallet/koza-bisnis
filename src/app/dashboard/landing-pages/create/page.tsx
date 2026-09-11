@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
-import { generateAICopy } from "@/lib/ai-copywriter";
 import { BUILDER_TEMPLATES, createDefaultBlock } from "@/lib/builder-templates";
-import { BuilderTemplate, BuilderPageDesign } from "@/types/builder";
-import { LandingPage, LandingPageTheme, LandingPageTone } from "@/types";
+import { BuilderTemplate, BuilderPageDesign, BuilderPageSEO, BuilderBlock } from "@/types/builder";
+import { LandingPageTheme, LandingPageTone } from "@/types";
+import { BlockRenderer } from "@/components/builder/block-renderer";
 import { 
   Sparkles, 
   ArrowLeft, 
@@ -46,23 +46,26 @@ export default function CreateLandingPage() {
   // User Pro Status (Termasuk Pro AI atau pemilik token AI)
   const isUserPro = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL" || (store.aiCreditsBalance !== undefined && store.aiCreditsBalance > 0);
 
-  // State for AI Generator
-  const [selectedProductId, setSelectedProductId] = useState<string>("");
+  // State for AI Generator (minimal input, AI decides layout/copywriting/design)
   const [productName, setProductName] = useState("");
+  const [description, setDescription] = useState("");
   const [sellingPrice, setSellingPrice] = useState<number>(145000);
   const [normalPrice, setNormalPrice] = useState<number>(225000);
-  const [keyBenefits, setKeyBenefits] = useState("");
-  const [targetAudience, setTargetAudience] = useState("");
+  const [ctaText, setCtaText] = useState("");
+  const [otherInfo, setOtherInfo] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [tone, setTone] = useState<LandingPageTone>("URGENT");
-  const [theme, setTheme] = useState<LandingPageTheme>("EMERALD");
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationStep, setGenerationStep] = useState("");
-  const [generatedLP, setGeneratedLP] = useState<Omit<LandingPage, "id" | "createdAt"> | null>(null);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [generatedBlocks, setGeneratedBlocks] = useState<BuilderBlock[] | null>(null);
+  const [generatedDesign, setGeneratedDesign] = useState<BuilderPageDesign | null>(null);
+  const [generatedSeo, setGeneratedSeo] = useState<BuilderPageSEO | null>(null);
+  const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
   const [devicePreview, setDevicePreview] = useState<"MOBILE" | "DESKTOP">("MOBILE");
 
   // State for Blank Canvas (Manual Mode)
+  const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [manualTitle, setManualTitle] = useState("");
   const [manualSlug, setManualSlug] = useState("");
   const [manualTheme, setManualTheme] = useState<LandingPageTheme>("EMERALD");
@@ -85,63 +88,101 @@ export default function CreateLandingPage() {
     setManualSlug(slugified);
   };
 
-  // If user selects an existing product in AI mode
-  const handleProductSelect = (productId: string) => {
-    setSelectedProductId(productId);
-    const prod = products.find((p) => p.id === productId);
-    if (prod) {
-      setProductName(prod.name);
-      setSellingPrice(prod.sellingPrice);
-      setNormalPrice(Math.round((prod.sellingPrice * 1.5) / 1000) * 1000);
-      setImageUrl(prod.imageUrl);
-      setKeyBenefits(prod.description);
-    }
-  };
 
-  // AI Generation Handler
+  // AI Generation Handler — memanggil endpoint server yang benar-benar memanggil OpenAI
   const handleGenerate = async () => {
-    if (!productName.trim()) {
-      alert("Silakan masukkan nama produk terlebih dahulu!");
+    if (!productName.trim() || !description.trim()) {
+      alert("Nama produk dan deskripsi produk wajib diisi!");
       return;
     }
 
     setIsGenerating(true);
-    setGenerationStep("Menganalisis audiens & positioning produk...");
-    await new Promise((r) => setTimeout(r, 600));
+    setGenerationError(null);
+    setGeneratedBlocks(null);
+    setGeneratedDesign(null);
+    setGeneratedSeo(null);
+    setPublishedUrl(null);
 
-    setGenerationStep("Menulis hook headline & copywriting formula AIDA...");
-    await new Promise((r) => setTimeout(r, 700));
+    try {
+      const res = await fetch("/api/landing-pages/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: productName,
+          description,
+          sellingPrice,
+          normalPrice,
+          imageUrl: imageUrl || undefined,
+          ctaText: ctaText || undefined,
+          otherInfo: otherInfo || undefined,
+        }),
+      });
+      const json = await res.json();
 
-    setGenerationStep("Menyusun ulasan pembeli autentik & penawaran terbatas...");
-    await new Promise((r) => setTimeout(r, 600));
+      if (!res.ok || !json.success) {
+        setGenerationError(json.error || "Gagal membuat halaman. Silakan coba lagi.");
+        return;
+      }
 
-    setGenerationStep("Menyiapkan layout checkout konversi tinggi...");
-    await new Promise((r) => setTimeout(r, 500));
+      setGeneratedBlocks(json.data.blocks);
+      setGeneratedDesign(json.data.design);
+      setGeneratedSeo(json.data.seo);
+    } catch (err) {
+      setGenerationError("Gagal terhubung ke server. Periksa koneksi Anda dan coba lagi.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
-    const result = generateAICopy({
-      productName,
-      sellingPrice,
-      normalPrice,
-      keyBenefits,
-      targetAudience,
-      tone,
-      theme,
-      imageUrl: imageUrl || undefined,
+  const buildAiLandingPagePayload = (isPublished: boolean) => {
+    const slug =
+      productName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "") +
+      "-" +
+      Math.floor(100 + Math.random() * 900);
+
+    return {
       storeId: store.id,
-      productId: selectedProductId || undefined,
-    });
+      slug,
+      title: generatedSeo?.metaTitle || productName,
+      theme: (generatedDesign?.themePreset === "CUSTOM" ? "EMERALD" : generatedDesign?.themePreset) || "EMERALD",
+      tone: "URGENT" as LandingPageTone,
+      builderMode: "AI" as const,
+      blocks: generatedBlocks || [],
+      design: generatedDesign || undefined,
+      seo: generatedSeo || { metaTitle: productName, metaDescription: description, metaKeywords: "", noIndex: !isPublished },
+      hero: { badge: "", headline: productName, subheadline: description, ctaText: ctaText || "Pesan Sekarang", heroImageUrl: imageUrl, countdownHours: 12 },
+      problemSection: { title: "", subtitle: "", painPoints: [] },
+      solutionSection: { title: "", description: "", highlights: [] },
+      features: [],
+      testimonials: [],
+      guarantee: { title: "Garansi 100% Kepuasan", description: "Barang rusak atau tidak sesuai kami ganti baru tanpa ribet." },
+      faq: [],
+      pricing: { normalPrice, promoPrice: sellingPrice, discountPercent: Math.round(((normalPrice - sellingPrice) / normalPrice) * 100), scarcityText: "" },
+      analytics: { viewsCount: 0, ordersCount: 0, conversionRate: 0 },
+      isPublished,
+    };
+  };
 
-    setGeneratedLP({
-      ...result,
-      builderMode: "AI",
-    });
-    setIsGenerating(false);
+  const handleEditInCanvas = () => {
+    if (!generatedBlocks) return;
+    const newPage = createLandingPage(buildAiLandingPagePayload(false));
+    router.push(`/dashboard/landing-pages/${newPage.id}/builder`);
   };
 
   const handlePublish = () => {
-    if (!generatedLP) return;
-    createLandingPage(generatedLP);
-    router.push("/dashboard/landing-pages");
+    if (!generatedBlocks) return;
+    const newPage = createLandingPage(buildAiLandingPagePayload(true));
+    setPublishedUrl(`${window.location.origin}/lp/${newPage.slug}`);
+  };
+
+  const handleCopyPublishedLink = () => {
+    if (!publishedUrl) return;
+    navigator.clipboard.writeText(publishedUrl);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
   };
 
   // Handler Start Blank Canvas (Manual Mode)
@@ -312,8 +353,6 @@ export default function CreateLandingPage() {
     }
   };
 
-  const currentTheme = generatedLP ? getThemeStyles(generatedLP.theme) : getThemeStyles(theme);
-
   // Filter templates
   const filteredTemplates = BUILDER_TEMPLATES.filter((tpl) => {
     const matchCat = selectedCategory === "ALL" || tpl.category === selectedCategory;
@@ -342,15 +381,6 @@ export default function CreateLandingPage() {
           </p>
         </div>
 
-        {generatedLP && creationMode === "AI" && (
-          <button
-            onClick={handlePublish}
-            className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400 active:scale-95 transition-all"
-          >
-            <Check className="h-4 w-4" />
-            <span>Simpan sebagai Draft</span>
-          </button>
-        )}
       </div>
 
       {/* 3-Mode Selector Tabs */}
@@ -439,41 +469,22 @@ export default function CreateLandingPage() {
       {/* ========================================================================= */}
       {creationMode === "AI" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Left Column: Form Controls */}
-          <div className="lg:col-span-6 space-y-6">
+          {/* Left Column: Minimal Input Form */}
+          <div className="lg:col-span-5 space-y-6">
             <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-xl">
               <div className="flex items-center gap-2 mb-4">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   <Wand2 className="h-4 w-4" />
                 </div>
-                <h2 className="text-lg font-bold text-white">AI Copywriting Generator</h2>
+                <h2 className="text-lg font-bold text-white">Buat dengan AI</h2>
               </div>
+              <p className="text-xs text-slate-400 mb-5">
+                Isi informasi bisnis dasar — AI yang urus copywriting, layout, dan tampilan halamannya.
+              </p>
 
-              {/* Product selection shortcut */}
-              {products.length > 0 && (
-                <div className="mb-4">
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Pilih Produk dari Toko (Opsional):
-                  </label>
-                  <select
-                    value={selectedProductId}
-                    onChange={(e) => handleProductSelect(e.target.value)}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
-                  >
-                    <option value="">-- Ketik Produk Baru Sendiri --</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} (Rp {p.sellingPrice.toLocaleString("id-ID")})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Product Name */}
               <div className="mb-4">
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Nama Produk <span className="text-rose-400">*</span>
+                  Judul Halaman / Nama Produk <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -484,64 +495,9 @@ export default function CreateLandingPage() {
                 />
               </div>
 
-              {/* Pricing */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Harga Promo (Jual)
-                  </label>
-                  <input
-                    type="number"
-                    value={sellingPrice}
-                    onChange={(e) => setSellingPrice(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                    Harga Coret (Normal)
-                  </label>
-                  <input
-                    type="number"
-                    value={normalPrice}
-                    onChange={(e) => setNormalPrice(Number(e.target.value))}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Key Benefits */}
               <div className="mb-4">
                 <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Poin Keunggulan Utama (Bahan, Manfaat)
-                </label>
-                <textarea
-                  rows={2}
-                  value={keyBenefits}
-                  onChange={(e) => setKeyBenefits(e.target.value)}
-                  placeholder="Contoh: Menyamarkan garis halus dalam 14 hari, tidak lengket, bersertifikasi BPOM, cocok untuk kulit sensitif."
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Target Audience */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Target Pembeli / Masalah yang Dialami
-                </label>
-                <input
-                  type="text"
-                  value={targetAudience}
-                  onChange={(e) => setTargetAudience(e.target.value)}
-                  placeholder="Contoh: Wanita 25-45 tahun yang ingin awet muda tanpa perawatan klinik mahal"
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              {/* Image URL */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Link Foto Produk (URL)
+                  URL Gambar Produk
                 </label>
                 <input
                   type="text"
@@ -552,65 +508,72 @@ export default function CreateLandingPage() {
                 />
               </div>
 
-              {/* Tone Selection */}
-              <div className="mb-5">
-                <label className="block text-xs font-semibold text-slate-300 mb-2">
-                  Gaya Bahasa Copywriting:
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Deskripsi Produk <span className="text-rose-400">*</span>
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: "URGENT", label: "🔥 Mendesak / Flash Sale", desc: "Urgensi tinggi, diskon terbatas" },
-                    { id: "LUXURY", label: "💎 Eksklusif / Mewah", desc: "Elegan, prestisius, nilai tinggi" },
-                    { id: "EMOTIONAL", label: "❤️ Cerita / Empati", desc: "Menyentuh perasaan & solusi" },
-                    { id: "SCIENTIFIC", label: "🧪 Fakta & Edukatif", desc: "Data, bahan, uji klinis" },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setTone(t.id as LandingPageTone)}
-                      className={`p-3 text-left rounded-xl border text-xs transition-all ${
-                        tone === t.id
-                          ? "bg-emerald-500/10 border-emerald-500/60 text-emerald-300 ring-1 ring-emerald-500/20"
-                          : "bg-slate-800/60 border-slate-700/60 text-slate-400 hover:border-slate-600"
-                      }`}
-                    >
-                      <span className="font-semibold block text-white">{t.label}</span>
-                      <span className="text-[10px] text-slate-400">{t.desc}</span>
-                    </button>
-                  ))}
+                <textarea
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Contoh: Serum wajah berbahan retinol yang menyamarkan garis halus dalam 14 hari, cocok untuk kulit sensitif, bersertifikasi BPOM."
+                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Harga Jual</label>
+                  <input
+                    type="number"
+                    value={sellingPrice}
+                    onChange={(e) => setSellingPrice(Number(e.target.value))}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">Harga Coret (Opsional)</label>
+                  <input
+                    type="number"
+                    value={normalPrice}
+                    onChange={(e) => setNormalPrice(Number(e.target.value))}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white focus:border-emerald-500 focus:outline-none"
+                  />
                 </div>
               </div>
 
-              {/* Theme Selection */}
+              <div className="mb-4">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Teks CTA (Opsional)
+                </label>
+                <input
+                  type="text"
+                  value={ctaText}
+                  onChange={(e) => setCtaText(e.target.value)}
+                  placeholder="Contoh: Pesan Sekarang"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+
               <div className="mb-6">
-                <label className="block text-xs font-semibold text-slate-300 mb-2">
-                  Pilihan Tema Visual:
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  Info Tambahan (Opsional)
                 </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { id: "EMERALD", name: "Emerald", color: "bg-emerald-500" },
-                    { id: "MIDNIGHT", name: "Midnight", color: "bg-amber-500" },
-                    { id: "ROSE", name: "Rose Glow", color: "bg-pink-500" },
-                    { id: "ELECTRIC", name: "Electric", color: "bg-red-500" },
-                  ].map((th) => (
-                    <button
-                      key={th.id}
-                      type="button"
-                      onClick={() => setTheme(th.id as LandingPageTheme)}
-                      className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
-                        theme === th.id
-                          ? "border-emerald-500 bg-emerald-500/10"
-                          : "border-slate-700 bg-slate-800/40 hover:border-slate-600"
-                      }`}
-                    >
-                      <div className={`h-5 w-5 rounded-full ${th.color} shadow-sm`} />
-                      <span className="text-[11px] font-medium text-slate-300">{th.name}</span>
-                    </button>
-                  ))}
-                </div>
+                <textarea
+                  rows={2}
+                  value={otherInfo}
+                  onChange={(e) => setOtherInfo(e.target.value)}
+                  placeholder="Target pembeli, garansi, promo khusus, dll."
+                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500 focus:outline-none resize-none"
+                />
               </div>
 
-              {/* Generate Button */}
+              {generationError && (
+                <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-300">
+                  {generationError}
+                </div>
+              )}
+
               <button
                 type="button"
                 disabled={isGenerating}
@@ -620,124 +583,118 @@ export default function CreateLandingPage() {
                 {isGenerating ? (
                   <>
                     <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>{generationStep}</span>
+                    <span>Sedang membuat halaman dengan AI...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4" />
-                    <span>Generate Landing Page Sekarang (15 Detik)</span>
+                    <span>Generate Landing Page</span>
                   </>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Right Column: Live Interactive Mockup */}
-          <div className="lg:col-span-6 sticky top-6">
+          {/* Right Column: Real Preview (BlockRenderer — sama persis dengan Canvas & halaman publik) */}
+          <div className="lg:col-span-7 sticky top-32">
             <div className="flex items-center justify-between mb-3 text-slate-400">
               <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Eye className="h-4 w-4 text-emerald-400" />
-                Live Mockup Preview
+                Preview
               </span>
 
-              <div className="flex items-center gap-1 rounded-lg bg-slate-900 border border-slate-800 p-1">
-                <button
-                  onClick={() => setDevicePreview("MOBILE")}
-                  className={`p-1.5 rounded ${devicePreview === "MOBILE" ? "bg-slate-800 text-emerald-400" : "text-slate-400"}`}
-                  title="Mobile View"
-                >
-                  <Smartphone className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setDevicePreview("DESKTOP")}
-                  className={`p-1.5 rounded ${devicePreview === "DESKTOP" ? "bg-slate-800 text-emerald-400" : "text-slate-400"}`}
-                  title="Desktop View"
-                >
-                  <Monitor className="h-4 w-4" />
-                </button>
-              </div>
+              {generatedBlocks && (
+                <div className="flex items-center gap-1 rounded-lg bg-slate-900 border border-slate-800 p-1">
+                  <button
+                    onClick={() => setDevicePreview("MOBILE")}
+                    className={`p-1.5 rounded ${devicePreview === "MOBILE" ? "bg-slate-800 text-emerald-400" : "text-slate-400"}`}
+                    title="Mobile View"
+                  >
+                    <Smartphone className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setDevicePreview("DESKTOP")}
+                    className={`p-1.5 rounded ${devicePreview === "DESKTOP" ? "bg-slate-800 text-emerald-400" : "text-slate-400"}`}
+                    title="Desktop View"
+                  >
+                    <Monitor className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* Smartphone frame */}
-            <div className="mx-auto max-w-[380px] rounded-[40px] border-[10px] border-slate-800 bg-slate-950 p-2 shadow-2xl relative overflow-hidden">
-              <div className="absolute top-2 left-1/2 -translate-x-1/2 h-4 w-28 bg-slate-800 rounded-b-xl z-30" />
-
-              <div className="h-[580px] overflow-y-auto rounded-[28px] bg-slate-900 scrollbar-none text-left">
-                {generatedLP ? (
-                  <div className={`p-4 space-y-4 ${currentTheme.bg}`}>
-                    <div className="text-center py-2 px-3 rounded-lg bg-red-600 text-white text-[11px] font-bold">
-                      🔥 {generatedLP.hero.badge}
-                    </div>
-
-                    <div className="text-center space-y-2">
-                      <h2 className="text-base font-black leading-tight text-white">
-                        {generatedLP.hero.headline}
-                      </h2>
-                      <p className="text-xs text-slate-300 leading-relaxed">
-                        {generatedLP.hero.subheadline}
-                      </p>
-                    </div>
-
-                    {generatedLP.hero.heroImageUrl ? (
-                      <div className="rounded-xl overflow-hidden border border-slate-700/50">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={generatedLP.hero.heroImageUrl}
-                          alt="Product"
-                          className="w-full h-44 object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="h-36 rounded-xl bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center text-slate-400 gap-1">
-                        <Flame className="h-6 w-6 text-amber-400" />
-                        <span className="text-[11px]">Foto Produk Anda</span>
-                      </div>
-                    )}
-
-                    <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/90 text-center space-y-1">
-                      <span className="text-[10px] text-slate-400 line-through">
-                        Rp {generatedLP.pricing.normalPrice.toLocaleString("id-ID")}
-                      </span>
-                      <div className="text-xl font-black text-emerald-400">
-                        Rp {generatedLP.pricing.promoPrice.toLocaleString("id-ID")}
-                      </div>
-                      <span className="inline-block text-[10px] font-bold text-amber-300 bg-amber-500/20 px-2 py-0.5 rounded-full">
-                        Hemat {generatedLP.pricing.discountPercent}% Hari Ini
-                      </span>
-                    </div>
-
-                    <div className="py-2.5 text-center text-xs font-bold rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md">
-                      {generatedLP.hero.ctaText}
-                    </div>
-
-                    <div className="p-3 rounded-xl bg-slate-800/60 border border-slate-700/50 space-y-2">
-                      <span className="text-[11px] font-bold text-rose-400">
-                        ⚠️ {generatedLP.problemSection.title}
-                      </span>
-                      <div className="space-y-1.5">
-                        {generatedLP.problemSection.painPoints.slice(0, 2).map((p, i) => (
-                          <div key={i} className="text-[10px] text-slate-300">
-                            • <strong className="text-white">{p.title}</strong>: {p.description}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-500 space-y-3">
-                    <div className="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
-                      <Sparkles className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-300">Preview Belum Digenerate</h4>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Isi form di samping dan klik tombol Generate untuk melihat visual mockup interaktif secara instan.
-                      </p>
-                    </div>
-                  </div>
-                )}
+            {publishedUrl ? (
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-8 text-center space-y-4">
+                <div className="mx-auto h-14 w-14 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <Check className="h-7 w-7" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Halaman Sudah Live!</h3>
+                  <p className="text-xs text-slate-400 mt-1 break-all">{publishedUrl}</p>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                  <button
+                    onClick={handleCopyPublishedLink}
+                    className="flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs font-bold text-white transition-colors"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                    <span>{isCopied ? "Tersalin!" : "Salin Link Halaman"}</span>
+                  </button>
+                  <a
+                    href={publishedUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 px-4 py-2.5 text-xs font-semibold text-slate-200 transition-colors"
+                  >
+                    Buka Halaman
+                  </a>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className={`mx-auto rounded-3xl border-[10px] border-slate-800 bg-slate-950 shadow-2xl relative overflow-hidden ${devicePreview === "MOBILE" ? "max-w-[380px]" : "max-w-full"}`}>
+                <div className="h-[620px] overflow-y-auto bg-slate-900 text-left">
+                  {generatedBlocks ? (
+                    <>
+                      <div className={devicePreview === "MOBILE" ? "" : "max-w-3xl mx-auto"}>
+                        {generatedBlocks
+                          .filter((b) => b.isVisible)
+                          .map((block) => (
+                            <BlockRenderer key={block.id} block={block} design={generatedDesign || undefined} isPreview />
+                          ))}
+                      </div>
+                      <div className="sticky bottom-0 p-3 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 flex items-center gap-2">
+                        <button
+                          onClick={handleEditInCanvas}
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 py-2.5 text-xs font-bold text-white transition-colors"
+                        >
+                          <Layers className="h-3.5 w-3.5" />
+                          <span>Edit di Canvas</span>
+                        </button>
+                        <button
+                          onClick={handlePublish}
+                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2.5 text-xs font-bold text-white shadow-lg shadow-emerald-500/20 transition-all"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          <span>Publish</span>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-500 space-y-3">
+                      <div className="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
+                        <Sparkles className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-300">Preview Belum Digenerate</h4>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Isi form di samping dan klik Generate untuk melihat halaman jadi secara instan.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

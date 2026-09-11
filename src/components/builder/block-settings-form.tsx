@@ -33,6 +33,7 @@ export function BlockSettingsForm({
     });
   };
 
+
   const updateTitle = (newTitle: string) => {
     onChange({
       ...block,
@@ -116,6 +117,27 @@ function renderTypeSpecificInputs(
   updateSetting: (key: string, value: any) => void
 ) {
   const { settings } = block;
+
+  const updateItem = (index: number, field: string, value: any) => {
+    const items = [...(settings.items || [])];
+    items[index] = { ...items[index], [field]: value };
+    updateSetting("items", items);
+  };
+  const removeItem = (index: number) => {
+    const items = (settings.items || []).filter((_: any, i: number) => i !== index);
+    updateSetting("items", items);
+  };
+  const moveItem = (index: number, direction: "UP" | "DOWN") => {
+    const items = [...(settings.items || [])];
+    const target = direction === "UP" ? index - 1 : index + 1;
+    if (target < 0 || target >= items.length) return;
+    [items[index], items[target]] = [items[target], items[index]];
+    updateSetting("items", items);
+  };
+  const addItem = (blankItem: any) => {
+    const items = [...(settings.items || []), blankItem];
+    updateSetting("items", items);
+  };
 
   switch (block.type) {
     case "HERO_BANNER":
@@ -478,6 +500,214 @@ function renderTypeSpecificInputs(
               <option value="space">Spasi Kosong Transparan</option>
               <option value="line">Garis Pemisah Halus (Divider)</option>
             </select>
+          </div>
+        </div>
+      );
+
+    case "FEATURES_GRID":
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Judul Seksi</label>
+            <input
+              type="text"
+              value={settings.title || ""}
+              onChange={(e) => updateSetting("title", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Subjudul</label>
+            <input
+              type="text"
+              value={settings.subtitle || ""}
+              onChange={(e) => updateSetting("subtitle", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+          <div className="space-y-3">
+            {(settings.items || []).map((item: any, i: number) => (
+              <div key={i} className="border border-slate-800 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Item {i + 1}</span>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => moveItem(i, "UP")} className="p-1 text-slate-500 hover:text-white">↑</button>
+                    <button type="button" onClick={() => moveItem(i, "DOWN")} className="p-1 text-slate-500 hover:text-white">↓</button>
+                    <button type="button" onClick={() => removeItem(i)} className="p-1 text-rose-400 hover:text-rose-300">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={item.icon || ""}
+                  onChange={(e) => updateItem(i, "icon", e.target.value)}
+                  placeholder="Emoji, contoh: 🚀"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+                />
+                <input
+                  type="text"
+                  value={item.title || ""}
+                  onChange={(e) => updateItem(i, "title", e.target.value)}
+                  placeholder="Judul keunggulan"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+                />
+                <textarea
+                  value={item.description || ""}
+                  onChange={(e) => updateItem(i, "description", e.target.value)}
+                  placeholder="Deskripsi singkat"
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none resize-none"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => addItem({ icon: "✨", title: "", description: "" })}
+              className="w-full py-2 rounded-lg border border-dashed border-slate-700 text-slate-400 hover:text-white hover:border-emerald-500 text-xs font-semibold"
+            >
+              + Tambah Item
+            </button>
+          </div>
+        </div>
+      );
+
+    case "TESTIMONIALS":
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Judul Seksi</label>
+            <input
+              type="text"
+              value={settings.title || ""}
+              onChange={(e) => updateSetting("title", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Subjudul</label>
+            <input
+              type="text"
+              value={settings.subtitle || ""}
+              onChange={(e) => updateSetting("subtitle", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+          <div className="space-y-3">
+            {(settings.items || []).map((item: any, i: number) => (
+              <div key={i} className="border border-slate-800 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Testimoni {i + 1}</span>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => moveItem(i, "UP")} className="p-1 text-slate-500 hover:text-white">↑</button>
+                    <button type="button" onClick={() => moveItem(i, "DOWN")} className="p-1 text-slate-500 hover:text-white">↓</button>
+                    <button type="button" onClick={() => removeItem(i)} className="p-1 text-rose-400 hover:text-rose-300">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={item.name || ""}
+                  onChange={(e) => updateItem(i, "name", e.target.value)}
+                  placeholder="Nama pembeli"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+                />
+                <input
+                  type="text"
+                  value={item.role || ""}
+                  onChange={(e) => updateItem(i, "role", e.target.value)}
+                  placeholder="Kota, contoh: Jakarta Selatan"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+                />
+                <textarea
+                  value={item.review || ""}
+                  onChange={(e) => updateItem(i, "review", e.target.value)}
+                  placeholder="Isi ulasan"
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none resize-none"
+                />
+                <div className="flex items-center gap-3">
+                  <label className="text-slate-300 text-xs">Rating</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={5}
+                    value={item.rating || 5}
+                    onChange={(e) => updateItem(i, "rating", Math.min(5, Math.max(1, Number(e.target.value))))}
+                    className="w-20 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none font-mono"
+                  />
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => addItem({ name: "", role: "", review: "", rating: 5, verified: false })}
+              className="w-full py-2 rounded-lg border border-dashed border-slate-700 text-slate-400 hover:text-white hover:border-emerald-500 text-xs font-semibold"
+            >
+              + Tambah Testimoni
+            </button>
+          </div>
+        </div>
+      );
+
+    case "FAQ_ACCORDION":
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Judul Seksi</label>
+            <input
+              type="text"
+              value={settings.title || ""}
+              onChange={(e) => updateSetting("title", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-300 font-semibold mb-1">Subjudul</label>
+            <input
+              type="text"
+              value={settings.subtitle || ""}
+              onChange={(e) => updateSetting("subtitle", e.target.value)}
+              className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+          <div className="space-y-3">
+            {(settings.items || []).map((item: any, i: number) => (
+              <div key={i} className="border border-slate-800 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">FAQ {i + 1}</span>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => moveItem(i, "UP")} className="p-1 text-slate-500 hover:text-white">↑</button>
+                    <button type="button" onClick={() => moveItem(i, "DOWN")} className="p-1 text-slate-500 hover:text-white">↓</button>
+                    <button type="button" onClick={() => removeItem(i)} className="p-1 text-rose-400 hover:text-rose-300">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={item.question || ""}
+                  onChange={(e) => updateItem(i, "question", e.target.value)}
+                  placeholder="Pertanyaan"
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none"
+                />
+                <textarea
+                  value={item.answer || ""}
+                  onChange={(e) => updateItem(i, "answer", e.target.value)}
+                  placeholder="Jawaban"
+                  rows={2}
+                  className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white focus:border-emerald-500 outline-none resize-none"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => addItem({ question: "", answer: "" })}
+              className="w-full py-2 rounded-lg border border-dashed border-slate-700 text-slate-400 hover:text-white hover:border-emerald-500 text-xs font-semibold"
+            >
+              + Tambah FAQ
+            </button>
           </div>
         </div>
       );
