@@ -97,7 +97,7 @@ function QuotaTopupContent() {
   const [selectedPkg, setSelectedPkg] = useState<QuotaPackage | null>(null);
   const [selectedAIToken, setSelectedAIToken] = useState<AITokenPackage | null>(null);
   const [selectedMembership, setSelectedMembership] = useState<{
-    code: "BASIC" | "PRO_AI" | "PRO_ANNUAL";
+    code: "BASIC" | "BASIC_ANNUAL" | "PRO_AI" | "PRO_ANNUAL";
     name: string;
     price: number;
     quotaBonus: number;
@@ -159,6 +159,8 @@ function QuotaTopupContent() {
         handleSelectMembership("PRO_AI");
       } else if (codeUpper === "BASIC") {
         handleSelectMembership("BASIC");
+      } else if (codeUpper === "BASIC_ANNUAL") {
+        handleSelectMembership("BASIC_ANNUAL");
       } else if (codeUpper === "PRO_ANNUAL") {
         handleSelectMembership("PRO_ANNUAL");
       } else {
@@ -220,20 +222,36 @@ function QuotaTopupContent() {
     setIsModalOpen(true);
   };
 
-  const handleSelectMembership = (tier: "BASIC" | "PRO_AI" | "PRO_ANNUAL") => {
+  const handleSelectMembership = (tier: "BASIC" | "BASIC_ANNUAL" | "PRO_AI" | "PRO_ANNUAL") => {
     setSelectedPkg(null);
     setSelectedAIToken(null);
     setSelectedMembership({
       code: tier,
       name:
         tier === "PRO_ANNUAL"
-          ? "Paket Pro Sultan (1 Tahun)"
+          ? "Paket Pro AI Tahunan (1 Tahun)"
+          : tier === "BASIC_ANNUAL"
+          ? "Paket Basic Tahunan (1 Tahun)"
           : tier === "PRO_AI"
           ? "Paket Pro AI (1 Bulan)"
           : "Paket Basic (1 Bulan)",
-      price: tier === "PRO_ANNUAL" ? 799000 : tier === "PRO_AI" ? 329000 : 75000,
-      quotaBonus: tier === "PRO_ANNUAL" ? 500 : tier === "PRO_AI" ? 250 : 100,
-      duration: tier === "PRO_ANNUAL" ? "365 Hari" : "30 Hari",
+      price:
+        tier === "PRO_ANNUAL"
+          ? 2990000
+          : tier === "BASIC_ANNUAL"
+          ? 750000
+          : tier === "PRO_AI"
+          ? 329000
+          : 75000,
+      quotaBonus:
+        tier === "PRO_ANNUAL"
+          ? 3000
+          : tier === "BASIC_ANNUAL"
+          ? 1200
+          : tier === "PRO_AI"
+          ? 250
+          : 100,
+      duration: tier === "PRO_ANNUAL" || tier === "BASIC_ANNUAL" ? "365 Hari" : "30 Hari",
     });
     setIsSuccess(false);
     setDiscountApplied(false);
@@ -535,7 +553,7 @@ function QuotaTopupContent() {
               onClick={() => handleSelectMembership("PRO_ANNUAL")}
               className="px-3 py-1.5 rounded-lg border border-indigo-500/30 text-indigo-300 font-bold text-[11px] hover:bg-indigo-500/10 transition-colors whitespace-nowrap"
             >
-              Pro Sultan 1 Thn (Rp 799rb)
+              Pro AI Tahunan (Rp 2.99jt)
             </button>
           </div>
         </div>

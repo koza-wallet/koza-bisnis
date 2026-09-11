@@ -48,10 +48,20 @@ export async function POST(req: NextRequest) {
 
     if (packageType === "MEMBERSHIP") {
       if (packageCode === "PRO_ANNUAL") {
+        grossAmount = 2990000;
+        packageName = "KoZa Bisnis - Paket Pro AI Tahunan (1 Tahun)";
+        quotaAmount = 3000;
+        planTier = "PRO_ANNUAL";
+      } else if (packageCode === "PRO_SULTAN" || packageCode === "PRO_ANNUAL_LEGACY") {
         grossAmount = 799000;
-        packageName = "KoZa Bisnis - Paket Pro Tahunan (1 Tahun)";
+        packageName = "KoZa Bisnis - Paket Pro Sultan (1 Tahun)";
         quotaAmount = 500;
         planTier = "PRO_ANNUAL";
+      } else if (packageCode === "BASIC_ANNUAL") {
+        grossAmount = 750000;
+        packageName = "KoZa Bisnis - Paket Basic Tahunan (1 Tahun)";
+        quotaAmount = 1200;
+        planTier = "BASIC";
       } else if (packageCode === "BASIC") {
         grossAmount = 75000;
         packageName = "KoZa Bisnis - Paket Basic (1 Bulan)";

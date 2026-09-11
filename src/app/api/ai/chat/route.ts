@@ -71,7 +71,9 @@ export async function POST(req: NextRequest) {
 
       if (storeData) {
         const isPlanPro =
-          storeData.plan === "PRO_MONTHLY" || storeData.plan === "PRO_ANNUAL";
+          storeData.plan === "PRO_AI" ||
+          storeData.plan === "PRO_MONTHLY" ||
+          storeData.plan === "PRO_ANNUAL";
         const isNotExpired =
           !storeData.plan_expiry_date ||
           new Date(storeData.plan_expiry_date).getTime() > Date.now();

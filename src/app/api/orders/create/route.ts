@@ -204,6 +204,7 @@ export async function POST(req: NextRequest) {
       id: string;
       name: string;
       sellingPrice: number;
+      costPrice: number;
       minOrderQuantity: number;
       wholesaleTiers: Array<{ min_qty?: number; minQty?: number; unit_price?: number; unitPrice?: number }>;
     }
@@ -211,8 +212,8 @@ export async function POST(req: NextRequest) {
     let productMetaMap = new Map<string, ProductMeta>();
     if (productIds.length > 0) {
       const { data: realProducts } = await supabase
-        .from("public_products")
-        .select("id, name, selling_price, min_order_quantity, wholesale_tiers")
+        .from("products")
+        .select("id, name, selling_price, cost_price, min_order_quantity, wholesale_tiers")
         .eq("store_id", storeId)
         .in("id", productIds);
 
@@ -224,6 +225,7 @@ export async function POST(req: NextRequest) {
               id: p.id,
               name: p.name,
               sellingPrice: Number(p.selling_price),
+              costPrice: Math.max(0, Number(p.cost_price || 0)),
               minOrderQuantity: Math.max(1, Number(p.min_order_quantity || 1)),
               wholesaleTiers: Array.isArray(p.wholesale_tiers) ? p.wholesale_tiers : [],
             },
@@ -234,6 +236,7 @@ export async function POST(req: NextRequest) {
 
     // Validasi item pesanan
     let calculatedItemsTotal = 0;
+    let calculatedTotalCostPrice = 0;
     const sanitizedItems = [];
 
     for (const itm of items) {
@@ -283,6 +286,9 @@ export async function POST(req: NextRequest) {
         price = matchedPrice;
       }
 
+      const unitCost = pMeta ? pMeta.costPrice : 0;
+      calculatedTotalCostPrice += qty * unitCost;
+
       calculatedItemsTotal += qty * price;
       sanitizedItems.push({
         productId: pId,
@@ -295,6 +301,7 @@ export async function POST(req: NextRequest) {
 
     const validShippingCost = Math.max(0, Number(shippingCost || 0));
     const grandTotal = calculatedItemsTotal + validShippingCost;
+    const calculatedNetProfit = Math.max(0, calculatedItemsTotal - calculatedTotalCostPrice);
     const orderNumber = generateOrderNumber();
 
     // 4. Penentuan Status Awal & Alokasi Kuota (Patch #8)
@@ -334,8 +341,8 @@ export async function POST(req: NextRequest) {
       shipping_cost: validShippingCost,
       items_total: calculatedItemsTotal,
       grand_total: grandTotal,
-      total_cost_price: 0,
-      net_profit: 0,
+      total_cost_price: calculatedTotalCostPrice,
+      net_profit: calculatedNetProfit,
       status: initialStatus,
       payment_method: paymentMethod === "QRIS_TOKO" ? "QRIS_TOKO" : "WHATSAPP",
       items: sanitizedItems,
