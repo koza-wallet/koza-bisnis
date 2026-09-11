@@ -333,6 +333,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           storeId: lp.storeId,
+          landingPageId: lp.id,
           customerName,
           customerPhone,
           customerAddress,
@@ -425,6 +426,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       storeId: lp.storeId,
+                      landingPageId: lp.id,
                       customerName: orderData.customerName,
                       customerPhone: orderData.customerPhone,
                       customerAddress: orderData.customerAddress,

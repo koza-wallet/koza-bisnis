@@ -45,9 +45,11 @@ export async function updateSession(request: NextRequest) {
   const isApexOrWww = currentHost === "kozabisnis.com" || currentHost === "www.kozabisnis.com";
   const isVercelPreview = currentHost.endsWith(".vercel.app");
 
-  // Dukungan simulasi domain kustom untuk pengujian lokal: header x-test-domain atau query param __test_domain
+  // Dukungan simulasi domain kustom untuk pengujian LOKAL SAJA: header x-test-domain atau
+  // query param __test_domain. Keduanya wajib dibatasi ke isLocalhost — tanpa ini siapa pun
+  // di internet bisa memicu logika rewrite multi-tenant di production lewat header biasa.
   const testDomainParam = isLocalhost ? request.nextUrl.searchParams.get("__test_domain") : null;
-  const testDomainHeader = request.headers.get("x-test-domain");
+  const testDomainHeader = isLocalhost ? request.headers.get("x-test-domain") : null;
   const simulatedDomain = testDomainParam || testDomainHeader;
 
   const isCustomDomain =

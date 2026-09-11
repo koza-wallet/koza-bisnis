@@ -92,6 +92,7 @@ export async function POST(req: NextRequest) {
       shippingCost = 0,
       items = [],
       paymentMethod = "WHATSAPP",
+      landingPageId,
     } = body;
 
     // 2. Validasi & Sanitasi Input (Audit P1.4)
@@ -234,6 +235,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Landing page berdiri sendiri (tidak terhubung produk katalog, dipakai murni untuk
+    // support iklan Meta/TikTok) — harga resminya diambil dari landing_pages.pricing yang
+    // di-set seller lewat dashboard (RLS-protected), BUKAN dari unitPrice yang dikirim client.
+    let landingPagePromoPrice: number | null = null;
+    if (landingPageId && typeof landingPageId === "string") {
+      const { data: lpRow } = await supabase
+        .from("landing_pages")
+        .select("pricing")
+        .eq("id", landingPageId)
+        .eq("store_id", storeId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      const promoPrice = Number(lpRow?.pricing?.promoPrice);
+      if (Number.isFinite(promoPrice) && promoPrice > 0) {
+        landingPagePromoPrice = promoPrice;
+      }
+    }
+
     // Validasi item pesanan
     let calculatedItemsTotal = 0;
     let calculatedTotalCostPrice = 0;
@@ -263,9 +283,13 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      // 2. Validasi B2B: Hitung harga satuan berdasarkan tier grosir jika kuantiti memenuhi syarat
-      let price = Math.max(0, Number(itm.unitPrice || itm.price || 0));
+      // 2. Tentukan harga resmi HANYA dari sumber terverifikasi server — tidak pernah dari
+      // unitPrice/price yang dikirim client (celah harga tempo hari, ditutup sekarang untuk
+      // kedua jalur: produk katalog maupun landing page berdiri sendiri tanpa produk).
+      let price: number;
+
       if (pMeta) {
+        // 2a. Produk katalog: hitung harga berdasarkan tier grosir jika kuantiti memenuhi syarat.
         let matchedPrice = pMeta.sellingPrice;
         if (pMeta.wholesaleTiers && pMeta.wholesaleTiers.length > 0) {
           const sortedTiers = [...pMeta.wholesaleTiers].sort((a, b) => {
@@ -284,6 +308,15 @@ export async function POST(req: NextRequest) {
           }
         }
         price = matchedPrice;
+      } else if (landingPagePromoPrice !== null) {
+        // 2b. Landing page berdiri sendiri (tanpa produk katalog): pakai harga promo resmi
+        // yang tersimpan di landing_pages.pricing, bukan MOQ/tier grosir (tidak berlaku di sini).
+        price = landingPagePromoPrice;
+      } else {
+        return NextResponse.json(
+          { error: `Item pesanan "${itmName}" tidak dapat diverifikasi harganya.` },
+          { status: 400 }
+        );
       }
 
       const unitCost = pMeta ? pMeta.costPrice : 0;

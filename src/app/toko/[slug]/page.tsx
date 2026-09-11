@@ -40,6 +40,7 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
   const [products, setProducts] = useState<Product[]>(localProducts);
   const [isLoading, setIsLoading] = useState(true);
   const [isNotFound, setIsNotFound] = useState(false);
+  const [isWhiteLabel, setIsWhiteLabel] = useState(false);
 
   // Fetch Store & Products from Supabase (P0 & P1 Security Fix)
   useEffect(() => {
@@ -63,7 +64,6 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
             originCity: storeRow.origin_city || "Kota Jakarta Selatan",
             originDistrict: storeRow.origin_district || "Kebayoran Baru",
             quotaBalance: 0,
-            plan: (storeRow.plan as any) || "NON_PRO",
             customDomain: storeRow.custom_domain,
             bankName: storeRow.bank_name,
             bankAccountNumber: storeRow.bank_account_number,
@@ -74,6 +74,7 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
               : ["JNT", "JNE", "SICEPAT"],
             createdAt: storeRow.created_at,
           });
+          setIsWhiteLabel(Boolean(storeRow.is_white_label));
 
           // P1 Audit Fix: Query from public_products VIEW so cost_price (HPP) is NEVER exposed to client!
           const { data: prodsRows } = await supabase
@@ -168,8 +169,10 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
   const [copiedOrderNumber, setCopiedOrderNumber] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Status White-label Toko (Pro AI / Annual / Monthly bebas watermark)
-  const isStoreWhiteLabel = store.plan === "PRO_AI" || store.plan === "PRO_ANNUAL" || store.plan === "PRO_MONTHLY";
+  // Status White-label Toko (Pro AI / Annual / Monthly bebas watermark) — dihitung server-side
+  // via kolom boolean is_white_label pada view public_stores, bukan dari string plan mentah
+  // (plan persis toko lain tidak perlu diketahui publik/kompetitor).
+  const isStoreWhiteLabel = isWhiteLabel;
 
   // Filter Products
   const activeProducts = products.filter((p) => p.isActive);
@@ -646,6 +649,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-slate-800 text-[11px] text-slate-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-all shadow-md group"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/koza-icon.svg" alt="KoZa" className="h-3.5 w-3.5 object-contain" />
             <span>Dibuat dengan</span>
             <span className="font-extrabold text-slate-200 group-hover:text-white">KoZa Bisnis</span>
             <span className="text-slate-600">•</span>
