@@ -25,7 +25,8 @@ import {
   ShieldCheck,
   PanelLeftClose,
   PanelLeftOpen,
-  Bot
+  Bot,
+  Globe
 } from "lucide-react";
 import { useState } from "react";
 
@@ -79,12 +80,19 @@ export function DashboardSidebar() {
           isAI: true 
         },
         { 
-          href: "/dashboard/pengaturan?tab=ai_bot", 
+          href: "/dashboard/jaga-ai", 
           label: "Jaga AI (CS WhatsApp)", 
           icon: Bot, 
           isAI: true,
           badge: "24/7",
           badgeColor: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+        },
+        { 
+          href: "/dashboard/custom-domain", 
+          label: "Custom Domain", 
+          icon: Globe, 
+          badge: "PRO",
+          badgeColor: "bg-amber-500/20 text-amber-800 dark:text-amber-400 border border-amber-400/30 font-bold"
         },
       ]
     },
@@ -92,7 +100,7 @@ export function DashboardSidebar() {
       title: "Keuangan & Ekspedisi",
       items: [
         { href: "/dashboard/keuangan", label: "Laba Bersih Toko", icon: TrendingUp },
-        { href: "/dashboard/pengaturan?tab=shipping", label: "Ekspedisi & Kurir", icon: Truck },
+        { href: "/dashboard/ekspedisi", label: "Ekspedisi & Kurir", icon: Truck },
       ]
     },
     {
@@ -383,7 +391,7 @@ export function DashboardMobileNav() {
     { href: "/dashboard", label: "Beranda", icon: Home },
     { href: "/dashboard/produk", label: "Produk", icon: Package },
     { 
-      href: "/dashboard/pengaturan?tab=ai_bot", 
+      href: "/dashboard/jaga-ai", 
       label: "Jaga AI", 
       icon: Bot, 
       isAI: true 

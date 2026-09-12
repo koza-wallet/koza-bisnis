@@ -280,7 +280,7 @@ export default function DashboardOverviewPage() {
 
         {/* Bento 3: Jaga AI Closing Rate (Tautan Langsung ke Pengaturan & Saklar AI) */}
         <Link
-          href="/dashboard/pengaturan?tab=ai_bot"
+          href="/dashboard/jaga-ai"
           className="group rounded-2xl border border-teal-200/80 dark:border-teal-500/20 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-all hover:border-teal-400 dark:hover:border-teal-500/40 hover:shadow-md cursor-pointer block"
         >
           <div className="flex items-center justify-between">
@@ -514,7 +514,7 @@ export default function DashboardOverviewPage() {
 
               {/* Item 2: Jaga AI */}
               <Link 
-                href="/dashboard/pengaturan?tab=ai_bot"
+                href="/dashboard/jaga-ai"
                 className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:border-teal-400/50 hover:bg-teal-50/20 dark:hover:bg-teal-950/10 transition-colors group cursor-pointer"
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-400 text-xs">
@@ -573,7 +573,7 @@ export default function DashboardOverviewPage() {
       {/* 4. Quick Action Toolbar (Pintasan Cepat Operasional) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Link
-          href="/dashboard/pengaturan?tab=ai_bot"
+          href="/dashboard/jaga-ai"
           className="flex items-center gap-3 p-3.5 rounded-xl border border-teal-300/80 dark:border-teal-500/30 bg-white dark:bg-[#0E1420] hover:border-teal-500 hover:shadow-xs transition-all group"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-600 group-hover:text-white transition-colors">

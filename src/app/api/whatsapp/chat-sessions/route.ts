@@ -52,8 +52,13 @@ export async function GET() {
       .limit(20);
 
     if (sessionErr) {
-      console.error('[API-CHAT-SESSIONS] Error fetching sessions:', sessionErr);
-      return NextResponse.json({ success: false, message: 'Gagal mengambil data sesi chat.' }, { status: 500 });
+      console.warn('[API-CHAT-SESSIONS] chat_sessions table pending or query error, returning empty state:', sessionErr.message);
+      return NextResponse.json({
+        success: true,
+        sessions: [],
+        quotaUsage: { usedToday: 0, dailyLimit: 150, percentage: 0 },
+        botSettings: store.whatsapp_bot_settings || {},
+      });
     }
 
     // Hitung estimasi chat terpakai hari ini (UTC start of day)
