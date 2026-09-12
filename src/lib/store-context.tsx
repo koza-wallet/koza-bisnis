@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { Store, Product, Order, OperationalExpense, OrderStatus, MembershipPlan, LandingPage } from "@/types";
 import { initialStore, initialProducts, initialOrders, initialExpenses, quotaPackages, initialLandingPages } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
@@ -48,6 +48,33 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [expenses, setExpenses] = useState<OperationalExpense[]>(initialExpenses);
   const [landingPages, setLandingPages] = useState<LandingPage[]>(initialLandingPages || []);
   const [isSupabaseUser, setIsSupabaseUser] = useState(false);
+
+  // Debounce buffer untuk sync Supabase updateLandingPage (state lokal tetap instan, hanya network write yang ditunda)
+  const pendingLandingPageUpdatesRef = useRef<Record<string, Record<string, unknown>>>({});
+  const landingPageDebounceTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const flushLandingPageUpdate = useCallback((id: string) => {
+    const payload = pendingLandingPageUpdatesRef.current[id];
+    delete pendingLandingPageUpdatesRef.current[id];
+    delete landingPageDebounceTimersRef.current[id];
+    if (!payload) return;
+
+    const supabase = createClient();
+    supabase.from("landing_pages").update(payload).eq("id", id).then(({ error }) => {
+      if (error) {
+        console.error("Gagal memperbarui landing page di database:", error);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      Object.keys(landingPageDebounceTimersRef.current).forEach((id) => {
+        clearTimeout(landingPageDebounceTimersRef.current[id]);
+        flushLandingPageUpdate(id);
+      });
+    };
+  }, [flushLandingPageUpdate]);
 
   const loadDataFromSupabase = useCallback(async () => {
     try {
@@ -663,8 +690,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     );
 
     if (isSupabaseUser) {
-      const supabase = createClient();
-      const payload: any = {};
+      const payload: Record<string, unknown> = { ...pendingLandingPageUpdatesRef.current[id] };
       if (updates.title !== undefined) payload.title = updates.title;
       if (updates.theme !== undefined) payload.theme = updates.theme;
       if (updates.tone !== undefined) payload.tone = updates.tone;
@@ -683,11 +709,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       if (updates.analytics !== undefined) payload.analytics = updates.analytics;
       if (updates.isPublished !== undefined) payload.is_active = updates.isPublished;
 
-      supabase.from("landing_pages").update(payload).eq("id", id).then(({ error }) => {
-        if (error) {
-          console.error("Gagal memperbarui landing page di database:", error);
-        }
-      });
+      pendingLandingPageUpdatesRef.current[id] = payload;
+
+      if (landingPageDebounceTimersRef.current[id]) {
+        clearTimeout(landingPageDebounceTimersRef.current[id]);
+      }
+      landingPageDebounceTimersRef.current[id] = setTimeout(() => {
+        flushLandingPageUpdate(id);
+      }, 450);
     }
   };
 
