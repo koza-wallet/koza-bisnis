@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { usePrivacy } from "@/lib/privacy-context";
 import { formatRupiah, formatDate } from "@/lib/utils";
+import type { Order } from "@/types";
 import { 
   TrendingUp, 
   ShoppingBag, 
@@ -42,6 +43,79 @@ interface ThermalData {
   isCod: boolean;
 }
 
+interface ChartPoint {
+  label: string;
+  fullLabel: string;
+  omset: number;
+  laba: number;
+}
+
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+
+// Hitung tren Omset & Laba Bersih dari data pesanan ASLI (bukan lagi kurva statis) --
+// hanya pesanan berstatus DIPROSES/SELESAI yang dihitung, sama seperti financialMetrics global.
+function buildChartSeries(orders: Order[], tab: "7d" | "30d" | "year"): ChartPoint[] {
+  const qualifying = orders.filter((o) => o.status === "SELESAI" || o.status === "DIPROSES");
+  const now = new Date();
+
+  if (tab === "year") {
+    const year = now.getFullYear();
+    return MONTH_LABELS.map((label, monthIdx) => {
+      const monthOrders = qualifying.filter((o) => {
+        const d = new Date(o.createdAt);
+        return d.getFullYear() === year && d.getMonth() === monthIdx;
+      });
+      return {
+        label,
+        fullLabel: `${label} ${year}`,
+        omset: monthOrders.reduce((sum, o) => sum + o.itemsTotal, 0),
+        laba: monthOrders.reduce((sum, o) => sum + o.netProfit, 0),
+      };
+    });
+  }
+
+  const totalDays = tab === "7d" ? 7 : 30;
+  const points: ChartPoint[] = [];
+  for (let i = totalDays - 1; i >= 0; i--) {
+    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+    const dayOrders = qualifying.filter((o) => {
+      const d = new Date(o.createdAt);
+      return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
+    });
+    points.push({
+      label: `${day.getDate()}/${day.getMonth() + 1}`,
+      fullLabel: day.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+      omset: dayOrders.reduce((sum, o) => sum + o.itemsTotal, 0),
+      laba: dayOrders.reduce((sum, o) => sum + o.netProfit, 0),
+    });
+  }
+  return points;
+}
+
+const CHART_TOP_Y = 15;
+const CHART_BASE_Y = 165;
+const CHART_WIDTH = 600;
+
+function pointsToCoords(values: number[], maxVal: number) {
+  const plotHeight = CHART_BASE_Y - CHART_TOP_Y;
+  const stepX = values.length > 1 ? CHART_WIDTH / (values.length - 1) : 0;
+  return values.map((v, i) => ({
+    x: i * stepX,
+    y: CHART_BASE_Y - (maxVal > 0 ? (v / maxVal) * plotHeight : 0),
+  }));
+}
+
+function coordsToLinePath(coords: { x: number; y: number }[]): string {
+  return coords.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(" ");
+}
+
+function coordsToAreaPath(coords: { x: number; y: number }[]): string {
+  if (coords.length === 0) return "";
+  const last = coords[coords.length - 1];
+  const first = coords[0];
+  return `${coordsToLinePath(coords)} L ${last.x.toFixed(1)} ${CHART_BASE_Y} L ${first.x.toFixed(1)} ${CHART_BASE_Y} Z`;
+}
+
 export default function DashboardOverviewPage() {
   const { store, products, orders, financialMetrics } = useStore();
   const { isPrivacyActive } = usePrivacy();
@@ -49,6 +123,23 @@ export default function DashboardOverviewPage() {
   const [copied, setCopied] = useState(false);
   const [storeUrl, setStoreUrl] = useState(`https://www.kozabisnis.com/toko/${store.slug}`);
   const [activeChartTab, setActiveChartTab] = useState<"7d" | "30d" | "year">("30d");
+  const chartWrapRef = useRef<HTMLDivElement>(null);
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+
+  const chartPoints = useMemo(() => buildChartSeries(orders, activeChartTab), [orders, activeChartTab]);
+  const hasChartData = chartPoints.some((p) => p.omset > 0 || p.laba > 0);
+  const chartMaxVal = Math.max(1, ...chartPoints.map((p) => Math.max(p.omset, p.laba)));
+  const omsetCoords = pointsToCoords(chartPoints.map((p) => p.omset), chartMaxVal);
+  const labaCoords = pointsToCoords(chartPoints.map((p) => p.laba), chartMaxVal);
+
+  const handleChartMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = chartWrapRef.current;
+    if (!el || chartPoints.length === 0) return;
+    const rect = el.getBoundingClientRect();
+    const fraction = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const idx = Math.round(fraction * (chartPoints.length - 1));
+    setHoverIndex(idx);
+  };
 
   // Thermal Modal State
   const [isThermalOpen, setIsThermalOpen] = useState(false);
@@ -388,56 +479,86 @@ export default function DashboardOverviewPage() {
               </div>
             </div>
 
-            {/* SVG Area Chart Container */}
-            <div className="w-full h-52 sm:h-56 mt-4">
-              <svg viewBox="0 0 600 180" className="w-full h-full overflow-visible">
-                <defs>
-                  <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
-                    <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
-                  </linearGradient>
-                  <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.25" />
-                    <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
+            {/* SVG Area Chart Container -- dihitung dari data pesanan asli (buildChartSeries), bukan kurva statis */}
+            {!hasChartData ? (
+              <div className="w-full h-52 sm:h-56 mt-4 flex flex-col items-center justify-center text-center gap-1.5 text-slate-400 dark:text-slate-500">
+                <TrendingUp className="h-6 w-6" />
+                <p className="text-xs font-medium">Belum ada transaksi selesai/diproses pada periode ini.</p>
+              </div>
+            ) : (
+              <div
+                ref={chartWrapRef}
+                className="w-full h-52 sm:h-56 mt-4 relative"
+                onMouseMove={handleChartMouseMove}
+                onMouseLeave={() => setHoverIndex(null)}
+              >
+                <svg viewBox="0 0 600 180" className="w-full h-full overflow-visible">
+                  <defs>
+                    <linearGradient id="emeraldGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                    </linearGradient>
+                    <linearGradient id="cyanGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#06B6D4" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#06B6D4" stopOpacity="0.0" />
+                    </linearGradient>
+                  </defs>
 
-                {/* Horizontal Guide Lines */}
-                <line x1="0" y1="30" x2="600" y2="30" stroke="currentColor" strokeDasharray="4" className="text-slate-200 dark:text-white/10" />
-                <line x1="0" y1="80" x2="600" y2="80" stroke="currentColor" strokeDasharray="4" className="text-slate-200 dark:text-white/10" />
-                <line x1="0" y1="130" x2="600" y2="130" stroke="currentColor" strokeDasharray="4" className="text-slate-200 dark:text-white/10" />
+                  {/* Horizontal Guide Lines */}
+                  <line x1="0" y1="47" x2="600" y2="47" stroke="currentColor" strokeDasharray="4" className="text-slate-200 dark:text-white/10" />
+                  <line x1="0" y1="90" x2="600" y2="90" stroke="currentColor" strokeDasharray="4" className="text-slate-200 dark:text-white/10" />
+                  <line x1="0" y1="133" x2="600" y2="133" stroke="currentColor" strokeDasharray="4" className="text-slate-200 dark:text-white/10" />
 
-                {/* Area 1: Omset Kotor (Cyan) */}
-                <path
-                  d="M 0 120 Q 60 70, 120 85 T 240 45 T 360 60 T 480 25 T 600 35 L 600 170 L 0 170 Z"
-                  fill="url(#cyanGrad)"
-                />
-                <path
-                  d="M 0 120 Q 60 70, 120 85 T 240 45 T 360 60 T 480 25 T 600 35"
-                  fill="none"
-                  stroke="#06B6D4"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                />
+                  {/* Area & Garis: Omset Kotor (Cyan) */}
+                  <path d={coordsToAreaPath(omsetCoords)} fill="url(#cyanGrad)" />
+                  <path d={coordsToLinePath(omsetCoords)} fill="none" stroke="#06B6D4" strokeWidth="2.5" strokeLinecap="round" />
 
-                {/* Area 2: Laba Bersih Riil (Emerald) */}
-                <path
-                  d="M 0 145 Q 60 110, 120 120 T 240 85 T 360 95 T 480 65 T 600 70 L 600 170 L 0 170 Z"
-                  fill="url(#emeraldGrad)"
-                />
-                <path
-                  d="M 0 145 Q 60 110, 120 120 T 240 85 T 360 95 T 480 65 T 600 70"
-                  fill="none"
-                  stroke="#10B981"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
+                  {/* Area & Garis: Laba Bersih Riil (Emerald) */}
+                  <path d={coordsToAreaPath(labaCoords)} fill="url(#emeraldGrad)" />
+                  <path d={coordsToLinePath(labaCoords)} fill="none" stroke="#10B981" strokeWidth="3" strokeLinecap="round" />
 
-                {/* Point Highlight Dots */}
-                <circle cx="480" cy="25" r="5" fill="#06B6D4" stroke="#FFF" strokeWidth="2" />
-                <circle cx="480" cy="65" r="5" fill="#10B981" stroke="#FFF" strokeWidth="2" />
-              </svg>
-            </div>
+                  {/* Garis panduan vertikal + titik pada posisi hover */}
+                  {hoverIndex !== null && omsetCoords[hoverIndex] && (
+                    <>
+                      <line
+                        x1={omsetCoords[hoverIndex].x}
+                        y1={CHART_TOP_Y}
+                        x2={omsetCoords[hoverIndex].x}
+                        y2={CHART_BASE_Y}
+                        stroke="currentColor"
+                        strokeWidth="1"
+                        className="text-slate-300 dark:text-white/20"
+                      />
+                      <circle cx={omsetCoords[hoverIndex].x} cy={omsetCoords[hoverIndex].y} r="5" fill="#06B6D4" stroke="#FFF" strokeWidth="2" />
+                      <circle cx={labaCoords[hoverIndex].x} cy={labaCoords[hoverIndex].y} r="5" fill="#10B981" stroke="#FFF" strokeWidth="2" />
+                    </>
+                  )}
+                </svg>
+
+                {/* Tooltip mengikuti posisi kursor */}
+                {hoverIndex !== null && chartPoints[hoverIndex] && (
+                  <div
+                    className="absolute z-10 -translate-y-full rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-[#151E2E] shadow-lg px-3 py-2 text-[11px] pointer-events-none"
+                    style={{
+                      left: `${(omsetCoords[hoverIndex].x / CHART_WIDTH) * 100}%`,
+                      top: `${(Math.min(omsetCoords[hoverIndex].y, labaCoords[hoverIndex].y) / 180) * 100}%`,
+                      transform: `translate(${hoverIndex > chartPoints.length / 2 ? "-100%" : "0%"}, -12px)`,
+                    }}
+                  >
+                    <p className="font-bold text-slate-900 dark:text-white mb-1">{chartPoints[hoverIndex].fullLabel}</p>
+                    <p className="text-cyan-600 dark:text-cyan-400">Omset: {formatRupiah(chartPoints[hoverIndex].omset)}</p>
+                    <p className="text-emerald-600 dark:text-emerald-400">Laba: {formatRupiah(chartPoints[hoverIndex].laba)}</p>
+                  </div>
+                )}
+
+                {/* Label sumbu-X: awal, tengah, akhir periode */}
+                <div className="flex items-center justify-between mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                  <span>{chartPoints[0]?.label}</span>
+                  <span>{chartPoints[Math.floor(chartPoints.length / 2)]?.label}</span>
+                  <span>{chartPoints[chartPoints.length - 1]?.label}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Chart Legend */}
