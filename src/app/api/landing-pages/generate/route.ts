@@ -7,6 +7,7 @@ import { generatedLandingPageSchema } from "@/lib/ai-landing-page-schema";
 import { isCircuitBreakerOpen, recordLLMFailure, recordLLMSuccess } from "@/lib/ai-cost-guard";
 import { isSlidingWindowLimited, isUsageQuotaExceeded, recordUsage, MONTHLY_QUOTA_PRO, ANNUAL_QUOTA_PRO } from "@/lib/ai-landing-page-limiter";
 import { serverError } from "@/lib/api-error";
+import { logLLMUsage } from "@/lib/llm-cost";
 
 const OPENAI_MODEL = "gpt-4o-mini";
 
@@ -144,6 +145,15 @@ Info tambahan dari seller: ${input.otherInfo || "(tidak ada)"}`;
         { status: 502 }
       );
     }
+
+    await logLLMUsage({
+      storeId: store.id,
+      provider: "openai",
+      model: OPENAI_MODEL,
+      feature: "ai_landing_page_generate",
+      promptTokens: completion.usage?.prompt_tokens || 0,
+      completionTokens: completion.usage?.completion_tokens || 0,
+    });
 
     const parsed = completion.choices[0]?.message?.parsed;
     if (!parsed) {

@@ -1,5 +1,12 @@
 import OpenAI from 'openai';
 import { recordLLMFailure, recordLLMSuccess } from '@/lib/ai-cost-guard';
+import { logLLMUsage } from '@/lib/llm-cost';
+
+interface LLMCallResult {
+  text: string;
+  promptTokens: number;
+  completionTokens: number;
+}
 
 export interface GenerateChatReplyParams {
   storeId: string;
@@ -31,7 +38,7 @@ export function getJagaAIGeminiKey(): string {
   return process.env.JAGA_AI_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
 }
 
-async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
+async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: string): Promise<LLMCallResult> {
   const openai = new OpenAI({ apiKey });
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 12000);
@@ -50,14 +57,18 @@ async function callOpenAI(apiKey: string, systemPrompt: string, userMessage: str
       { signal: controller.signal }
     );
     clearTimeout(timeoutId);
-    return completion.choices[0]?.message?.content?.trim() || '';
+    return {
+      text: completion.choices[0]?.message?.content?.trim() || '',
+      promptTokens: completion.usage?.prompt_tokens || 0,
+      completionTokens: completion.usage?.completion_tokens || 0,
+    };
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;
   }
 }
 
-async function callGemini(apiKey: string, systemPrompt: string, userMessage: string): Promise<string> {
+async function callGemini(apiKey: string, systemPrompt: string, userMessage: string): Promise<LLMCallResult> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 12000);
   const combinedPrompt = `${systemPrompt}\n\nPesan dari pembeli:\n"${userMessage}"`;
@@ -82,7 +93,11 @@ async function callGemini(apiKey: string, systemPrompt: string, userMessage: str
     }
 
     const data = await response.json();
-    return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    return {
+      text: data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '',
+      promptTokens: data?.usageMetadata?.promptTokenCount || 0,
+      completionTokens: data?.usageMetadata?.candidatesTokenCount || 0,
+    };
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;
@@ -146,16 +161,32 @@ Aturan Menjawab:
   for (const provider of providerQueue) {
     try {
       if (provider === 'openai' && openaiKey) {
-        const reply = await callOpenAI(openaiKey, systemPrompt, userMessage);
-        if (reply) {
+        const result = await callOpenAI(openaiKey, systemPrompt, userMessage);
+        if (result.text) {
           recordLLMSuccess(storeId);
-          return { reply, providerUsed: 'openai', success: true };
+          await logLLMUsage({
+            storeId,
+            provider: 'openai',
+            model: 'gpt-4o-mini',
+            feature: 'jaga_ai_chat',
+            promptTokens: result.promptTokens,
+            completionTokens: result.completionTokens,
+          });
+          return { reply: result.text, providerUsed: 'openai', success: true };
         }
       } else if (provider === 'gemini' && geminiKey) {
-        const reply = await callGemini(geminiKey, systemPrompt, userMessage);
-        if (reply) {
+        const result = await callGemini(geminiKey, systemPrompt, userMessage);
+        if (result.text) {
           recordLLMSuccess(storeId);
-          return { reply, providerUsed: 'gemini', success: true };
+          await logLLMUsage({
+            storeId,
+            provider: 'gemini',
+            model: 'gemini-1.5-flash',
+            feature: 'jaga_ai_chat',
+            promptTokens: result.promptTokens,
+            completionTokens: result.completionTokens,
+          });
+          return { reply: result.text, providerUsed: 'gemini', success: true };
         }
       }
     } catch (err) {
