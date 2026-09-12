@@ -72,11 +72,11 @@ export default function LandingPage() {
       points: [
         {
           title: "Paket Basic (Rp 75.000/bulan):",
-          desc: "Toko online bio link mandiri lengkap dengan kalkulator ongkir otomatis se-Indonesia, checkout WhatsApp & QRIS, pembukuan laba bersih, dan 0% komisi transaksi (terdapat watermark micro-branding 'Powered by KoZa').",
+          desc: "Toko online bio link mandiri lengkap dengan kalkulator ongkir otomatis se-Indonesia, checkout WhatsApp & QRIS, TikTok Pixel & Meta Pixel siap iklan, pembukuan laba bersih, dan 0% komisi transaksi (terdapat watermark micro-branding 'Powered by KoZa').",
         },
         {
           title: "Paket Pro AI (Rp 329.000/bulan):",
-          desc: "Solusi autopilot 100% White-Label (tanpa watermark), custom domain (namatoko.com), pixel TikTok & Meta, serta 3 Karyawan AI Otonom: Jaga AI CS WhatsApp 24/7, generator 3 landing page iklan per bulan, dan AI content scheduler.",
+          desc: "Solusi autopilot 100% White-Label (tanpa watermark), custom domain (namatoko.com), serta 3 Karyawan AI Otonom: Jaga AI CS WhatsApp 24/7, generator 3 landing page iklan per bulan, dan AI content scheduler.",
         },
       ],
     },
@@ -1054,6 +1054,10 @@ export default function LandingPage() {
                   <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <span>Buku Kas & Pelacakan Resi Publik (/lacak)</span>
                 </li>
+                <li className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 font-bold" />
+                  <span><strong>TikTok Pixel & Meta Pixel</strong> Terintegrasi Siap Iklan</span>
+                </li>
                 <li className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
                   <X className="h-4 w-4 text-slate-400 dark:text-slate-600 shrink-0" />
                   <span>100% Bebas Watermark (Ada <em>Powered by KoZa</em>)</span>
@@ -1061,10 +1065,6 @@ export default function LandingPage() {
                 <li className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
                   <X className="h-4 w-4 text-slate-400 dark:text-slate-600 shrink-0" />
                   <span>Dukungan Custom Domain Toko (namatoko.com)</span>
-                </li>
-                <li className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
-                  <X className="h-4 w-4 text-slate-400 dark:text-slate-600 shrink-0" />
-                  <span>TikTok Pixel & Meta Pixel Terintegrasi Siap Iklan</span>
                 </li>
                 <li className="flex items-center gap-2 text-slate-400 dark:text-slate-500">
                   <X className="h-4 w-4 text-slate-400 dark:text-slate-600 shrink-0" />

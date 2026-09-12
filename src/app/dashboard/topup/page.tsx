@@ -513,11 +513,11 @@ function QuotaTopupContent() {
             {isStorePro ? (
               <span className="text-emerald-800 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4" />
-                100% Bebas Watermark • 3 Karyawan AI Otonom • Custom Domain & Pixel Iklan
+                100% Bebas Watermark • 3 Karyawan AI Otonom • Custom Domain Toko Sendiri
               </span>
             ) : store.plan === "BASIC" ? (
               <span className="text-slate-600 dark:text-slate-300">
-                Paket Toko Mandiri: 0% Komisi Transaksi • Upgrade ke Pro AI untuk 3 Karyawan Digital & White-Label!
+                Paket Toko Mandiri: 0% Komisi Transaksi • TikTok & Meta Pixel Siap Iklan • Upgrade ke Pro AI untuk 3 Karyawan Digital & White-Label!
               </span>
             ) : (
               <span className="text-slate-600 dark:text-slate-300">
