@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       domainCostIdr,
       cloudflareCostIdr,
       supabaseCostIdr,
-      otherCostIdr,
+      otherCostItems, // { label: string; amount: number }[]
       usdIdrRate,
       notes,
     } = body;
@@ -33,6 +33,13 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    const items: { label: string; amount: number }[] = Array.isArray(otherCostItems)
+      ? otherCostItems
+          .map((it: any) => ({ label: String(it.label || "").trim(), amount: Number(it.amount) || 0 }))
+          .filter((it) => it.label && it.amount > 0)
+      : [];
+    const otherCostIdr = items.reduce((sum, it) => sum + it.amount, 0);
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -53,7 +60,8 @@ export async function POST(req: NextRequest) {
         domain_cost_idr: Number(domainCostIdr) || 0,
         cloudflare_cost_idr: Number(cloudflareCostIdr) || 0,
         supabase_cost_idr: Number(supabaseCostIdr) || 0,
-        other_cost_idr: Number(otherCostIdr) || 0,
+        other_cost_idr: otherCostIdr,
+        other_costs_items: items,
         usd_idr_rate: Number(usdIdrRate) || 15800,
         notes: notes || null,
         updated_at: new Date().toISOString(),

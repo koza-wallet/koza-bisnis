@@ -161,6 +161,7 @@ export async function GET() {
               cloudflare: Number(costRow.cloudflare_cost_idr),
               supabase: Number(costRow.supabase_cost_idr),
               other: Number(costRow.other_cost_idr),
+              otherItems: Array.isArray(costRow.other_costs_items) ? costRow.other_costs_items : [],
               notes: costRow.notes,
             }
           : null,

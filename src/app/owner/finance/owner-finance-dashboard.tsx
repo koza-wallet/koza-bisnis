@@ -13,6 +13,8 @@ import {
   Bot,
   Wallet,
   RefreshCw,
+  X,
+  Plus,
 } from "lucide-react";
 
 interface MonthRow {
@@ -34,6 +36,7 @@ interface MonthRow {
     cloudflare: number;
     supabase: number;
     other: number;
+    otherItems: { label: string; amount: number }[];
     notes: string | null;
   } | null;
 }
@@ -67,10 +70,12 @@ export function OwnerFinanceDashboard() {
     domainCostIdr: "",
     cloudflareCostIdr: "",
     supabaseCostIdr: "",
-    otherCostIdr: "",
     usdIdrRate: "15800",
     notes: "",
   });
+  const [otherItems, setOtherItems] = useState<{ label: string; amount: string }[]>([]);
+  const [newItemLabel, setNewItemLabel] = useState("");
+  const [newItemAmount, setNewItemAmount] = useState("");
   const [isSavingCosts, setIsSavingCosts] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
@@ -95,10 +100,15 @@ export function OwnerFinanceDashboard() {
           domainCostIdr: String(current.infraCostDetail.domain || ""),
           cloudflareCostIdr: String(current.infraCostDetail.cloudflare || ""),
           supabaseCostIdr: String(current.infraCostDetail.supabase || ""),
-          otherCostIdr: String(current.infraCostDetail.other || ""),
           usdIdrRate: String(current.usdIdrRate || 15800),
           notes: current.infraCostDetail.notes || "",
         });
+        setOtherItems(
+          (current.infraCostDetail.otherItems || []).map((it: { label: string; amount: number }) => ({
+            label: it.label,
+            amount: String(it.amount),
+          }))
+        );
       }
     } catch {
       setLoadError("Gagal terhubung ke server. Periksa koneksi internet Anda.");
@@ -121,6 +131,7 @@ export function OwnerFinanceDashboard() {
         body: JSON.stringify({
           month: selectedMonth,
           ...costForm,
+          otherCostItems: otherItems.map((it) => ({ label: it.label, amount: Number(it.amount) || 0 })),
         }),
       });
       const data = await res.json();
@@ -153,6 +164,19 @@ export function OwnerFinanceDashboard() {
     } catch {
       // Diam -- pricingRates di state tetap seperti sebelumnya, tidak menutupi input user
     }
+  };
+
+  const handleAddOtherItem = () => {
+    const label = newItemLabel.trim();
+    const amount = Number(newItemAmount);
+    if (!label || !amount || amount <= 0) return;
+    setOtherItems([...otherItems, { label, amount: String(amount) }]);
+    setNewItemLabel("");
+    setNewItemAmount("");
+  };
+
+  const handleRemoveOtherItem = (index: number) => {
+    setOtherItems(otherItems.filter((_, i) => i !== index));
   };
 
   const latest = months[0];
@@ -270,7 +294,6 @@ export function OwnerFinanceDashboard() {
               { key: "domainCostIdr", label: "Domain" },
               { key: "cloudflareCostIdr", label: "Cloudflare" },
               { key: "supabaseCostIdr", label: "Supabase" },
-              { key: "otherCostIdr", label: "Lainnya" },
               { key: "usdIdrRate", label: "Kurs USD→IDR" },
             ].map((field) => (
               <div key={field.key} className="space-y-1">
@@ -284,6 +307,59 @@ export function OwnerFinanceDashboard() {
                 />
               </div>
             ))}
+          </div>
+
+          {/* Lainnya -- daftar item bernama, BUKAN satu angka, supaya beberapa
+              biaya (mis. "Claude Pro", "Gemini Pro") bisa ditambah tanpa saling menimpa */}
+          <div className="space-y-2">
+            <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">Lainnya (bisa lebih dari satu)</label>
+            {otherItems.length > 0 && (
+              <div className="space-y-1.5">
+                {otherItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950 px-3 py-2"
+                  >
+                    <span className="text-xs text-slate-900 dark:text-white">{item.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono text-slate-600 dark:text-slate-300">
+                        {formatRupiah(Number(item.amount) || 0)}
+                      </span>
+                      <button
+                        onClick={() => handleRemoveOtherItem(idx)}
+                        className="text-rose-500 hover:text-rose-600 cursor-pointer"
+                        title="Hapus item ini"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newItemLabel}
+                onChange={(e) => setNewItemLabel(e.target.value)}
+                placeholder="Nama biaya, mis. Claude Pro"
+                className="flex-1 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none"
+              />
+              <input
+                type="number"
+                value={newItemAmount}
+                onChange={(e) => setNewItemAmount(e.target.value)}
+                placeholder="0"
+                className="w-28 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white font-mono focus:border-emerald-500 focus:outline-none"
+              />
+              <button
+                onClick={handleAddOtherItem}
+                className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-500/30 transition-colors cursor-pointer"
+                title="Tambah item"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-1">
