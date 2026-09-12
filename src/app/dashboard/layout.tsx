@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { DashboardSidebar, DashboardTopbar, DashboardMobileNav } from "@/components/dashboard-nav";
 import { useStore } from "@/lib/store-context";
 import Link from "next/link";
-import { AlertCircle, Zap } from "lucide-react";
+import { AlertCircle, Zap, Loader2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
@@ -12,7 +12,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { store } = useStore();
+  const { store, isInitializing } = useStore();
   const pathname = usePathname();
   const isBuilder = pathname?.includes("/builder");
 
@@ -67,7 +67,14 @@ export default function DashboardLayout({
               : "flex-1 px-4 py-6 sm:px-8 max-w-7xl w-full mx-auto pb-24 lg:pb-12"
           }
         >
-          {children}
+          {isInitializing ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-24 text-slate-400 dark:text-slate-500">
+              <Loader2 className="h-6 w-6 animate-spin" />
+              <p className="text-xs font-medium">Memuat data toko Anda...</p>
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
 

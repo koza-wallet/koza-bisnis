@@ -2,8 +2,25 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { Store, Product, Order, OperationalExpense, OrderStatus, MembershipPlan, LandingPage } from "@/types";
-import { initialStore, initialProducts, initialOrders, initialExpenses, quotaPackages, initialLandingPages } from "@/lib/mock-data";
+import { quotaPackages } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
+
+// Toko/produk/pesanan/landing page KOSONG -- state awal sebelum data asli dari
+// Supabase selesai dimuat. Sengaja BUKAN data contoh: seller yang baru daftar atau
+// yang datanya belum termuat harus melihat keadaan kosong yang jujur, bukan produk
+// palsu ("Gamis Silk Premium" dkk) yang terlihat seperti toko sudah pernah jualan.
+const EMPTY_STORE: Store = {
+  id: "",
+  slug: "",
+  name: "",
+  description: "",
+  logoUrl: "",
+  whatsappNumber: "",
+  originCity: "",
+  originDistrict: "",
+  quotaBalance: 0,
+  createdAt: "",
+};
 
 interface StoreContextType {
   store: Store;
@@ -28,6 +45,7 @@ interface StoreContextType {
   getLandingPageBySlug: (slug: string) => LandingPage | undefined;
   recordLandingPageView: (slug: string) => void;
   refreshStore: () => Promise<void>;
+  isInitializing: boolean;
   financialMetrics: {
     totalOmset: number;
     totalHPP: number;
@@ -42,12 +60,19 @@ interface StoreContextType {
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [store, setStore] = useState<Store>(initialStore);
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [expenses, setExpenses] = useState<OperationalExpense[]>(initialExpenses);
-  const [landingPages, setLandingPages] = useState<LandingPage[]>(initialLandingPages || []);
+  const [store, setStore] = useState<Store>(EMPTY_STORE);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [expenses, setExpenses] = useState<OperationalExpense[]>([]);
+  const [landingPages, setLandingPages] = useState<LandingPage[]>([]);
   const [isSupabaseUser, setIsSupabaseUser] = useState(false);
+
+  // Sengaja mulai TRUE: state di atas ("store", "products", dst) diinisialisasi dari
+  // data contoh (mock-data.ts) sebagai placeholder React, BUKAN untuk pernah tampil ke
+  // seller yang sudah login. Selama nilai ini true, halaman dashboard WAJIB menampilkan
+  // skeleton/loading, bukan children -- supaya data contoh tidak pernah "berkedip"
+  // seolah data asli sebelum hasil fetch Supabase yang sesungguhnya datang.
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Debounce buffer untuk sync Supabase updateLandingPage (state lokal tetap instan, hanya network write yang ditunda)
   const pendingLandingPageUpdatesRef = useRef<Record<string, Record<string, unknown>>>({});
@@ -278,6 +303,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (err) {
       console.error("Failed to load store data from Supabase:", err);
+    } finally {
+      setIsInitializing(false);
     }
   }, []);
 
@@ -290,11 +317,11 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         loadDataFromSupabase();
       } else if (event === "SIGNED_OUT") {
         setIsSupabaseUser(false);
-        setStore(initialStore);
-        setProducts(initialProducts);
-        setOrders(initialOrders);
-        setExpenses(initialExpenses);
-        setLandingPages(initialLandingPages || []);
+        setStore(EMPTY_STORE);
+        setProducts([]);
+        setOrders([]);
+        setExpenses([]);
+        setLandingPages([]);
       }
     });
 
@@ -802,6 +829,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         getLandingPageBySlug,
         recordLandingPageView,
         refreshStore: loadDataFromSupabase,
+        isInitializing,
         financialMetrics: {
           totalOmset,
           totalHPP,
