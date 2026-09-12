@@ -32,8 +32,10 @@ export default function DashboardLayout({
         {/* Top Command Header Bar */}
         <DashboardTopbar />
 
-        {/* Quota Warning Alert Banner (Adaptive Soft Alert) */}
-        {!isBuilder && store.quotaBalance <= 5 && (
+        {/* Quota Warning Alert Banner (Adaptive Soft Alert) -- baru boleh dievaluasi setelah
+        data toko asli selesai dimuat, supaya tidak sempat menampilkan "kuota habis (0)"
+        dari nilai placeholder EMPTY_STORE sebelum fetch Supabase selesai. */}
+        {!isBuilder && !isInitializing && store.quotaBalance <= 5 && (
           <div className="bg-amber-50 dark:bg-amber-950/40 border-b border-amber-200/80 dark:border-amber-800/50 px-4 py-2.5 transition-colors">
             <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 text-xs sm:text-sm">
               <div className="flex items-center gap-2 text-amber-900 dark:text-amber-300">

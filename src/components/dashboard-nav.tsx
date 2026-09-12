@@ -48,7 +48,7 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams?.get("tab");
-  const { store, orders } = useStore();
+  const { store, orders, isInitializing } = useStore();
   const { isCollapsed, toggleSidebar } = useSidebar();
 
   const pendingOrdersCount = orders.filter(
@@ -104,7 +104,7 @@ export function DashboardSidebar() {
           href: "/dashboard/topup", 
           label: "Isi Kuota Transaksi", 
           icon: Zap,
-          badge: store.quotaBalance <= 5 ? `${store.quotaBalance} Sisa` : undefined,
+          badge: !isInitializing && store.quotaBalance <= 5 ? `${store.quotaBalance} Sisa` : undefined,
           badgeColor: "bg-rose-500 text-white"
         },
       ]
@@ -212,7 +212,7 @@ export function DashboardSidebar() {
 
 export function DashboardTopbar() {
   const router = useRouter();
-  const { store } = useStore();
+  const { store, isInitializing } = useStore();
   const { isPrivacyActive, togglePrivacy } = usePrivacy();
   const { isCollapsed, toggleSidebar } = useSidebar();
   const [searchQuery, setSearchQuery] = useState("");
@@ -289,8 +289,8 @@ export function DashboardTopbar() {
             )}
           </button>
 
-          {/* Quota Warning Indicator Pill - Only shown when quota <= 5 */}
-          {store.quotaBalance <= 5 && (
+          {/* Quota Warning Indicator Pill - Only shown when quota <= 5 (dan data asli sudah termuat) */}
+          {!isInitializing && store.quotaBalance <= 5 && (
             <Link
               href="/dashboard/topup"
               className="hidden md:flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition-all border bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30 animate-pulse"
