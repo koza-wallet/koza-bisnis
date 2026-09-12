@@ -273,8 +273,10 @@ export interface LandingPage {
     bonusGift?: string;
   };
   pixels?: {
+    // Boleh diisi lebih dari 1 ID, dipisah koma (lihat parseIds di pixel-tracker.tsx)
     metaPixelId?: string;
     tiktokPixelId?: string;
+    gtmId?: string;
   };
   analytics: {
     viewsCount: number;

@@ -6,7 +6,7 @@ import { useStore } from "@/lib/store-context";
 import { destinationOptions } from "@/lib/mock-data";
 import { createClient } from "@/lib/supabase/client";
 import { LandingPage } from "@/types";
-import { PixelTracker, trackPixelInitiateCheckout, trackPixelPurchase } from "@/components/pixel-tracker";
+import { PixelTracker, trackPixelInitiateCheckout, trackPixelPurchase, trackPixelCustomEvent } from "@/components/pixel-tracker";
 import { BlockRenderer } from "@/components/builder/block-renderer";
 import { 
   Sparkles, 
@@ -402,7 +402,12 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <PixelTracker metaPixelId={lp.pixels?.metaPixelId} tiktokPixelId={lp.pixels?.tiktokPixelId} />
+      <PixelTracker
+        metaPixelId={lp.pixels?.metaPixelId}
+        tiktokPixelId={lp.pixels?.tiktokPixelId}
+        gtmId={lp.pixels?.gtmId}
+        viewContent={{ title: lp.title, value: lp.pricing.promoPrice }}
+      />
       
       {lp.builderMode === "MANUAL_BERDU" || lp.builderMode === "MANUAL" || (lp.blocks && lp.blocks.length > 0) ? (
         <div

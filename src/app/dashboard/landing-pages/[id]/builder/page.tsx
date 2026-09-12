@@ -751,9 +751,10 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           });
                           setHasUnsavedChanges(true);
                         }}
-                        placeholder="Contoh: 123456789012345"
+                        placeholder="Contoh: 123456789012345, 987654321098765"
                         className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono outline-none focus:border-emerald-500"
                       />
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Bisa lebih dari 1 ID, pisahkan dengan koma (misal: ID toko + ID agency iklan).</p>
                     </div>
 
                     <div>
@@ -767,9 +768,27 @@ export default function BuilderPage({ params }: { params: Promise<{ id: string }
                           });
                           setHasUnsavedChanges(true);
                         }}
-                        placeholder="Contoh: C1234567890ABC"
+                        placeholder="Contoh: C1234567890ABC, C0987654321XYZ"
                         className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono outline-none focus:border-emerald-500"
                       />
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Bisa lebih dari 1 ID, pisahkan dengan koma.</p>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Google Tag Manager ID</label>
+                      <input
+                        type="text"
+                        value={lp.pixels?.gtmId || ""}
+                        onChange={(e) => {
+                          updateLandingPage(id, {
+                            pixels: { ...lp.pixels, gtmId: e.target.value },
+                          });
+                          setHasUnsavedChanges(true);
+                        }}
+                        placeholder="Contoh: GTM-XXXXXXX"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono outline-none focus:border-emerald-500"
+                      />
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Opsional — buat hubungkan tracking apapun lewat container GTM Anda sendiri.</p>
                     </div>
                   </div>
                 </div>

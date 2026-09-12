@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { BuilderBlock, BuilderPageDesign } from "@/types/builder";
 import { destinationOptions } from "@/lib/mock-data";
+import { trackPixelCustomEvent } from "@/components/pixel-tracker";
 
 interface BlockRendererProps {
   block: BuilderBlock;
@@ -199,6 +200,11 @@ function HeroBannerBlock({ settings, ctx }: { settings: any; ctx: any }) {
           <div className="pt-2">
             <a
               href={settings.ctaLink || "#checkout-section"}
+              onClick={() => {
+                if (settings.pixelEvent) {
+                  trackPixelCustomEvent(settings.pixelEvent, { title: settings.headline || settings.ctaText || "" });
+                }
+              }}
               className={`inline-flex items-center justify-center gap-2 px-6 py-3.5 ${ctx.radiusClass} font-bold text-slate-950 shadow-lg hover:brightness-110 transition-all active:scale-95`}
               style={{ backgroundColor: ctx.primaryColor }}
             >

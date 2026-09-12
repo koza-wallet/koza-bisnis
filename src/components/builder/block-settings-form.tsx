@@ -222,6 +222,26 @@ function renderTypeSpecificInputs(
               className="w-4 h-4 rounded text-emerald-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
             />
           </div>
+
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Pixel Event Custom (Opsional)</label>
+            <input
+              type="text"
+              list="hero-pixel-event-options"
+              value={settings.pixelEvent || ""}
+              onChange={(e) => updateSetting("pixelEvent", e.target.value)}
+              placeholder="Contoh: Lead, Contact, AddToCart"
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+            />
+            <datalist id="hero-pixel-event-options">
+              <option value="Lead" />
+              <option value="Contact" />
+              <option value="AddToCart" />
+              <option value="AddToWishlist" />
+              <option value="ViewContent" />
+            </datalist>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Fire event Meta/TikTok/GTM tambahan saat tombol CTA ini diklik. Kosongkan jika tidak perlu.</p>
+          </div>
         </div>
       );
 

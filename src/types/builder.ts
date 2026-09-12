@@ -42,6 +42,9 @@ export interface HeroBannerSettings {
   heroImageUrl: string;
   showCountdown: boolean;
   countdownHours: number;
+  // Nama Pixel Event custom yang di-fire saat tombol CTA ini diklik (Meta/TikTok/GTM
+  // dataLayer sekaligus), independen dari event funnel baku (InitiateCheckout/Purchase).
+  pixelEvent?: string;
 }
 
 export interface AnnouncementBarSettings {
