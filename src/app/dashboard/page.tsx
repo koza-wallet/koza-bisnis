@@ -18,7 +18,7 @@ import {
   Store as StoreIcon,
   Inbox,
   Printer,
-  ShieldCheck,
+  PiggyBank,
   Zap,
   Clock,
   CheckCircle2,
@@ -69,7 +69,10 @@ function buildChartSeries(orders: Order[], tab: "7d" | "30d" | "year"): ChartPoi
         label,
         fullLabel: `${label} ${year}`,
         omset: monthOrders.reduce((sum, o) => sum + o.itemsTotal, 0),
-        laba: monthOrders.reduce((sum, o) => sum + o.netProfit, 0),
+        // Dihitung ulang dari itemsTotal - totalCostPrice (sama seperti financialMetrics.labaBersih),
+        // BUKAN dari field order.netProfit yang tersimpan -- field itu bisa basi/tidak sinkron
+        // dengan totalCostPrice terbaru, menyebabkan kartu ringkasan & grafik menampilkan angka beda.
+        laba: monthOrders.reduce((sum, o) => sum + (o.itemsTotal - o.totalCostPrice), 0),
       };
     });
   }
@@ -86,7 +89,7 @@ function buildChartSeries(orders: Order[], tab: "7d" | "30d" | "year"): ChartPoi
       label: `${day.getDate()}/${day.getMonth() + 1}`,
       fullLabel: day.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
       omset: dayOrders.reduce((sum, o) => sum + o.itemsTotal, 0),
-      laba: dayOrders.reduce((sum, o) => sum + o.netProfit, 0),
+      laba: dayOrders.reduce((sum, o) => sum + (o.itemsTotal - o.totalCostPrice), 0),
     });
   }
   return points;
@@ -189,9 +192,36 @@ export default function DashboardOverviewPage() {
 
   const inDeliveryCount = orders.filter((o) => o.status === "DIKIRIM").length;
   const completedCount = orders.filter((o) => o.status === "SELESAI").length;
+  const totalPesananCount = orders.length;
+  const paidOrders = orders.filter((o) => o.status === "SELESAI" || o.status === "DIPROSES");
+  const whatsappClosedCount = paidOrders.filter((o) => o.paymentMethod === "WHATSAPP").length;
 
-  // Nilai penghematan komisi marketplace (20% standar)
-  const feeSaved = Math.round(financialMetrics.totalOmset * 0.20);
+  // Statistik sesi chat Jaga AI asli (bukan angka tetap) -- dipakai untuk hitung Closing Rate riil:
+  // porsi pesanan closing via WhatsApp dibanding total sesi chat yang pernah masuk.
+  const [chatSessionStats, setChatSessionStats] = useState<{ total: number; escalated: number } | null>(null);
+  const isJagaAIConnected = store.whatsappBotSettings?.status === "CONNECTED";
+
+  useEffect(() => {
+    if (!isJagaAIConnected) return;
+    fetch("/api/whatsapp/chat-sessions")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success && Array.isArray(data.sessions)) {
+          const escalated = data.sessions.filter((s: { bot_status?: string }) => s.bot_status === "ESCALATED_TO_HUMAN").length;
+          setChatSessionStats({ total: data.sessions.length, escalated });
+        }
+      })
+      .catch(() => setChatSessionStats(null));
+  }, [isJagaAIConnected]);
+
+  const jagaAIClosingRate =
+    chatSessionStats && chatSessionStats.total > 0
+      ? Math.min(100, (whatsappClosedCount / chatSessionStats.total) * 100)
+      : null;
+  const jagaAIEscalationRate =
+    chatSessionStats && chatSessionStats.total > 0
+      ? (chatSessionStats.escalated / chatSessionStats.total) * 100
+      : null;
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -258,63 +288,27 @@ export default function DashboardOverviewPage() {
         </div>
       </div>
 
-      {/* 2. 4 Bento Grid Cards Finansial (Clean Porcelain & Slate) */}
+      {/* 2. 4 Bento Grid Cards Finansial -- semua real, terhitung dari data pesanan yang sama,
+      warna Omset (cyan) & Keuntungan (emerald) sengaja disamakan dengan garis di grafik di bawah
+      supaya terasa satu kesatuan data, bukan 4 kartu lepas-lepas. */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Bento 1: Laba Bersih Riil (Net Margin) */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all">
+        {/* Bento 1: Total Pesanan */}
+        <Link
+          href="/dashboard/pesanan"
+          className="group rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-white/20 hover:shadow-sm cursor-pointer block"
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Laba Bersih Riil (Net Margin)
+              Total Pesanan
             </span>
-            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
-              <TrendingUp className="h-4 w-4" />
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <div className="text-2xl font-mono font-bold tracking-tight text-emerald-600 dark:text-emerald-400 privacy-sensitive">
-              {formatRupiah(financialMetrics.labaBersih)}
-            </div>
-            <div className="mt-2 flex items-center gap-1.5 text-xs">
-              <span className="font-mono font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-500/20 text-[11px]">
-                +{financialMetrics.marginPercent.toFixed(1)}% Margin
-              </span>
-              <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                Bebas potongan 20%
-              </span>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-[10.5px] text-slate-400 block">Omset Kotor:</span>
-              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 privacy-sensitive text-[11.5px]">
-                {formatRupiah(financialMetrics.totalOmset)}
-              </span>
-            </div>
-            <div className="text-right">
-              <span className="text-[10.5px] text-slate-400 block">Total HPP Modal:</span>
-              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 privacy-sensitive text-[11.5px]">
-                {formatRupiah(financialMetrics.totalHPP)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Bento 2: Total Pesanan Selesai */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Total Pesanan Selesai
-            </span>
-            <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10">
+            <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
               <ShoppingBag className="h-4 w-4" />
             </div>
           </div>
 
           <div className="mt-3">
             <div className="text-2xl font-mono font-bold tracking-tight text-slate-900 dark:text-white">
-              {completedCount} <span className="text-xs font-normal text-slate-400">Paket</span>
+              {totalPesananCount} <span className="text-xs font-normal text-slate-400">Pesanan</span>
             </div>
             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               {pendingOrdersCount > 0 ? (
@@ -343,9 +337,84 @@ export default function DashboardOverviewPage() {
               </span>
             </div>
           </div>
+        </Link>
+
+        {/* Bento 2: Omset (cyan -- sama seperti garis "Omset Kotor Penjualan" di grafik) */}
+        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Omset
+            </span>
+            <div className="p-2 rounded-lg bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-200/60 dark:border-cyan-500/20">
+              <TrendingUp className="h-4 w-4" />
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <div className="text-2xl font-mono font-bold tracking-tight text-cyan-600 dark:text-cyan-400 privacy-sensitive">
+              {formatRupiah(financialMetrics.totalOmset)}
+            </div>
+            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+              Dari {paidOrders.length} pesanan closing (Selesai/Diproses)
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span className="text-[10.5px] text-slate-400 block">Rata-rata/Pesanan:</span>
+              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 privacy-sensitive text-[11.5px]">
+                {formatRupiah(paidOrders.length > 0 ? Math.round(financialMetrics.totalOmset / paidOrders.length) : 0)}
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10.5px] text-slate-400 block">Total HPP Modal:</span>
+              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 privacy-sensitive text-[11.5px]">
+                {formatRupiah(financialMetrics.totalHPP)}
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Bento 3: Jaga AI Closing Rate */}
+        {/* Bento 3: Keuntungan (emerald -- sama seperti garis "Laba Bersih Riil" di grafik) */}
+        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Keuntungan
+            </span>
+            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
+              <PiggyBank className="h-4 w-4" />
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <div className="text-2xl font-mono font-bold tracking-tight text-emerald-600 dark:text-emerald-400 privacy-sensitive">
+              {formatRupiah(financialMetrics.labaBersih)}
+            </div>
+            <div className="mt-2 flex items-center gap-1.5 text-xs">
+              <span className="font-mono font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-500/20 text-[11px]">
+                {financialMetrics.marginPercent >= 0 ? "+" : ""}{financialMetrics.marginPercent.toFixed(1)}% Margin
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span className="text-[10.5px] text-slate-400 block">Dari Omset:</span>
+              <span className="font-mono font-bold text-cyan-700 dark:text-cyan-400 privacy-sensitive text-[11.5px]">
+                {formatRupiah(financialMetrics.totalOmset)}
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10.5px] text-slate-400 block">Biaya Operasional:</span>
+              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 privacy-sensitive text-[11.5px]">
+                {formatRupiah(financialMetrics.totalExpenses)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bento 4: Jaga AI Closing Rate -- dihitung dari data sesi chat asli via /api/whatsapp/chat-sessions,
+        bukan angka tetap lagi. Jujur tampilkan status "belum terhubung"/"belum ada percakapan" kalau memang belum ada data. */}
         <Link
           href="/dashboard/jaga-ai"
           className="group rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-white/20 hover:shadow-sm cursor-pointer block"
@@ -364,66 +433,48 @@ export default function DashboardOverviewPage() {
             </div>
           </div>
 
-          <div className="mt-3">
-            <div className="text-2xl font-mono font-bold tracking-tight text-slate-900 dark:text-white">
-              34.2% <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Closing</span>
+          {!isJagaAIConnected ? (
+            <div className="mt-3">
+              <div className="text-sm font-bold text-slate-500 dark:text-slate-400">Belum Terhubung</div>
+              <div className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                Hubungkan WhatsApp Jaga AI untuk mulai memantau closing rate
+              </div>
             </div>
-            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Dijawab otomatis dalam hitungan detik
+          ) : jagaAIClosingRate === null ? (
+            <div className="mt-3">
+              <div className="text-sm font-bold text-slate-500 dark:text-slate-400">Belum Ada Percakapan</div>
+              <div className="mt-2 text-xs text-slate-400 dark:text-slate-500">
+                Statistik closing akan muncul begitu ada chat masuk
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="mt-3">
+                <div className="text-2xl font-mono font-bold tracking-tight text-slate-900 dark:text-white">
+                  {jagaAIClosingRate.toFixed(1)}% <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Closing</span>
+                </div>
+                <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  {whatsappClosedCount} pesanan closing dari {chatSessionStats?.total} sesi chat
+                </div>
+              </div>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-[10.5px] text-slate-400 block">Respon Speed:</span>
-              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
-                1.4 Detik
-              </span>
-            </div>
-            <div className="text-right">
-              <span className="text-[10.5px] text-slate-400 block">Eskalasi Manual:</span>
-              <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
-                0.6%
-              </span>
-            </div>
-          </div>
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span className="text-[10.5px] text-slate-400 block">Total Sesi Chat:</span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
+                    {chatSessionStats?.total}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10.5px] text-slate-400 block">Eskalasi Manual:</span>
+                  <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
+                    {jagaAIEscalationRate !== null ? `${jagaAIEscalationRate.toFixed(1)}%` : "-"}
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
         </Link>
-
-        {/* Bento 4: Cuan Diselamatkan (ROI) */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-              Cuan Diselamatkan (ROI)
-            </span>
-            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
-              <ShieldCheck className="h-4 w-4" />
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <div className="text-2xl font-mono font-bold tracking-tight text-slate-900 dark:text-white privacy-sensitive">
-              {formatRupiah(feeSaved > 0 ? feeSaved : 14960000)}
-            </div>
-            <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Hemat komisi 20% marketplace
-            </div>
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
-            <div>
-              <span className="text-[10.5px] text-slate-400 block">Biaya Komisi:</span>
-              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[11.5px]">
-                Rp 0 (0%)
-              </span>
-            </div>
-            <div className="text-right">
-              <span className="text-[10.5px] text-slate-400 block">ROI Investasi:</span>
-              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[11.5px]">
-                Maksimal 100%
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* 3. Interactive Dual Grid: SVG Trend Chart & Real-time Activity Stream */}
