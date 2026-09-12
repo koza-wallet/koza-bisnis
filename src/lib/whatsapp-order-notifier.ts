@@ -1,4 +1,4 @@
-import { sendWhatsAppMessage } from '@/lib/whatsapp-gateway';
+import { sendWhatsAppMessage } from './whatsapp-gateway';
 
 export interface OrderItemPayload {
   name?: string;
@@ -32,6 +32,10 @@ export interface StorePayload {
     deviceToken?: string;
     provider?: 'fonnte' | 'wablas' | 'custom';
     serverUrl?: string;
+    enableAICustomerService?: boolean;
+    notifyBuyerOrder?: boolean;
+    notifyBuyerShipping?: boolean;
+    notifySellerOrderAlert?: boolean;
   } | null;
 }
 
@@ -63,8 +67,8 @@ export async function notifyNewOrderOnWhatsApp({
   let buyerSent = false;
   let sellerSent = false;
 
-  // 1. Kirim Notifikasi ke Pembeli
-  if (order.customerPhone) {
+  // 1. Kirim Notifikasi ke Pembeli (hanya jika saklar notifyBuyerOrder !== false)
+  if (order.customerPhone && botSettings.notifyBuyerOrder !== false) {
     const itemsListText = (order.items || [])
       .map((item, idx) => {
         const itemName = item.name || item.productName || 'Produk';
@@ -102,8 +106,8 @@ Pesanan kakak akan segera disiapkan oleh tim kami. Terima kasih banyak ya kak! ð
     }
   }
 
-  // 2. Kirim Alert ke Penjual (Owner Toko)
-  if (store.whatsappNumber) {
+  // 2. Kirim Alert ke Penjual (Owner Toko) (hanya jika saklar notifySellerOrderAlert !== false)
+  if (store.whatsappNumber && botSettings.notifySellerOrderAlert !== false) {
     const sellerAlertMessage = `ðŸ”” *ADA PESANAN BARU MASUK!*
 Toko: *${store.name}*
 
@@ -150,7 +154,12 @@ export async function notifyShippingResiOnWhatsApp({
     botSettings?.isActive !== false &&
     Boolean(botSettings?.deviceToken);
 
-  if (!isBotActive || !botSettings?.deviceToken || !order.customerPhone) {
+  if (
+    !isBotActive ||
+    !botSettings?.deviceToken ||
+    !order.customerPhone ||
+    botSettings.notifyBuyerShipping === false
+  ) {
     return false;
   }
 

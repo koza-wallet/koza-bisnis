@@ -132,6 +132,20 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Periksa saklar kebebasan seller: Tanya Jawab AI CS 24/7
+      if (storeData?.whatsapp_bot_settings?.enableAICustomerService === false) {
+        return NextResponse.json(
+          {
+            success: true,
+            processedByLLM: false,
+            botStatus: "PAUSED",
+            rejectionReason: "DISABLED_BY_SELLER",
+            message: "Layanan Tanya Jawab AI CS dinonaktifkan oleh pemilik toko.",
+          },
+          { status: 200 }
+        );
+      }
+
       const { data: sessionData } = await supabase
         .from("chat_sessions")
         .select("bot_status, paused_until, turn_count")

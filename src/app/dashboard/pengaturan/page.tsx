@@ -31,8 +31,12 @@ import {
   Unlink,
   Copy,
   WifiOff,
+  Sliders,
+  ShoppingBag,
+  Bell,
   X
 } from "lucide-react";
+import { WhatsAppBotSettings } from "@/types";
 
 export default function StoreSettingsPage() {
   const { store, updateStore } = useStore();
@@ -146,6 +150,16 @@ export default function StoreSettingsPage() {
       whatsappBotSettings: {
         ...botSettings,
         isActive: !currentActive,
+      },
+    });
+  };
+
+  const handleToggleBotFeature = (key: keyof WhatsAppBotSettings) => {
+    const currentValue = botSettings[key] !== false; // default true (opt-out)
+    updateStore({
+      whatsappBotSettings: {
+        ...botSettings,
+        [key]: !currentValue,
       },
     });
   };
@@ -676,15 +690,15 @@ export default function StoreSettingsPage() {
                   <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 p-4 flex items-center justify-between gap-4">
                     <div className="space-y-0.5">
                       <div className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                        <span>Balas Otomatis Jaga AI</span>
+                        <span>Master Switch Jaga AI</span>
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                           botSettings.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
                         }`}>
-                          {botSettings.isActive ? 'AKTIF' : 'NONAKTIF'}
+                          {botSettings.isActive ? 'BOT AKTIF' : 'BOT NONAKTIF'}
                         </span>
                       </div>
                       <p className="text-xs text-slate-600 dark:text-slate-400">
-                        Saat aktif, bot akan langsung merespons pertanyaan pembeli menggunakan katalog produk toko Anda.
+                        Saklar utama seluruh fungsi bot WhatsApp toko. Matikan jika ingin menjeda seluruh layanan otomatis secara instan.
                       </p>
                     </div>
 
@@ -702,6 +716,194 @@ export default function StoreSettingsPage() {
                     </button>
                   </div>
                 )}
+
+                {/* Preferensi & Saklar Kebebasan Seller Jaga AI */}
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 p-5 sm:p-6 space-y-5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                        <Sliders className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>Preferensi & Saklar Otomasi Jaga AI</span>
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-bold border border-emerald-200/60 dark:border-emerald-500/20">
+                            Kendali Penuh Seller
+                          </span>
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Aktifkan atau matikan modul cerdas secara individual sesuai gaya operasional toko Anda.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {/* Saklar 1: AI CS Tanya Jawab Produk 24/7 */}
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-4 sm:p-4.5 flex items-start justify-between gap-3.5 shadow-xs">
+                      <div className="space-y-1.5 pr-1 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                            <Bot className="h-4 w-4" />
+                          </div>
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                            AI CS Tanya Jawab 24/7
+                          </span>
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                          AI menjawab otomatis pertanyaan pembeli seputar stok, harga, dan varian katalog toko.
+                        </p>
+                        <div className="pt-0.5">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                            botSettings.enableAICustomerService !== false
+                              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300'
+                              : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
+                            {botSettings.enableAICustomerService !== false ? 'AKTIF (24 Jam)' : 'NONAKTIF'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleBotFeature('enableAICustomerService')}
+                        className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-colors shrink-0 cursor-pointer ${
+                          botSettings.enableAICustomerService !== false ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-800'
+                        }`}
+                        aria-label="Toggle AI CS"
+                      >
+                        <div
+                          className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${
+                            botSettings.enableAICustomerService !== false ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Saklar 2: Rekap Pesanan Baru ke WhatsApp Pembeli */}
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-4 sm:p-4.5 flex items-start justify-between gap-3.5 shadow-xs">
+                      <div className="space-y-1.5 pr-1 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                            <ShoppingBag className="h-4 w-4" />
+                          </div>
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                            Rekap Pesanan ke Pembeli
+                          </span>
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                          Kirim rincian invoice dan tautan lacak otomatis ke WhatsApp pembeli saat selesai checkout.
+                        </p>
+                        <div className="pt-0.5">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                            botSettings.notifyBuyerOrder !== false
+                              ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-300'
+                              : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
+                            {botSettings.notifyBuyerOrder !== false ? 'AKTIF (Kirim Otomatis)' : 'NONAKTIF'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleBotFeature('notifyBuyerOrder')}
+                        className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-colors shrink-0 cursor-pointer ${
+                          botSettings.notifyBuyerOrder !== false ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-800'
+                        }`}
+                        aria-label="Toggle Buyer Order Notification"
+                      >
+                        <div
+                          className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${
+                            botSettings.notifyBuyerOrder !== false ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Saklar 3: Nomor Resi & Tracking Live ke WhatsApp Pembeli */}
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-4 sm:p-4.5 flex items-start justify-between gap-3.5 shadow-xs">
+                      <div className="space-y-1.5 pr-1 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-lg bg-sky-50 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 flex items-center justify-center shrink-0">
+                            <Truck className="h-4 w-4" />
+                          </div>
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                            Kirim Resi & Lacak Ekspedisi
+                          </span>
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                          Kirim nomor resi dan link pelacakan kurir saat pesanan Anda update ke status 'Dikirim'.
+                        </p>
+                        <div className="pt-0.5">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                            botSettings.notifyBuyerShipping !== false
+                              ? 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-300'
+                              : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
+                            {botSettings.notifyBuyerShipping !== false ? 'AKTIF (Resi Ekspedisi)' : 'NONAKTIF'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleBotFeature('notifyBuyerShipping')}
+                        className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-colors shrink-0 cursor-pointer ${
+                          botSettings.notifyBuyerShipping !== false ? 'bg-sky-600' : 'bg-slate-300 dark:bg-slate-800'
+                        }`}
+                        aria-label="Toggle Shipping Notification"
+                      >
+                        <div
+                          className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${
+                            botSettings.notifyBuyerShipping !== false ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Saklar 4: Alert Pesanan Masuk ke WhatsApp Penjual */}
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 p-4 sm:p-4.5 flex items-start justify-between gap-3.5 shadow-xs">
+                      <div className="space-y-1.5 pr-1 flex-1">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-lg bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                            <Bell className="h-4 w-4" />
+                          </div>
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                            Alert Pesanan ke WhatsApp Penjual
+                          </span>
+                        </div>
+                        <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                          Notifikasi instan ke WhatsApp pemilik toko begitu ada pembeli checkout agar segera dipacking.
+                        </p>
+                        <div className="pt-0.5">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
+                            botSettings.notifySellerOrderAlert !== false
+                              ? 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300'
+                              : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
+                            {botSettings.notifySellerOrderAlert !== false ? 'AKTIF (Alert Toko)' : 'NONAKTIF'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleToggleBotFeature('notifySellerOrderAlert')}
+                        className={`w-11 h-6 flex items-center rounded-full p-0.5 transition-colors shrink-0 cursor-pointer ${
+                          botSettings.notifySellerOrderAlert !== false ? 'bg-amber-600' : 'bg-slate-300 dark:bg-slate-800'
+                        }`}
+                        aria-label="Toggle Seller Alert Notification"
+                      >
+                        <div
+                          className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform ${
+                            botSettings.notifySellerOrderAlert !== false ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Status Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">

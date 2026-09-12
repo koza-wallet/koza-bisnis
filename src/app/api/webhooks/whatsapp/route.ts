@@ -125,6 +125,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, ignored: true, reason: 'Bot inactive or disconnected' });
     }
 
+    // Periksa saklar kebebasan seller: AI CS Tanya Jawab Produk 24/7
+    if (botSettings.enableAICustomerService === false) {
+      return NextResponse.json({
+        success: true,
+        ignored: true,
+        reason: 'Tanya Jawab AI CS dinonaktifkan oleh pemilik toko.',
+      });
+    }
+
     // Verifikasi membership PRO toko
     const isPlanPro =
       store.plan === 'PRO_AI' ||

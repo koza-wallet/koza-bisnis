@@ -21,6 +21,10 @@ export interface WhatsAppBotSettings {
   serverUrl?: string;
   webhookSecret?: string;
   aiModelProvider?: 'auto' | 'openai' | 'gemini';
+  enableAICustomerService?: boolean;
+  notifyBuyerOrder?: boolean;
+  notifyBuyerShipping?: boolean;
+  notifySellerOrderAlert?: boolean;
 }
 
 export interface Store {
