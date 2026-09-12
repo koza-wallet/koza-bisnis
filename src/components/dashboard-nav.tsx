@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store-context";
 import { usePrivacy } from "@/lib/privacy-context";
 import { useSidebar } from "@/lib/sidebar-context";
@@ -24,7 +24,8 @@ import {
   ChevronRight,
   ShieldCheck,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Bot
 } from "lucide-react";
 import { useState } from "react";
 
@@ -44,6 +45,8 @@ interface MenuGroup {
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams?.get("tab");
   const { store, orders } = useStore();
   const { isCollapsed, toggleSidebar } = useSidebar();
 
@@ -75,13 +78,21 @@ export function DashboardSidebar() {
           icon: Sparkles, 
           isAI: true 
         },
+        { 
+          href: "/dashboard/pengaturan?tab=ai_bot", 
+          label: "Jaga AI (CS WhatsApp)", 
+          icon: Bot, 
+          isAI: true,
+          badge: "24/7",
+          badgeColor: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+        },
       ]
     },
     {
       title: "Keuangan & Ekspedisi",
       items: [
         { href: "/dashboard/keuangan", label: "Laba Bersih Toko", icon: TrendingUp },
-        { href: "/dashboard/pengaturan", label: "Ekspedisi & Kurir", icon: Truck },
+        { href: "/dashboard/pengaturan?tab=shipping", label: "Ekspedisi & Kurir", icon: Truck },
       ]
     },
     {
@@ -147,7 +158,19 @@ export function DashboardSidebar() {
             </div>
             {group.items.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+              const itemPath = item.href.split("?")[0];
+              const itemTab = item.href.includes("?tab=") ? new URLSearchParams(item.href.split("?")[1]).get("tab") : null;
+
+              let isActive = false;
+              if (itemTab) {
+                isActive = pathname === itemPath && currentTab === itemTab;
+              } else if (item.href === "/dashboard") {
+                isActive = pathname === "/dashboard";
+              } else if (pathname === itemPath) {
+                isActive = !currentTab || currentTab === "shipping";
+              } else {
+                isActive = itemPath !== "/dashboard" && pathname.startsWith(itemPath);
+              }
 
               return (
                 <Link
@@ -348,6 +371,8 @@ export function DashboardTopbar() {
 
 export function DashboardMobileNav() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams?.get("tab");
   const { orders } = useStore();
 
   const pendingOrdersCount = orders.filter(
@@ -357,6 +382,12 @@ export function DashboardMobileNav() {
   const navItems = [
     { href: "/dashboard", label: "Beranda", icon: Home },
     { href: "/dashboard/produk", label: "Produk", icon: Package },
+    { 
+      href: "/dashboard/pengaturan?tab=ai_bot", 
+      label: "Jaga AI", 
+      icon: Bot, 
+      isAI: true 
+    },
     { 
       href: "/dashboard/landing-pages", 
       label: "Jualan AI", 
@@ -370,7 +401,6 @@ export function DashboardMobileNav() {
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined 
     },
     { href: "/dashboard/keuangan", label: "Laba", icon: TrendingUp },
-    { href: "/dashboard/pengaturan", label: "Ekspedisi", icon: Truck },
   ];
 
   return (
@@ -378,7 +408,19 @@ export function DashboardMobileNav() {
       <div className="grid grid-cols-6 py-1 px-1 items-center">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const itemPath = item.href.split("?")[0];
+          const itemTab = item.href.includes("?tab=") ? new URLSearchParams(item.href.split("?")[1]).get("tab") : null;
+
+          let isActive = false;
+          if (itemTab) {
+            isActive = pathname === itemPath && currentTab === itemTab;
+          } else if (item.href === "/dashboard") {
+            isActive = pathname === "/dashboard";
+          } else if (pathname === itemPath) {
+            isActive = !currentTab || currentTab === "shipping";
+          } else {
+            isActive = itemPath !== "/dashboard" && pathname.startsWith(itemPath);
+          }
 
           if (item.isAI) {
             return (

@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   Truck,
   MessageSquare,
+  Bot,
   X
 } from "lucide-react";
 
@@ -277,14 +278,22 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* Bento 3: Jaga AI Closing Rate */}
-        <div className="rounded-2xl border border-teal-200/80 dark:border-teal-500/20 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-colors">
+        {/* Bento 3: Jaga AI Closing Rate (Tautan Langsung ke Pengaturan & Saklar AI) */}
+        <Link
+          href="/dashboard/pengaturan?tab=ai_bot"
+          className="group rounded-2xl border border-teal-200/80 dark:border-teal-500/20 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-all hover:border-teal-400 dark:hover:border-teal-500/40 hover:shadow-md cursor-pointer block"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-teal-800 dark:text-teal-300">
-              Jaga AI Closing Rate
-            </span>
-            <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20">
-              <MessageSquare className="h-4 w-4" />
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-teal-800 dark:text-teal-300">
+                Jaga AI Closing Rate
+              </span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+                Atur Saklar ↗
+              </span>
+            </div>
+            <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 group-hover:scale-110 transition-transform">
+              <Bot className="h-4 w-4" />
             </div>
           </div>
 
@@ -311,7 +320,7 @@ export default function DashboardOverviewPage() {
               </span>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Bento 4: Cuan Diselamatkan (ROI) */}
         <div className="rounded-2xl border border-purple-200/80 dark:border-purple-500/20 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-colors">
@@ -503,15 +512,19 @@ export default function DashboardOverviewPage() {
                 </div>
               </div>
 
-              {/* Item 2 */}
-              <div className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
+              {/* Item 2: Jaga AI */}
+              <Link 
+                href="/dashboard/pengaturan?tab=ai_bot"
+                className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:border-teal-400/50 hover:bg-teal-50/20 dark:hover:bg-teal-950/10 transition-colors group cursor-pointer"
+              >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-400 text-xs">
                   🤖
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
-                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      Jaga AI Closing Otomatis
+                    <span className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1">
+                      <span>Jaga AI Closing Otomatis</span>
+                      <span className="text-[10px] text-teal-600 dark:text-teal-400 group-hover:translate-x-0.5 transition-transform">↗</span>
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">3m lalu</span>
                   </div>
@@ -522,7 +535,7 @@ export default function DashboardOverviewPage() {
                     Konversi Closing: Rp 345.000
                   </span>
                 </div>
-              </div>
+              </Link>
 
               {/* Item 3 */}
               <div className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
@@ -558,7 +571,23 @@ export default function DashboardOverviewPage() {
       </div>
 
       {/* 4. Quick Action Toolbar (Pintasan Cepat Operasional) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <Link
+          href="/dashboard/pengaturan?tab=ai_bot"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-teal-300/80 dark:border-teal-500/30 bg-white dark:bg-[#0E1420] hover:border-teal-500 hover:shadow-xs transition-all group"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-600 group-hover:text-white transition-colors">
+            <Bot className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
+              <span>Jaga AI CS</span>
+              <span className="text-[8px] px-1 py-0.2 rounded bg-teal-100 dark:bg-teal-500/20 text-teal-800 dark:text-teal-300 font-bold">24/7</span>
+            </div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">Saklar & chat bot</div>
+          </div>
+        </Link>
+
         <Link
           href="/dashboard/produk"
           className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-emerald-500/40 hover:shadow-xs transition-all group"

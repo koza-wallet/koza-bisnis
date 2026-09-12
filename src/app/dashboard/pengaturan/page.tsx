@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useStore } from "@/lib/store-context";
 import { MASTER_COURIERS } from "@/lib/mock-data";
 import { 
@@ -38,9 +39,19 @@ import {
 } from "lucide-react";
 import { WhatsAppBotSettings } from "@/types";
 
-export default function StoreSettingsPage() {
+function StoreSettingsContent() {
   const { store, updateStore } = useStore();
-  const [activeTab, setActiveTab] = useState<"shipping" | "ai_bot" | "domain">("shipping");
+  const searchParams = useSearchParams();
+  const tabQuery = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<"shipping" | "ai_bot" | "domain">(
+    tabQuery === "ai_bot" ? "ai_bot" : tabQuery === "domain" ? "domain" : "shipping"
+  );
+
+  useEffect(() => {
+    if (tabQuery === "ai_bot" || tabQuery === "shipping" || tabQuery === "domain") {
+      setActiveTab(tabQuery);
+    }
+  }, [tabQuery]);
   const [customDomainInput, setCustomDomainInput] = useState(store.customDomain || "");
   const [isDomainSaved, setIsDomainSaved] = useState(false);
   const [isCheckingDns, setIsCheckingDns] = useState(false);
@@ -1390,5 +1401,13 @@ export default function StoreSettingsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function StoreSettingsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-slate-400">Memuat pengaturan toko...</div>}>
+      <StoreSettingsContent />
+    </Suspense>
   );
 }

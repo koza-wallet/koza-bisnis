@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { DashboardSidebar, DashboardTopbar, DashboardMobileNav } from "@/components/dashboard-nav";
 import { useStore } from "@/lib/store-context";
 import Link from "next/link";
@@ -22,7 +23,9 @@ export default function DashboardLayout({
       }`}
     >
       {/* Desktop Fixed Sidebar Navigation (256px) */}
-      <DashboardSidebar />
+      <Suspense fallback={null}>
+        <DashboardSidebar />
+      </Suspense>
 
       {/* Main Viewport Container */}
       <div className={`flex-1 flex flex-col min-w-0 ${isBuilder ? "h-screen overflow-hidden" : ""}`}>
@@ -69,7 +72,11 @@ export default function DashboardLayout({
       </div>
 
       {/* Mobile Floating Bottom Dock (6 Tabs) */}
-      {!isBuilder && <DashboardMobileNav />}
+      {!isBuilder && (
+        <Suspense fallback={null}>
+          <DashboardMobileNav />
+        </Suspense>
+      )}
     </div>
   );
 }
