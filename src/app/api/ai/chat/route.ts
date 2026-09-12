@@ -9,6 +9,7 @@ import {
 } from "@/lib/ai-cost-guard";
 import { BotChatStatus } from "@/types";
 import { generateJagaAIReply } from "@/lib/jaga-ai-llm";
+import { serverError } from "@/lib/api-error";
 
 // ==============================================================================
 // KOZA BISNIS — AI CHAT & HUMAN HANDOFF API ROUTE
@@ -284,14 +285,10 @@ export async function POST(req: NextRequest) {
       turnCount: nextTurnCount,
     });
   } catch (error: unknown) {
-    console.error("[AI-CHAT-ROUTE] Internal Server Error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        message: "Terjadi kesalahan pada server saat memproses chat.",
-      },
-      { status: 500 }
-    );
+    return serverError("API-AI-CHAT", error, {
+      userMessage: "Terjadi kesalahan pada server saat memproses chat.",
+      fieldName: "message",
+    });
   }
 }
 

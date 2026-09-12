@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { notifyShippingResiOnWhatsApp } from '@/lib/whatsapp-order-notifier';
+import { serverError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,10 +127,9 @@ export async function POST(req: NextRequest) {
       notificationSent,
     });
   } catch (err: unknown) {
-    console.error('[UPDATE-ORDER-STATUS] Server error:', err);
-    return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan internal server.' },
-      { status: 500 }
-    );
+    return serverError("API-ORDERS-UPDATE-STATUS", err, {
+      userMessage: "Terjadi kesalahan internal server.",
+      fieldName: "message",
+    });
   }
 }

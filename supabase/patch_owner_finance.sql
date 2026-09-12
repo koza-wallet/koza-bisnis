@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS public.platform_operating_costs (
     cloudflare_cost_idr NUMERIC(14, 2) NOT NULL DEFAULT 0,
     supabase_cost_idr NUMERIC(14, 2) NOT NULL DEFAULT 0,
     other_cost_idr NUMERIC(14, 2) NOT NULL DEFAULT 0,
-    usd_idr_rate NUMERIC(10, 2) NOT NULL DEFAULT 15800,
+    usd_idr_rate NUMERIC(10, 2) NOT NULL DEFAULT 17650,
     notes TEXT,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );

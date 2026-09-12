@@ -123,7 +123,7 @@ export async function GET() {
     const lastKnownRate =
       (costRows && costRows.length > 0
         ? Number(costRows[costRows.length - 1].usd_idr_rate)
-        : undefined) || 15800;
+        : undefined) || 17650;
 
     const result = allMonthKeys.map((key) => {
       const m = monthly[key] || { month: key, revenueIdr: 0, llmCostUsd: 0, llmCallCount: 0 };

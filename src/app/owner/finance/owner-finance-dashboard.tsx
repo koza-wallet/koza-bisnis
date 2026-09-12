@@ -70,7 +70,7 @@ export function OwnerFinanceDashboard() {
     domainCostIdr: "",
     cloudflareCostIdr: "",
     supabaseCostIdr: "",
-    usdIdrRate: "15800",
+    usdIdrRate: "17650",
     notes: "",
   });
   const [otherItems, setOtherItems] = useState<{ label: string; amount: string }[]>([]);
@@ -100,7 +100,7 @@ export function OwnerFinanceDashboard() {
           domainCostIdr: String(current.infraCostDetail.domain || ""),
           cloudflareCostIdr: String(current.infraCostDetail.cloudflare || ""),
           supabaseCostIdr: String(current.infraCostDetail.supabase || ""),
-          usdIdrRate: String(current.usdIdrRate || 15800),
+          usdIdrRate: String(current.usdIdrRate || 17650),
           notes: current.infraCostDetail.notes || "",
         });
         setOtherItems(

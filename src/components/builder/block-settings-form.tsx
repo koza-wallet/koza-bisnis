@@ -139,6 +139,27 @@ function renderTypeSpecificInputs(
     updateSetting("items", items);
   };
 
+  const updateImage = (index: number, field: string, value: any) => {
+    const images = [...(settings.images || [])];
+    images[index] = { ...images[index], [field]: value };
+    updateSetting("images", images);
+  };
+  const removeImage = (index: number) => {
+    const images = (settings.images || []).filter((_: any, i: number) => i !== index);
+    updateSetting("images", images);
+  };
+  const moveImage = (index: number, direction: "UP" | "DOWN") => {
+    const images = [...(settings.images || [])];
+    const target = direction === "UP" ? index - 1 : index + 1;
+    if (target < 0 || target >= images.length) return;
+    [images[index], images[target]] = [images[target], images[index]];
+    updateSetting("images", images);
+  };
+  const addImage = (blankImage: any) => {
+    const images = [...(settings.images || []), blankImage];
+    updateSetting("images", images);
+  };
+
   switch (block.type) {
     case "HERO_BANNER":
       return (
@@ -728,6 +749,223 @@ function renderTypeSpecificInputs(
             >
               + Tambah FAQ
             </button>
+          </div>
+        </div>
+      );
+
+    case "IMAGE_SLIDER":
+      return (
+        <div className="space-y-4">
+          <div className="space-y-3">
+            {(settings.images || []).map((img: any, i: number) => (
+              <div key={i} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Gambar {i + 1}</span>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => moveImage(i, "UP")} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white">↑</button>
+                    <button type="button" onClick={() => moveImage(i, "DOWN")} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white">↓</button>
+                    <button type="button" onClick={() => removeImage(i)} className="p-1 text-rose-500 hover:text-rose-600 dark:hover:text-rose-300">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={img.url || ""}
+                  onChange={(e) => updateImage(i, "url", e.target.value)}
+                  placeholder="URL gambar, https://..."
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                />
+                <input
+                  type="text"
+                  value={img.caption || ""}
+                  onChange={(e) => updateImage(i, "caption", e.target.value)}
+                  placeholder="Caption (opsional)"
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => addImage({ url: "", caption: "" })}
+              className="w-full py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-emerald-500 text-xs font-semibold"
+            >
+              + Tambah Gambar
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Auto-Slide</span>
+              <input
+                type="checkbox"
+                checked={!!settings.autoSlide}
+                onChange={(e) => updateSetting("autoSlide", e.target.checked)}
+                className="w-4 h-4 rounded text-emerald-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+              />
+            </div>
+            <div className="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <span className="text-slate-700 dark:text-slate-300 font-medium">Tampilkan Titik</span>
+              <input
+                type="checkbox"
+                checked={!!settings.showDots}
+                onChange={(e) => updateSetting("showDots", e.target.checked)}
+                className="w-4 h-4 rounded text-emerald-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+              />
+            </div>
+          </div>
+        </div>
+      );
+
+    case "IMAGE_GALLERY":
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Jumlah Kolom</label>
+            <select
+              value={settings.columns || 3}
+              onChange={(e) => updateSetting("columns", Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+            >
+              <option value={2}>2 Kolom</option>
+              <option value={3}>3 Kolom</option>
+              <option value={4}>4 Kolom</option>
+            </select>
+          </div>
+          <div className="space-y-3">
+            {(settings.images || []).map((img: any, i: number) => (
+              <div key={i} className="border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Gambar {i + 1}</span>
+                  <div className="flex items-center gap-1">
+                    <button type="button" onClick={() => moveImage(i, "UP")} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white">↑</button>
+                    <button type="button" onClick={() => moveImage(i, "DOWN")} className="p-1 text-slate-400 hover:text-slate-900 dark:hover:text-white">↓</button>
+                    <button type="button" onClick={() => removeImage(i)} className="p-1 text-rose-500 hover:text-rose-600 dark:hover:text-rose-300">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="text"
+                  value={img.url || ""}
+                  onChange={(e) => updateImage(i, "url", e.target.value)}
+                  placeholder="URL gambar, https://..."
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                />
+                <input
+                  type="text"
+                  value={img.title || ""}
+                  onChange={(e) => updateImage(i, "title", e.target.value)}
+                  placeholder="Judul (opsional)"
+                  className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => addImage({ url: "", title: "" })}
+              className="w-full py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-emerald-500 text-xs font-semibold"
+            >
+              + Tambah Gambar
+            </button>
+          </div>
+        </div>
+      );
+
+    case "SALES_TOAST":
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+            <div>
+              <p className="font-semibold text-slate-900 dark:text-white">Aktifkan Notifikasi Pembelian</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Muncul di pojok layar seolah ada yang baru beli</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={!!settings.enabled}
+              onChange={(e) => updateSetting("enabled", e.target.checked)}
+              className="w-4 h-4 rounded text-emerald-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Label Produk</label>
+            <input
+              type="text"
+              value={settings.productLabel || ""}
+              onChange={(e) => updateSetting("productLabel", e.target.value)}
+              placeholder="produk ini"
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Interval Muncul (Detik)</label>
+            <input
+              type="number"
+              value={settings.intervalSeconds || 8}
+              onChange={(e) => updateSetting("intervalSeconds", Number(e.target.value))}
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none font-mono"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Nama Sampel (pisahkan koma)</label>
+            <input
+              type="text"
+              value={(settings.sampleNames || []).join(", ")}
+              onChange={(e) => updateSetting("sampleNames", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
+              placeholder="Budi, Siti, Andi, Rina"
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Kota Sampel (pisahkan koma)</label>
+            <input
+              type="text"
+              value={(settings.sampleCities || []).join(", ")}
+              onChange={(e) => updateSetting("sampleCities", e.target.value.split(",").map((s: string) => s.trim()).filter(Boolean))}
+              placeholder="Jakarta, Bandung, Surabaya"
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+        </div>
+      );
+
+    case "STICKY_BOTTOM_CTA":
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Teks Tombol</label>
+            <input
+              type="text"
+              value={settings.text || ""}
+              onChange={(e) => updateSetting("text", e.target.value)}
+              placeholder="Pesan Sekarang"
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Label Harga</label>
+            <input
+              type="text"
+              value={settings.priceLabel || ""}
+              onChange={(e) => updateSetting("priceLabel", e.target.value)}
+              placeholder="Rp 145.000"
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none font-mono"
+            />
+          </div>
+          <div>
+            <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Target Anchor Saat Diklik</label>
+            <input
+              type="text"
+              value={settings.targetAnchor || ""}
+              onChange={(e) => updateSetting("targetAnchor", e.target.value)}
+              placeholder="#checkout-section"
+              className="w-full px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:border-emerald-500 outline-none"
+            />
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">ID seksi tujuan scroll, mis. seksi checkout.</p>
           </div>
         </div>
       );

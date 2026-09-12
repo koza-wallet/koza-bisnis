@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         supabase_cost_idr: Number(supabaseCostIdr) || 0,
         other_cost_idr: otherCostIdr,
         other_costs_items: items,
-        usd_idr_rate: Number(usdIdrRate) || 15800,
+        usd_idr_rate: Number(usdIdrRate) || 17650,
         notes: notes || null,
         updated_at: new Date().toISOString(),
       },
