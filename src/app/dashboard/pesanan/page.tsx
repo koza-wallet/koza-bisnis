@@ -25,6 +25,8 @@ export default function OrderManagementPage() {
   const [copiedResi, setCopiedResi] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
   const [processingOrderId, setProcessingOrderId] = useState<string | null>(null);
+  const [savingResiId, setSavingResiId] = useState<string | null>(null);
+  const [resiSuccessMsg, setResiSuccessMsg] = useState<{ id: string; msg: string } | null>(null);
 
   const filteredOrders = orders.filter((o) => {
     const matchesStatus = filterStatus === "ALL" || o.status === filterStatus;
@@ -35,13 +37,37 @@ export default function OrderManagementPage() {
     return matchesStatus && matchesSearch;
   });
 
-  const handleUpdateResi = (orderId: string) => {
+  const handleUpdateResi = async (orderId: string) => {
     const resi = trackingInputs[orderId]?.trim();
     if (!resi) {
       alert("Masukkan nomor resi terlebih dahulu");
       return;
     }
     updateOrderStatus(orderId, "DIKIRIM", resi);
+    setSavingResiId(orderId);
+
+    try {
+      const res = await fetch("/api/orders/update-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          status: "DIKIRIM",
+          trackingNumber: resi,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.notificationSent) {
+        setResiSuccessMsg({ id: orderId, msg: "Resi tersimpan & notifikasi WhatsApp terkirim ke pembeli! 🚀" });
+      } else {
+        setResiSuccessMsg({ id: orderId, msg: "Nomor resi berhasil disimpan." });
+      }
+      setTimeout(() => setResiSuccessMsg(null), 4000);
+    } catch (err) {
+      console.warn("Gagal sinkron status pesanan:", err);
+    } finally {
+      setSavingResiId(null);
+    }
   };
 
   const handleCopyResi = (resi: string) => {
@@ -385,11 +411,17 @@ export default function OrderManagementPage() {
                     />
                     <button
                       type="button"
+                      disabled={savingResiId === order.id}
                       onClick={() => handleUpdateResi(order.id)}
-                      className="rounded-lg bg-sky-600 hover:bg-sky-700 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-xs shrink-0 cursor-pointer"
+                      className="rounded-lg bg-sky-600 hover:bg-sky-700 px-3.5 py-1.5 text-xs font-semibold text-white transition-all active:scale-95 shadow-xs shrink-0 cursor-pointer disabled:opacity-50"
                     >
-                      Kirim Resi
+                      {savingResiId === order.id ? "Menyimpan..." : "Kirim Resi"}
                     </button>
+                    {resiSuccessMsg?.id === order.id && (
+                      <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 animate-fade-in">
+                        {resiSuccessMsg.msg}
+                      </span>
+                    )}
                   </div>
                 ) : (
                   <div className="text-xs text-slate-500">

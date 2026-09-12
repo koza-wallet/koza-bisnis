@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateOrderNumber } from "@/lib/utils";
+import { notifyNewOrderOnWhatsApp } from "@/lib/whatsapp-order-notifier";
 
 // In-memory sliding window rate limiter
 interface RateLimitEntry {
@@ -389,7 +390,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 5. Return respon sukses terstruktur
+    // 5. Kirim Notifikasi WhatsApp Otomatis ke Pembeli & Penjual (Non-blocking)
+    try {
+      const { data: storeInfo } = await supabase
+        .from("stores")
+        .select("id, name, slug, whatsapp_number, whatsapp_bot_settings")
+        .eq("id", storeId)
+        .maybeSingle();
+
+      if (storeInfo && storeInfo.whatsapp_bot_settings?.status === "CONNECTED") {
+        notifyNewOrderOnWhatsApp({
+          order: {
+            orderNumber,
+            customerName: cleanName,
+            customerPhone: cleanPhone,
+            courierName: String(courierName || "Kurir Rekomendasi"),
+            shippingCost: validShippingCost,
+            grandTotal,
+            paymentMethod,
+            items: sanitizedItems,
+          },
+          store: {
+            id: storeInfo.id,
+            name: storeInfo.name,
+            slug: storeInfo.slug,
+            whatsappNumber: storeInfo.whatsapp_number,
+            whatsapp_bot_settings: storeInfo.whatsapp_bot_settings,
+          },
+        }).catch((notifErr) => {
+          console.warn("[CREATE-ORDER] Async WhatsApp notification error:", notifErr);
+        });
+      }
+    } catch (notifCatch) {
+      console.warn("[CREATE-ORDER] Error querying store for notification:", notifCatch);
+    }
+
+    // 6. Return respon sukses terstruktur
     const completedOrder = {
       orderNumber,
       storeId,

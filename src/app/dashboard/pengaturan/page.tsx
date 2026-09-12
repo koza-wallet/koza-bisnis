@@ -69,6 +69,26 @@ export default function StoreSettingsPage() {
   const [isCopiedWebhook, setIsCopiedWebhook] = useState(false);
   const [qrSecondsRemaining, setQrSecondsRemaining] = useState(60);
 
+  // Chat Sessions & Daily Quota State
+  interface ChatSessionItem {
+    id: string;
+    buyer_phone: string;
+    bot_status: "ACTIVE" | "PAUSED" | "ESCALATED_TO_HUMAN";
+    turn_count: number;
+    last_buyer_message?: string;
+    last_bot_reply?: string;
+    updated_at: string;
+  }
+
+  const [chatSessions, setChatSessions] = useState<ChatSessionItem[]>([]);
+  const [quotaUsage, setQuotaUsage] = useState<{ usedToday: number; dailyLimit: number; percentage: number }>({
+    usedToday: 0,
+    dailyLimit: 150,
+    percentage: 0,
+  });
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [resumingPhone, setResumingPhone] = useState<string | null>(null);
+
   const botSettings = useMemo(() => {
     return store.whatsappBotSettings || {
       provider: 'fonnte' as const,
@@ -137,6 +157,51 @@ export default function StoreSettingsPage() {
     navigator.clipboard.writeText(webhookUrl);
     setIsCopiedWebhook(true);
     setTimeout(() => setIsCopiedWebhook(false), 3000);
+  };
+
+  const fetchChatSessions = async () => {
+    setLoadingSessions(true);
+    try {
+      const res = await fetch("/api/whatsapp/chat-sessions");
+      const data = await res.json();
+      if (data.success) {
+        setChatSessions(data.sessions || []);
+        if (data.quotaUsage) {
+          setQuotaUsage(data.quotaUsage);
+        }
+      }
+    } catch (err) {
+      console.warn("Gagal mengambil data chat_sessions:", err);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "ai_bot") {
+      fetchChatSessions();
+    }
+  }, [activeTab]);
+
+  const handleResumeSession = async (buyerPhone: string) => {
+    setResumingPhone(buyerPhone);
+    try {
+      const res = await fetch("/api/whatsapp/chat-sessions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ buyerPhone, botStatus: "ACTIVE" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setChatSessions((prev) =>
+          prev.map((s) => (s.buyer_phone === buyerPhone ? { ...s, bot_status: "ACTIVE" } : s))
+        );
+      }
+    } catch (err) {
+      console.warn("Gagal mengaktifkan kembali bot:", err);
+    } finally {
+      setResumingPhone(null);
+    }
   };
 
   useEffect(() => {
@@ -702,6 +767,172 @@ export default function StoreSettingsPage() {
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
                     *Tip: Anda juga cukup mengetik balasan langsung dari WhatsApp HP Anda, bot akan otomatis menjeda diri selama 60 menit tanpa Anda perlu mengetik perintah.
                   </p>
+                </div>
+
+                {/* Meteran Kuota Chat Harian AI */}
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                        <Zap className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">Meteran Kuota Harian Jaga AI</h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Pengendali batas anggaran chat harian per toko</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                      quotaUsage.percentage >= 90
+                        ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20"
+                        : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+                    }`}>
+                      {quotaUsage.usedToday} / {quotaUsage.dailyLimit} Chat Hari Ini ({quotaUsage.percentage}%)
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="h-2.5 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        quotaUsage.percentage >= 90
+                          ? "bg-rose-500"
+                          : quotaUsage.percentage >= 70
+                          ? "bg-amber-500"
+                          : "bg-emerald-500"
+                      }`}
+                      style={{ width: `${Math.max(2, quotaUsage.percentage)}%` }}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] text-slate-400">
+                    <span>Reset otomatis setiap pukul 00:00 WIB</span>
+                    <span>Tersisa {Math.max(0, quotaUsage.dailyLimit - quotaUsage.usedToday)} chat hari ini</span>
+                  </div>
+                </div>
+
+                {/* Aktivitas Chat Jaga AI & Human Escalation */}
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                        <MessageSquare className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">Riwayat Percakapan & Status Ambil Alih</h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Daftar calon pembeli yang dilayani bot dan status eskalasi seller</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={fetchChatSessions}
+                      disabled={loadingSessions}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-all cursor-pointer"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${loadingSessions ? "animate-spin" : ""}`} />
+                      <span>Segarkan</span>
+                    </button>
+                  </div>
+
+                  {chatSessions.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center space-y-2">
+                      <div className="mx-auto w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                        <Bot className="h-5 w-5" />
+                      </div>
+                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                        Belum ada percakapan masuk dari calon pembeli.
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Begitu ada WhatsApp masuk ke nomor toko Anda, bot akan otomatis melayani dan riwayatnya muncul di sini.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {chatSessions.map((session) => (
+                        <div
+                          key={session.id}
+                          className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-4 space-y-3 transition-all hover:border-slate-300 dark:hover:border-slate-700"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">
+                                {session.buyer_phone}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                ({session.turn_count || 1} pesan)
+                              </span>
+                            </div>
+
+                            {/* Status Badge */}
+                            <div className="flex items-center gap-2">
+                              {session.bot_status === "ACTIVE" && (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                  Aktif Melayani
+                                </span>
+                              )}
+                              {session.bot_status === "PAUSED" && (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                                  Dijeda Seller (60 mnt)
+                                </span>
+                              )}
+                              {session.bot_status === "ESCALATED_TO_HUMAN" && (
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                                  Eskalasi Manual
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Message Snippet */}
+                          <div className="space-y-1.5 text-xs">
+                            {session.last_buyer_message && (
+                              <div className="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+                                <span className="text-[10px] font-bold text-slate-400 shrink-0 mt-0.5">Pembeli:</span>
+                                <span className="bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-800 break-words">
+                                  &ldquo;{session.last_buyer_message}&rdquo;
+                                </span>
+                              </div>
+                            )}
+                            {session.last_bot_reply && (
+                              <div className="flex items-start gap-2 text-slate-600 dark:text-slate-400 text-[11px]">
+                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">Bot:</span>
+                                <span className="bg-emerald-50/60 dark:bg-emerald-950/20 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-500/20 break-words">
+                                  {session.last_bot_reply}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            {session.bot_status !== "ACTIVE" && (
+                              <button
+                                type="button"
+                                disabled={resumingPhone === session.buyer_phone}
+                                onClick={() => handleResumeSession(session.buyer_phone)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold transition-all cursor-pointer disabled:opacity-50"
+                              >
+                                <Zap className="h-3 w-3" />
+                                <span>{resumingPhone === session.buyer_phone ? "Mengaktifkan..." : "Aktifkan Bot Lagi"}</span>
+                              </button>
+                            )}
+
+                            <a
+                              href={`https://wa.me/${session.buyer_phone}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-semibold transition-all"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              <span>Buka Chat WA</span>
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
