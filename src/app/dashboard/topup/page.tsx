@@ -122,6 +122,7 @@ function QuotaTopupContent() {
   // Transaction history
   const [transactions, setTransactions] = useState<TopupTransactionRecord[]>([]);
   const [checkingOrderId, setCheckingOrderId] = useState<string | null>(null);
+  const [historyCheckError, setHistoryCheckError] = useState("");
 
   // Custom Quota input state (for Non-Pro 3rd package option)
   const [customQuotaInput, setCustomQuotaInput] = useState<number>(25);
@@ -389,6 +390,7 @@ function QuotaTopupContent() {
   const handleVerifyOrder = useCallback(
     async (orderId: string, transactionId?: string) => {
       setCheckingOrderId(orderId);
+      setHistoryCheckError("");
       try {
         let res = await fetch("/api/payment/verify-status", {
           method: "POST",
@@ -417,13 +419,16 @@ function QuotaTopupContent() {
         } else {
           await fetchTransactions();
           if (data.error) {
-            setPaymentError(data.error);
+            setHistoryCheckError(data.error);
           } else if (data.diagnostics?.length) {
             console.warn("[Cek Status] Diagnostik verifikasi Midtrans:", data.diagnostics);
+            setHistoryCheckError(
+              "Status masih menunggu pembayaran menurut Midtrans. Jika kamu yakin sudah membayar, coba lagi beberapa saat lagi atau hubungi admin."
+            );
           }
         }
       } catch (err: any) {
-        setPaymentError(err?.message || "Gagal memeriksa status pembayaran. Coba lagi sebentar lagi.");
+        setHistoryCheckError(err?.message || "Gagal memeriksa status pembayaran. Coba lagi sebentar lagi.");
       } finally {
         setCheckingOrderId(null);
       }
@@ -920,6 +925,13 @@ function QuotaTopupContent() {
               <RefreshCw className="h-4 w-4" />
             </button>
           </div>
+
+          {historyCheckError && (
+            <div className="rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 p-3 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{historyCheckError}</span>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
