@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { TrackingEvent, PublicOrderTracking } from "@/types";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { serverError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -165,11 +166,10 @@ export async function GET(req: NextRequest) {
       success: true,
       data: trackingData,
     });
-  } catch (err: any) {
-    console.error("Error fetching tracking data:", err);
-    return NextResponse.json(
-      { success: false, message: err.message || "Gagal memuat status pelacakan." },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return serverError("API-TRACKING", err, {
+      userMessage: "Gagal memuat status pelacakan. Silakan coba lagi.",
+      fieldName: "message",
+    });
   }
 }

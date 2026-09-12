@@ -326,7 +326,8 @@ function QuotaTopupContent() {
       const data = await res.json();
 
       if (!res.ok || !data.token) {
-        throw new Error(data.error || "Gagal membuat sesi pembayaran Midtrans.");
+        const suffix = data.errorRef ? ` (Kode Referensi: ${data.errorRef})` : "";
+        throw new Error((data.error || "Gagal membuat sesi pembayaran Midtrans.") + suffix);
       }
 
       setActiveOrderId(data.orderId);
@@ -419,9 +420,10 @@ function QuotaTopupContent() {
         } else {
           await fetchTransactions();
           if (data.error) {
-            setHistoryCheckError(data.error);
-          } else if (data.diagnostics?.length) {
-            console.warn("[Cek Status] Diagnostik verifikasi Midtrans:", data.diagnostics);
+            setHistoryCheckError(
+              data.errorRef ? `${data.error} (Kode Referensi: ${data.errorRef})` : data.error
+            );
+          } else {
             setHistoryCheckError(
               "Status masih menunggu pembayaran menurut Midtrans. Jika kamu yakin sudah membayar, coba lagi beberapa saat lagi atau hubungi admin."
             );

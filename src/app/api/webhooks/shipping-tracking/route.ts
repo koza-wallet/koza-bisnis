@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { timingSafeEqual } from "node:crypto";
 import { TrackingEvent } from "@/types";
+import { serverError } from "@/lib/api-error";
 
 export const dynamic = "force-dynamic";
 
@@ -164,11 +165,10 @@ export async function POST(req: NextRequest) {
       estimatedDeliveryDate: estimatedEta,
       notification: notificationPayload,
     });
-  } catch (err: any) {
-    console.error("Webhook shipping tracking error:", err);
-    return NextResponse.json(
-      { success: false, message: err.message || "Gagal memproses webhook tracking." },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return serverError("API-WEBHOOKS-SHIPPING-TRACKING", err, {
+      userMessage: "Gagal memproses webhook tracking.",
+      fieldName: "message",
+    });
   }
 }

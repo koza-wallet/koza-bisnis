@@ -126,7 +126,8 @@ export default function CreateLandingPage() {
       const json = await res.json();
 
       if (!res.ok || !json.success) {
-        setGenerationError(json.error || "Gagal membuat halaman. Silakan coba lagi.");
+        const suffix = json.errorRef ? ` (Kode Referensi: ${json.errorRef})` : "";
+        setGenerationError((json.error || "Gagal membuat halaman. Silakan coba lagi.") + suffix);
         return;
       }
 

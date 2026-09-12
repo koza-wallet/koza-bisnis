@@ -6,6 +6,7 @@ import { z } from "zod";
 import { generatedLandingPageSchema } from "@/lib/ai-landing-page-schema";
 import { isCircuitBreakerOpen, recordLLMFailure, recordLLMSuccess } from "@/lib/ai-cost-guard";
 import { isSlidingWindowLimited, isUsageQuotaExceeded, recordUsage, MONTHLY_QUOTA_PRO, ANNUAL_QUOTA_PRO } from "@/lib/ai-landing-page-limiter";
+import { serverError } from "@/lib/api-error";
 
 const OPENAI_MODEL = "gpt-4o-mini";
 
@@ -178,11 +179,9 @@ Info tambahan dari seller: ${input.otherInfo || "(tidak ada)"}`;
         blocks: blocksWithFreshIds,
       },
     });
-  } catch (err: any) {
-    console.error("Landing page generate route error:", err);
-    return NextResponse.json(
-      { success: false, error: err.message || "Terjadi kesalahan internal server.", code: "OPENAI_ERROR" },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return serverError("API-LANDING-PAGE-GENERATE", err, {
+      userMessage: "Terjadi kesalahan pada server saat membuat halaman. Silakan coba lagi.",
+    });
   }
 }

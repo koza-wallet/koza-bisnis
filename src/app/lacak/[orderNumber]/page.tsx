@@ -68,7 +68,8 @@ export default function PublicOrderTrackingPage() {
         const json = await res.json();
 
         if (!res.ok || !json.success) {
-          setError(json.message || "Pesanan tidak ditemukan.");
+          const suffix = json.errorRef ? ` (Kode Referensi: ${json.errorRef})` : "";
+          setError((json.message || "Pesanan tidak ditemukan.") + suffix);
           return;
         }
 
@@ -127,7 +128,8 @@ export default function PublicOrderTrackingPage() {
       const json = await res.json();
 
       if (!res.ok || !json.success) {
-        setReviewError(json.message || "Gagal menyimpan ulasan.");
+        const suffix = json.errorRef ? ` (Kode Referensi: ${json.errorRef})` : "";
+        setReviewError((json.message || "Gagal menyimpan ulasan.") + suffix);
         return;
       }
 

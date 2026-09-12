@@ -38,6 +38,7 @@ export default function CustomDomainPage() {
     targetCname?: string;
     targetA?: string;
     checkedAt?: string;
+    errorRef?: string;
   } | null>(null);
 
   const handleCopyText = (text: string, fieldId: string) => {
@@ -287,6 +288,7 @@ export default function CustomDomainPage() {
                 </div>
                 <p className="text-xs leading-relaxed opacity-90">
                   {dnsStatus.message}
+                  {dnsStatus.errorRef && ` (Kode Referensi: ${dnsStatus.errorRef})`}
                 </p>
                 {dnsStatus.checkedAt && (
                   <p className="text-[10px] text-slate-400">

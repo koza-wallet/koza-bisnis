@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import dns from "node:dns/promises";
 import { createClient } from "@/lib/supabase/server";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { serverError } from "@/lib/api-error";
 
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 10; // maksimal 10 cek DNS per menit per seller
@@ -149,13 +150,12 @@ export async function GET(request: NextRequest) {
       sslReady: isConfigured,
       checkedAt: new Date().toISOString(),
     });
-  } catch (err: any) {
-    return NextResponse.json(
-      {
-        error: "Gagal memverifikasi konfigurasi DNS",
-        details: err?.message || String(err),
-      },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return serverError("API-DOMAIN-VERIFY", err, {
+      userMessage: "Gagal memverifikasi konfigurasi DNS. Silakan coba lagi.",
+      fieldName: "message",
+      extra: { configured: false },
+      status: 500,
+    });
   }
 }

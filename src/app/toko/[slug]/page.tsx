@@ -315,7 +315,8 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
       const resData = await res.json();
 
       if (!res.ok) {
-        alert(resData.error || "Gagal membuat pesanan. Silakan coba lagi.");
+        const suffix = resData.errorRef ? ` (Kode Referensi: ${resData.errorRef})` : "";
+        alert((resData.error || "Gagal membuat pesanan. Silakan coba lagi.") + suffix);
         setIsSubmitting(false);
         return;
       }

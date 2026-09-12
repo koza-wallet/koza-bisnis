@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { deleteFonnteDevice } from '@/lib/whatsapp-gateway';
+import { serverError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,10 +73,9 @@ export async function POST() {
       status: 'DISCONNECTED',
     });
   } catch (err: unknown) {
-    console.error('[API-DEVICE-DISCONNECT] Error:', err);
-    return NextResponse.json(
-      { success: false, message: 'Gagal memutuskan koneksi WhatsApp.' },
-      { status: 500 }
-    );
+    return serverError("API-WHATSAPP-DEVICE-DISCONNECT", err, {
+      userMessage: "Gagal memutuskan koneksi WhatsApp.",
+      fieldName: "message",
+    });
   }
 }

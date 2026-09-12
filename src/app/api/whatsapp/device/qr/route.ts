@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { requestFonnteDeviceQR } from '@/lib/whatsapp-gateway';
+import { serverError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -100,10 +101,9 @@ export async function GET() {
       status: 'CONNECTING',
     });
   } catch (err: unknown) {
-    console.error('[API-DEVICE-QR] Error:', err);
-    return NextResponse.json(
-      { success: false, message: 'Terjadi kesalahan pada server saat membuat QR.' },
-      { status: 500 }
-    );
+    return serverError("API-WHATSAPP-DEVICE-QR", err, {
+      userMessage: "Terjadi kesalahan pada server saat membuat QR.",
+      fieldName: "message",
+    });
   }
 }

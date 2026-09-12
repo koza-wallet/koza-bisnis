@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
+import { serverError } from "@/lib/api-error";
 
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 5; // maksimal 5 submit review per menit per IP
@@ -127,11 +128,10 @@ export async function POST(req: NextRequest) {
         submittedAt: now,
       },
     });
-  } catch (error: any) {
-    console.error("[TRACKING-REVIEW] Internal Error:", error);
-    return NextResponse.json(
-      { success: false, message: error.message || "Terjadi kesalahan pada server." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return serverError("API-TRACKING-REVIEW", error, {
+      userMessage: "Gagal menyimpan ulasan. Silakan coba lagi.",
+      fieldName: "message",
+    });
   }
 }

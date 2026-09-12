@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { generateOrderNumber } from "@/lib/utils";
 import { notifyNewOrderOnWhatsApp } from "@/lib/whatsapp-order-notifier";
+import { serverError } from "@/lib/api-error";
 
 // In-memory sliding window rate limiter
 interface RateLimitEntry {
@@ -448,11 +449,9 @@ export async function POST(req: NextRequest) {
       success: true,
       order: completedOrder,
     });
-  } catch (err: any) {
-    console.error("Error in create order API:", err);
-    return NextResponse.json(
-      { error: err.message || "Internal server error." },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return serverError("API-ORDERS-CREATE", err, {
+      userMessage: "Gagal membuat pesanan. Silakan coba lagi.",
+    });
   }
 }

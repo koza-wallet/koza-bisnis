@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { BotChatStatus } from '@/types';
+import { serverError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,8 +86,10 @@ export async function GET() {
       botSettings: store.whatsapp_bot_settings || {},
     });
   } catch (err: unknown) {
-    console.error('[API-CHAT-SESSIONS] Server error:', err);
-    return NextResponse.json({ success: false, message: 'Terjadi kesalahan server.' }, { status: 500 });
+    return serverError("API-WHATSAPP-CHAT-SESSIONS", err, {
+      userMessage: "Terjadi kesalahan server.",
+      fieldName: "message",
+    });
   }
 }
 
@@ -163,7 +166,9 @@ export async function PATCH(req: NextRequest) {
       session: updated,
     });
   } catch (err: unknown) {
-    console.error('[API-CHAT-SESSIONS] Server error:', err);
-    return NextResponse.json({ success: false, message: 'Terjadi kesalahan server.' }, { status: 500 });
+    return serverError("API-WHATSAPP-CHAT-SESSIONS", err, {
+      userMessage: "Terjadi kesalahan server.",
+      fieldName: "message",
+    });
   }
 }

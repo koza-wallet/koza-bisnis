@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { quotaPackages, aiTokenPackages } from "@/lib/mock-data";
+import { serverError } from "@/lib/api-error";
 
 export async function POST(req: NextRequest) {
   try {
@@ -237,11 +238,9 @@ export async function POST(req: NextRequest) {
       clientKey,
       isProduction,
     });
-  } catch (err: any) {
-    console.error("Error create-snap route:", err);
-    return NextResponse.json(
-      { error: err.message || "Terjadi kesalahan internal server." },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return serverError("API-PAYMENT-CREATE-SNAP", err, {
+      userMessage: "Gagal membuat sesi pembayaran. Silakan coba lagi.",
+    });
   }
 }

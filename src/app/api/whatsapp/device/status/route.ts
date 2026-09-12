@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { checkFonnteDeviceStatus } from '@/lib/whatsapp-gateway';
+import { serverError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,10 +80,9 @@ export async function GET() {
       connectedNumber: statusResult.connectedNumber || settings.connectedNumber,
     });
   } catch (err: unknown) {
-    console.error('[API-DEVICE-STATUS] Error:', err);
-    return NextResponse.json(
-      { success: false, message: 'Gagal memeriksa status koneksi.' },
-      { status: 500 }
-    );
+    return serverError("API-WHATSAPP-DEVICE-STATUS", err, {
+      userMessage: "Gagal memeriksa status koneksi.",
+      fieldName: "message",
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createServiceClient } from "@supabase/supabase-js";
+import { serverError } from "@/lib/api-error";
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,9 +71,10 @@ export async function POST(req: NextRequest) {
 
     const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
     if (!serverKey) {
-      return NextResponse.json(
-        { error: "MIDTRANS_SERVER_KEY tidak tersedia." },
-        { status: 500 }
+      return serverError(
+        "API-PAYMENT-VERIFY-STATUS",
+        new Error("MIDTRANS_SERVER_KEY tidak dikonfigurasi di server."),
+        { userMessage: "Gagal memverifikasi pembayaran. Silakan coba lagi atau hubungi admin." }
       );
     }
 
@@ -193,10 +195,10 @@ export async function POST(req: NextRequest) {
         const failStatus = transactionStatus === "expire" ? "EXPIRED" : "FAILED";
         const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
         if (!serviceRoleKey) {
-          console.error("SUPABASE_SERVICE_ROLE_KEY belum dikonfigurasi di environment server.");
-          return NextResponse.json(
-            { error: "Server misconfigured: SUPABASE_SERVICE_ROLE_KEY missing." },
-            { status: 500 }
+          return serverError(
+            "API-PAYMENT-VERIFY-STATUS",
+            new Error("SUPABASE_SERVICE_ROLE_KEY belum dikonfigurasi di environment server."),
+            { userMessage: "Gagal memverifikasi pembayaran. Silakan coba lagi atau hubungi admin." }
           );
         }
 
@@ -240,24 +242,26 @@ export async function POST(req: NextRequest) {
       );
 
       if (rpcErr) {
-        console.error("RPC handle_midtrans_settlement error:", rpcErr);
-        return NextResponse.json(
+        return serverError(
+          "API-PAYMENT-VERIFY-STATUS-RPC",
+          new Error(`handle_midtrans_settlement RPC error: ${rpcErr.message}`),
           {
-            settled: false,
-            error: `Pembayaran terverifikasi di Midtrans, tapi gagal disinkronkan ke database: ${rpcErr.message}`,
-          },
-          { status: 500 }
+            userMessage:
+              "Pembayaran terverifikasi di Midtrans, tapi gagal disinkronkan ke sistem kami. Tim kami akan menindaklanjuti otomatis, atau silakan hubungi admin.",
+            extra: { settled: false },
+          }
         );
       }
 
       if (rpcData && rpcData.success === false) {
-        console.error("RPC handle_midtrans_settlement returned failure:", rpcData);
-        return NextResponse.json(
+        return serverError(
+          "API-PAYMENT-VERIFY-STATUS-RPC",
+          new Error(`handle_midtrans_settlement returned failure: ${rpcData.message}`),
           {
-            settled: false,
-            error: rpcData.message || "Gagal menyelesaikan settlement di database.",
-          },
-          { status: 500 }
+            userMessage:
+              "Pembayaran terverifikasi di Midtrans, tapi gagal disinkronkan ke sistem kami. Silakan hubungi admin.",
+            extra: { settled: false },
+          }
         );
       }
 
@@ -268,16 +272,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (diagnostics.length > 0) {
+      console.warn(`[API-PAYMENT-VERIFY-STATUS] order=${orderId} belum settled:`, diagnostics);
+    }
+
     return NextResponse.json({
       settled: false,
       status: tx.status,
-      diagnostics: diagnostics.length > 0 ? diagnostics : undefined,
     });
-  } catch (err: any) {
-    console.error("Error verify-status route:", err);
-    return NextResponse.json(
-      { error: err.message || "Internal server error." },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return serverError("API-PAYMENT-VERIFY-STATUS", err, {
+      userMessage: "Gagal memeriksa status pembayaran. Silakan coba lagi.",
+    });
   }
 }

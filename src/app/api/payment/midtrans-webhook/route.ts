@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { serverError } from "@/lib/api-error";
 
 export async function POST(req: NextRequest) {
   try {
@@ -125,11 +126,9 @@ export async function POST(req: NextRequest) {
       status: "OK",
       message: `Transaction status ${transaction_status} acknowledged.`,
     });
-  } catch (err: any) {
-    console.error("Midtrans Webhook handler error:", err);
-    return NextResponse.json(
-      { error: err.message || "Internal server error" },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return serverError("API-PAYMENT-MIDTRANS-WEBHOOK", err, {
+      userMessage: "Internal server error",
+    });
   }
 }
