@@ -31,6 +31,50 @@ import {
 } from "lucide-react";
 import { WhatsAppBotSettings } from "@/types";
 
+declare global {
+  interface Window {
+    snap?: {
+      pay: (
+        token: string,
+        options?: {
+          onSuccess?: (result: any) => void;
+          onPending?: (result: any) => void;
+          onError?: (result: any) => void;
+          onClose?: () => void;
+        }
+      ) => void;
+    };
+  }
+}
+
+function loadSnapScript(clientKey?: string, isProduction: boolean = false): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined") return resolve();
+    if (window.snap) return resolve();
+
+    const scriptId = "midtrans-snap-script";
+    const existing = document.getElementById(scriptId) as HTMLScriptElement;
+    if (existing) {
+      if (window.snap) return resolve();
+      existing.onload = () => resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.id = scriptId;
+    script.src = isProduction
+      ? "https://app.midtrans.com/snap/snap.js"
+      : "https://app.sandbox.midtrans.com/snap/snap.js";
+
+    if (clientKey) {
+      script.setAttribute("data-client-key", clientKey);
+    }
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Gagal memuat gateway Midtrans Snap"));
+    document.body.appendChild(script);
+  });
+}
+
 interface ChatSessionItem {
   id: string;
   buyer_phone: string;
@@ -57,15 +101,27 @@ export default function JagaAIPage() {
   const [isCopiedWebhook, setIsCopiedWebhook] = useState(false);
   const [qrSecondsRemaining, setQrSecondsRemaining] = useState(60);
 
-  // Chat Sessions & Daily Quota State
+  // Chat Sessions & Kuota Bulanan Pesan WhatsApp (Fonnte)
   const [chatSessions, setChatSessions] = useState<ChatSessionItem[]>([]);
-  const [quotaUsage, setQuotaUsage] = useState<{ usedToday: number; dailyLimit: number; percentage: number }>({
-    usedToday: 0,
-    dailyLimit: 150,
+  const [quotaUsage, setQuotaUsage] = useState<{
+    used: number;
+    baseQuota: number;
+    addonPurchased: number;
+    totalQuota: number;
+    remaining: number;
+    percentage: number;
+  }>({
+    used: 0,
+    baseQuota: 1000,
+    addonPurchased: 0,
+    totalQuota: 1000,
+    remaining: 1000,
     percentage: 0,
   });
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [resumingPhone, setResumingPhone] = useState<string | null>(null);
+  const [isBuyingAddon, setIsBuyingAddon] = useState(false);
+  const [addonError, setAddonError] = useState<string | null>(null);
 
   const botSettings = useMemo(() => {
     return store.whatsappBotSettings || {
@@ -136,6 +192,43 @@ export default function JagaAIPage() {
         [key]: !currentValue,
       },
     });
+  };
+
+  const handleBuyAddon = async () => {
+    setIsBuyingAddon(true);
+    setAddonError(null);
+    try {
+      const res = await fetch("/api/payment/create-snap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageType: "WA_ADDON", packageCode: "WA_ADDON_1000" }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        setAddonError(data.error || "Gagal membuat transaksi pembayaran addon.");
+        setIsBuyingAddon(false);
+        return;
+      }
+
+      await loadSnapScript(data.clientKey, data.isProduction);
+
+      window.snap?.pay(data.token, {
+        onSuccess: () => {
+          setIsBuyingAddon(false);
+          fetchChatSessions();
+        },
+        onPending: () => setIsBuyingAddon(false),
+        onError: () => {
+          setAddonError("Pembayaran gagal diproses. Silakan coba lagi.");
+          setIsBuyingAddon(false);
+        },
+        onClose: () => setIsBuyingAddon(false),
+      });
+    } catch {
+      setAddonError("Terjadi kesalahan saat menghubungi server pembayaran.");
+      setIsBuyingAddon(false);
+    }
   };
 
   const handleCopyWebhook = () => {
@@ -701,7 +794,7 @@ export default function JagaAIPage() {
               </p>
             </div>
 
-            {/* Meteran Kuota Chat Harian AI */}
+            {/* Meteran Kuota Pesan WhatsApp Bulanan (mengikuti limit Fonnte Lite 1.000/bulan) */}
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -709,8 +802,8 @@ export default function JagaAIPage() {
                     <Zap className="h-4 w-4" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Meteran Kuota Harian Jaga AI</h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Pengendali batas anggaran chat harian per toko</p>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">Kuota Pesan WhatsApp Bulan Ini</h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Gabungan balasan Jaga AI, notifikasi order & resi</p>
                   </div>
                 </div>
                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
@@ -718,7 +811,7 @@ export default function JagaAIPage() {
                     ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20"
                     : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
                 }`}>
-                  {quotaUsage.usedToday} / {quotaUsage.dailyLimit} Chat Hari Ini ({quotaUsage.percentage}%)
+                  {quotaUsage.used} / {quotaUsage.totalQuota} Pesan ({quotaUsage.percentage}%)
                 </span>
               </div>
 
@@ -737,9 +830,28 @@ export default function JagaAIPage() {
               </div>
 
               <div className="flex items-center justify-between text-[10px] text-slate-400">
-                <span>Reset otomatis setiap pukul 00:00 WIB</span>
-                <span>Tersisa {Math.max(0, quotaUsage.dailyLimit - quotaUsage.usedToday)} chat hari ini</span>
+                <span>Kuota dasar 1.000/bulan{quotaUsage.addonPurchased > 0 ? ` + ${quotaUsage.addonPurchased} addon` : ""}, reset tiap awal bulan</span>
+                <span>Tersisa {quotaUsage.remaining} pesan</span>
               </div>
+
+              {quotaUsage.percentage >= 80 && (
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    Kuota mulai menipis. Kalau habis, Jaga AI akan otomatis mengalihkan chat ke admin manual sampai Anda menambah kuota.
+                  </p>
+                  {addonError && (
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400">{addonError}</p>
+                  )}
+                  <button
+                    onClick={handleBuyAddon}
+                    disabled={isBuyingAddon}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-bold transition-colors"
+                  >
+                    {isBuyingAddon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Zap className="h-3.5 w-3.5" />}
+                    Beli 1.000 Pesan Tambahan — Rp49.000
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Aktivitas Chat Jaga AI & Human Escalation */}

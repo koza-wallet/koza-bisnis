@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { BotChatStatus } from '@/types';
 import { serverError } from '@/lib/api-error';
+import { getWhatsAppQuotaStatus } from '@/lib/whatsapp-quota';
 
 export const dynamic = 'force-dynamic';
 
@@ -52,37 +53,22 @@ export async function GET() {
       .order('updated_at', { ascending: false })
       .limit(20);
 
+    const quotaStatus = await getWhatsAppQuotaStatus(store.id);
+
     if (sessionErr) {
       console.warn('[API-CHAT-SESSIONS] chat_sessions table pending or query error, returning empty state:', sessionErr.message);
       return NextResponse.json({
         success: true,
         sessions: [],
-        quotaUsage: { usedToday: 0, dailyLimit: 150, percentage: 0 },
+        quotaUsage: quotaStatus,
         botSettings: store.whatsapp_bot_settings || {},
       });
     }
 
-    // Hitung estimasi chat terpakai hari ini (UTC start of day)
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-
-    let chatsToday = 0;
-    (sessions || []).forEach((s) => {
-      if (s.updated_at && new Date(s.updated_at).getTime() >= todayStart.getTime()) {
-        chatsToday += Math.max(1, s.turn_count || 1);
-      }
-    });
-
-    const dailyLimit = 150;
-
     return NextResponse.json({
       success: true,
       sessions: sessions || [],
-      quotaUsage: {
-        usedToday: Math.min(dailyLimit, chatsToday),
-        dailyLimit,
-        percentage: Math.min(100, Math.round((chatsToday / dailyLimit) * 100)),
-      },
+      quotaUsage: quotaStatus,
       botSettings: store.whatsapp_bot_settings || {},
     });
   } catch (err: unknown) {

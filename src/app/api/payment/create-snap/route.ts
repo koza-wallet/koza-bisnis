@@ -74,6 +74,18 @@ export async function POST(req: NextRequest) {
         quotaAmount = 250;
         planTier = "PRO_AI";
       }
+    } else if (packageType === "WA_ADDON") {
+      // Addon 1.000 pesan WhatsApp tambahan -- khusus toko Pro aktif, harga tetap
+      const isStorePro = store.plan === "PRO_AI" || store.plan === "PRO_MONTHLY" || store.plan === "PRO_ANNUAL";
+      if (!isStorePro) {
+        return NextResponse.json(
+          { error: "Addon pesan WhatsApp khusus untuk member Pro aktif. Silakan upgrade ke langganan Pro terlebih dahulu." },
+          { status: 403 }
+        );
+      }
+      grossAmount = 49000;
+      quotaAmount = 1000;
+      packageName = "KoZa Bisnis - Tambahan 1.000 Pesan WhatsApp";
     } else if (packageType === "AI_TOKEN") {
       const matchedAI = aiTokenPackages.find((p) => p.code === packageCode);
       if (!matchedAI) {

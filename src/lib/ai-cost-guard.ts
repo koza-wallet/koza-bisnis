@@ -1,4 +1,6 @@
 import { BotChatStatus, CostGuardEvaluation } from "@/types";
+import { detectPromptInjectionAttempt, INJECTION_REFUSAL_REPLY } from "@/lib/jaga-ai-guard";
+import { getWhatsAppQuotaStatus } from "@/lib/whatsapp-quota";
 
 // ==============================================================================
 // KOZA BISNIS — AI COST GUARD & HUMAN TAKEOVER ENGINE
@@ -18,10 +20,6 @@ let consecutiveFailures = 0;
 let circuitOpenUntil = 0;
 const MAX_CONSECUTIVE_FAILURES = 3;
 const CIRCUIT_RESET_TIMEOUT_MS = 5 * 60 * 1000; // 5 Menit
-
-// In-memory daily quota tracker: StoreId_Date -> count
-const dailyUsageStore = new Map<string, number>();
-const DEFAULT_DAILY_STORE_QUOTA = 150; // Maksimal 150 chat AI per hari per toko
 
 // Kata kunci pemicu eskalasi otomatis ke manusia
 const SENSITIVE_KEYWORDS = [
@@ -88,18 +86,15 @@ export function recordLLMFailure(): void {
 /**
  * Mencatat keberhasilan pemanggilan LLM untuk mereset kegagalan
  */
-export function recordLLMSuccess(storeId: string): void {
+export function recordLLMSuccess(_storeId: string): void {
   consecutiveFailures = 0;
-  const todayKey = `${storeId}_${new Date().toISOString().slice(0, 10)}`;
-  const current = dailyUsageStore.get(todayKey) || 0;
-  dailyUsageStore.set(todayKey, current + 1);
 }
 
 /**
  * Evaluasi menyeluruh terhadap pesan masuk sebelum dikirimkan ke LLM.
  * Mencegah kebocoran biaya dan memfasilitasi human handoff.
  */
-export function evaluateIncomingMessage(input: IncomingMessagePayload): CostGuardEvaluation {
+export async function evaluateIncomingMessage(input: IncomingMessagePayload): Promise<CostGuardEvaluation> {
   const {
     storeId,
     senderPhone,
@@ -231,7 +226,21 @@ export function evaluateIncomingMessage(input: IncomingMessagePayload): CostGuar
   const sanitizedText = rawText.slice(0, 500);
 
   // ----------------------------------------------------------------------------
-  // 6. DETEKSI KATA KUNCI KOMPLAIN / ESKALASI OTOMATIS KE MANUSIA
+  // 6. LAPIS 2 -- DETEKSI UPAYA PROMPT INJECTION (murah, sebelum panggil LLM)
+  // ----------------------------------------------------------------------------
+  if (detectPromptInjectionAttempt(sanitizedText)) {
+    console.warn(`[COST-GUARD] Upaya prompt-injection terdeteksi dari toko ${storeId}, pesan ditolak sebelum sampai ke LLM.`);
+    return {
+      shouldProcessLLM: false,
+      botStatus: "ACTIVE",
+      sanitizedMessage: sanitizedText,
+      rejectionReason: "INJECTION_BLOCKED",
+      immediateReply: INJECTION_REFUSAL_REPLY,
+    };
+  }
+
+  // ----------------------------------------------------------------------------
+  // 7. DETEKSI KATA KUNCI KOMPLAIN / ESKALASI OTOMATIS KE MANUSIA
   // ----------------------------------------------------------------------------
   const lowerMsg = sanitizedText.toLowerCase();
   const isSensitive = SENSITIVE_KEYWORDS.some((kw) => lowerMsg.includes(kw));
@@ -251,7 +260,7 @@ export function evaluateIncomingMessage(input: IncomingMessagePayload): CostGuar
   }
 
   // ----------------------------------------------------------------------------
-  // 7. CIRCUIT BREAKER CHECK (Mencegah Retry Storm saat Provider Down)
+  // 8. CIRCUIT BREAKER CHECK (Mencegah Retry Storm saat Provider Down)
   // ----------------------------------------------------------------------------
   if (isCircuitBreakerOpen()) {
     return {
@@ -265,18 +274,19 @@ export function evaluateIncomingMessage(input: IncomingMessagePayload): CostGuar
   }
 
   // ----------------------------------------------------------------------------
-  // 8. KUOTA HARIAN PER TOKO (Hard Budget Cap)
+  // 9. KUOTA BULANAN PESAN WHATSAPP (mengikuti limit riil Fonnte Lite 1.000/bulan
+  // + addon berbayar yang sudah dibeli seller, bukan lagi limit harian buatan sendiri)
   // ----------------------------------------------------------------------------
-  const todayKey = `${storeId}_${new Date().toISOString().slice(0, 10)}`;
-  const currentUsage = dailyUsageStore.get(todayKey) || 0;
-  if (currentUsage >= DEFAULT_DAILY_STORE_QUOTA) {
+  const waQuota = await getWhatsAppQuotaStatus(storeId);
+  if (waQuota.exceeded) {
     return {
       shouldProcessLLM: false,
-      botStatus: "PAUSED",
+      botStatus: "ESCALATED_TO_HUMAN",
       sanitizedMessage: sanitizedText,
-      rejectionReason: "DAILY_QUOTA_EXCEEDED",
+      shouldEscalateToHuman: true,
+      rejectionReason: "WA_QUOTA_EXCEEDED",
       immediateReply:
-        "Halo kak! Terima kasih sudah menghubungi toko kami. Pesan kakak telah tersimpan dan admin kami akan membalas segera ya kak 🙏",
+        "Halo kak! Terima kasih sudah menghubungi toko kami. Pesan kakak telah tersimpan dan admin kami akan membalas secara langsung ya kak 🙏",
     };
   }
 

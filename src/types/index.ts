@@ -171,7 +171,7 @@ export interface CostGuardEvaluation {
   shouldProcessLLM: boolean;
   botStatus: BotChatStatus;
   sanitizedMessage: string;
-  rejectionReason?: 'ECHO_DETECTED' | 'GROUP_IGNORED' | 'BOT_PAUSED' | 'RATE_LIMITED' | 'DAILY_QUOTA_EXCEEDED' | 'CIRCUIT_BREAKER_OPEN' | 'MAGIC_COMMAND' | 'PRO_FEATURE_ONLY';
+  rejectionReason?: 'ECHO_DETECTED' | 'GROUP_IGNORED' | 'BOT_PAUSED' | 'RATE_LIMITED' | 'WA_QUOTA_EXCEEDED' | 'CIRCUIT_BREAKER_OPEN' | 'MAGIC_COMMAND' | 'PRO_FEATURE_ONLY' | 'INJECTION_BLOCKED';
   immediateReply?: string;
   shouldEscalateToHuman?: boolean;
 }

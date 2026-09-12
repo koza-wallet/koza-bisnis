@@ -164,7 +164,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Evaluasi Cost Guard & Human Handoff (Anti-Echo, Rate Limit, Token Bombing, Handoff)
-    const evaluation = evaluateIncomingMessage({
+    const evaluation = await evaluateIncomingMessage({
       storeId,
       senderPhone,
       messageText,
@@ -299,6 +299,6 @@ export async function GET() {
     circuitBreakerOpen: isCircuitBreakerOpen(),
     maxInputChars: 500,
     maxRequestsPerMinute: 5,
-    dailyStoreQuota: 150,
+    monthlyStoreQuotaBase: 1000,
   });
 }

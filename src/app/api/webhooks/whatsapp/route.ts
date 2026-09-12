@@ -12,6 +12,7 @@ import {
 } from '@/lib/ai-cost-guard';
 import { BotChatStatus } from '@/types';
 import { generateJagaAIReply } from '@/lib/jaga-ai-llm';
+import { incrementWhatsAppUsage } from '@/lib/whatsapp-quota';
 
 export const dynamic = 'force-dynamic';
 
@@ -155,7 +156,7 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     // 1. Evaluasi Cost Guard & Human Handoff Engine
-    const evaluation = evaluateIncomingMessage({
+    const evaluation = await evaluateIncomingMessage({
       storeId: store.id,
       senderPhone,
       messageText: rawMessage,
@@ -193,13 +194,16 @@ export async function POST(req: NextRequest) {
 
       // Kirim immediate reply jika ada (misal notifikasi eskalasi)
       if (evaluation.immediateReply && botSettings.deviceToken) {
-        await sendWhatsAppMessage({
+        const sendRes = await sendWhatsAppMessage({
           provider: botSettings.provider || 'fonnte',
           token: botSettings.deviceToken,
           targetPhone: senderPhone,
           message: evaluation.immediateReply,
           serverUrl: botSettings.serverUrl,
         });
+        if (sendRes.success && (botSettings.provider || 'fonnte') === 'fonnte') {
+          incrementWhatsAppUsage(store.id).catch(() => {});
+        }
       }
 
       return NextResponse.json({
@@ -242,13 +246,16 @@ export async function POST(req: NextRequest) {
 
     // 4. Kirim Balasan ke WhatsApp Pembeli via Gateway
     if (botReply && botSettings.deviceToken) {
-      await sendWhatsAppMessage({
+      const sendRes = await sendWhatsAppMessage({
         provider: botSettings.provider || 'fonnte',
         token: botSettings.deviceToken,
         targetPhone: senderPhone,
         message: botReply,
         serverUrl: botSettings.serverUrl,
       });
+      if (sendRes.success && (botSettings.provider || 'fonnte') === 'fonnte') {
+        incrementWhatsAppUsage(store.id).catch(() => {});
+      }
     }
 
     // 5. Catat riwayat sesi di Supabase

@@ -1,4 +1,5 @@
 import { sendWhatsAppMessage } from './whatsapp-gateway';
+import { incrementWhatsAppUsage } from './whatsapp-quota';
 
 export interface OrderItemPayload {
   name?: string;
@@ -101,6 +102,9 @@ Pesanan kakak akan segera disiapkan oleh tim kami. Terima kasih banyak ya kak! ð
         serverUrl: botSettings.serverUrl,
       });
       buyerSent = res.success;
+      if (buyerSent && (botSettings.provider || 'fonnte') === 'fonnte') {
+        incrementWhatsAppUsage(store.id).catch(() => {});
+      }
     } catch (err) {
       console.warn('[NOTIFIER] Gagal mengirim WhatsApp pesanan baru ke pembeli:', err);
     }
@@ -128,6 +132,9 @@ Buka dan proses pesanan sekarang di Dashboard:
         serverUrl: botSettings.serverUrl,
       });
       sellerSent = res.success;
+      if (sellerSent && (botSettings.provider || 'fonnte') === 'fonnte') {
+        incrementWhatsAppUsage(store.id).catch(() => {});
+      }
     } catch (err) {
       console.warn('[NOTIFIER] Gagal mengirim alert pesanan baru ke seller:', err);
     }
@@ -186,6 +193,9 @@ Mohon pastikan nomor telepon aktif ya kak saat kurir mengantar paket. Terima kas
       message,
       serverUrl: botSettings.serverUrl,
     });
+    if (res.success && (botSettings.provider || 'fonnte') === 'fonnte') {
+      incrementWhatsAppUsage(store.id).catch(() => {});
+    }
     return res.success;
   } catch (err) {
     console.warn('[NOTIFIER] Gagal mengirim notifikasi resi ke pembeli:', err);
