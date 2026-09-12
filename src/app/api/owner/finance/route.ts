@@ -32,12 +32,28 @@ export async function GET() {
 
     const supabase = createServiceClient(supabaseUrl, serviceRoleKey);
 
-    // 1. Revenue nyata lintas semua toko (bukan cuma toko sendiri)
-    const { data: settledTx, error: txErr } = await supabase
+    // 0. Cari toko milik akun pemilik platform sendiri -- pembelian dari toko ini
+    // (mis. testing upgrade Pro) TIDAK dihitung sebagai revenue asli, supaya angka
+    // tidak ambigu antara transaksi customer sungguhan vs testing pemilik sendiri.
+    const { data: ownStores } = await supabase
+      .from("stores")
+      .select("id")
+      .eq("owner_id", owner.id);
+
+    const ownStoreIds = (ownStores || []).map((s) => s.id);
+
+    // 1. Revenue nyata lintas semua toko customer (toko milik pemilik platform dikecualikan)
+    let settledTxQuery = supabase
       .from("topup_transactions")
-      .select("amount, created_at")
+      .select("amount, created_at, store_id")
       .eq("status", "SETTLED")
       .order("created_at", { ascending: true });
+
+    if (ownStoreIds.length > 0) {
+      settledTxQuery = settledTxQuery.not("store_id", "in", `(${ownStoreIds.join(",")})`);
+    }
+
+    const { data: settledTx, error: txErr } = await settledTxQuery;
 
     if (txErr) {
       return serverError("API-OWNER-FINANCE-TX", new Error(txErr.message), {
