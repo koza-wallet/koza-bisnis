@@ -80,6 +80,7 @@ export async function POST(req: NextRequest) {
 
     // 1. Coba cek dengan orderId (standar Midtrans Core API)
     let midtransData: any = null;
+    const diagnostics: string[] = [];
 
     try {
       const coreRes = await fetch(`${statusApiBase}/${orderId}/status`, {
@@ -92,14 +93,20 @@ export async function POST(req: NextRequest) {
         cache: "no-store",
       });
 
+      const parsed = await coreRes.json().catch(() => null);
+
       if (coreRes.ok) {
-        const parsed = await coreRes.json();
         // Midtrans Core API mengembalikan status_code "404" jika order_id tidak terdaftar di v2 (misal kanal DANA)
         if (parsed && parsed.status_code !== "404" && parsed.transaction_status) {
           midtransData = parsed;
+        } else {
+          diagnostics.push(`core-api ok tapi tanpa transaction_status (status_code=${parsed?.status_code})`);
         }
+      } else {
+        diagnostics.push(`core-api HTTP ${coreRes.status}: ${JSON.stringify(parsed)}`);
       }
     } catch (err) {
+      diagnostics.push(`core-api exception: ${err instanceof Error ? err.message : String(err)}`);
       console.warn("Core API status check error:", err);
     }
 
@@ -119,13 +126,19 @@ export async function POST(req: NextRequest) {
           cache: "no-store",
         });
 
+        const snapData = await snapRes.json().catch(() => null);
+
         if (snapRes.ok) {
-          const snapData = await snapRes.json();
           if (snapData && snapData.transaction_status) {
             midtransData = snapData;
+          } else {
+            diagnostics.push(`snap-api ok tapi tanpa transaction_status: ${JSON.stringify(snapData)}`);
           }
+        } else {
+          diagnostics.push(`snap-api HTTP ${snapRes.status}: ${JSON.stringify(snapData)}`);
         }
       } catch (err) {
+        diagnostics.push(`snap-api exception: ${err instanceof Error ? err.message : String(err)}`);
         console.warn("Snap token status check error:", err);
       }
     }
@@ -143,13 +156,19 @@ export async function POST(req: NextRequest) {
           cache: "no-store",
         });
 
+        const parsedTx = await txRes.json().catch(() => null);
+
         if (txRes.ok) {
-          const parsedTx = await txRes.json();
           if (parsedTx && parsedTx.status_code !== "404" && parsedTx.transaction_status) {
             midtransData = parsedTx;
+          } else {
+            diagnostics.push(`transaction-id-api ok tapi tanpa transaction_status (status_code=${parsedTx?.status_code})`);
           }
+        } else {
+          diagnostics.push(`transaction-id-api HTTP ${txRes.status}: ${JSON.stringify(parsedTx)}`);
         }
       } catch (err) {
+        diagnostics.push(`transaction-id-api exception: ${err instanceof Error ? err.message : String(err)}`);
         console.warn("Transaction ID status check error:", err);
       }
     }
@@ -222,6 +241,24 @@ export async function POST(req: NextRequest) {
 
       if (rpcErr) {
         console.error("RPC handle_midtrans_settlement error:", rpcErr);
+        return NextResponse.json(
+          {
+            settled: false,
+            error: `Pembayaran terverifikasi di Midtrans, tapi gagal disinkronkan ke database: ${rpcErr.message}`,
+          },
+          { status: 500 }
+        );
+      }
+
+      if (rpcData && rpcData.success === false) {
+        console.error("RPC handle_midtrans_settlement returned failure:", rpcData);
+        return NextResponse.json(
+          {
+            settled: false,
+            error: rpcData.message || "Gagal menyelesaikan settlement di database.",
+          },
+          { status: 500 }
+        );
       }
 
       return NextResponse.json({
@@ -234,6 +271,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       settled: false,
       status: tx.status,
+      diagnostics: diagnostics.length > 0 ? diagnostics : undefined,
     });
   } catch (err: any) {
     console.error("Error verify-status route:", err);

@@ -416,9 +416,14 @@ function QuotaTopupContent() {
           setIsModalOpen(true);
         } else {
           await fetchTransactions();
+          if (data.error) {
+            setPaymentError(data.error);
+          } else if (data.diagnostics?.length) {
+            console.warn("[Cek Status] Diagnostik verifikasi Midtrans:", data.diagnostics);
+          }
         }
-      } catch {
-        // Ignored
+      } catch (err: any) {
+        setPaymentError(err?.message || "Gagal memeriksa status pembayaran. Coba lagi sebentar lagi.");
       } finally {
         setCheckingOrderId(null);
       }
