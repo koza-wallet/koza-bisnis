@@ -88,12 +88,9 @@ export default function CustomDomainPage() {
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                   Custom Domain & White-Label
                 </h1>
-                <span className="rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[10px] px-2 py-0.5 border border-amber-300 dark:border-amber-500/30 font-bold">
-                  PRO
-                </span>
               </div>
             </div>
           </div>
@@ -190,7 +187,7 @@ export default function CustomDomainPage() {
           )}
 
           {/* Domain Setup Card */}
-          <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-7 space-y-6 shadow-xs">
+          <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-6 sm:p-7 space-y-6 shadow-xs">
             <div className="space-y-1">
               <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <Globe className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
@@ -202,7 +199,7 @@ export default function CustomDomainPage() {
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
                 Nama Domain atau Subdomain:
               </label>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -212,7 +209,7 @@ export default function CustomDomainPage() {
                     value={customDomainInput}
                     onChange={(e) => setCustomDomainInput(e.target.value)}
                     placeholder="misal: belanja.tokoberkah.com atau tokoku.com"
-                    className="w-full rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 transition-colors font-mono"
+                    className="w-full rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-white/10 px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 transition-colors font-mono"
                   />
                   {customDomainInput && (
                     <span className="absolute right-3 top-3 text-[11px] font-mono text-slate-400">

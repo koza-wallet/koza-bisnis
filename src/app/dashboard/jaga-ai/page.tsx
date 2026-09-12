@@ -234,8 +234,8 @@ export default function JagaAIPage() {
             </span>
             <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
               <span>Jaga AI CS WhatsApp 24/7</span>
-              <span className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-0.5 text-[9px] font-black text-slate-950 shadow-xs">
-                AI ⚡
+              <span className="rounded-full bg-amber-500/15 dark:bg-amber-400/20 border border-amber-500/30 px-2 py-0.5 text-[9px] font-black tracking-wider uppercase text-amber-800 dark:text-amber-300 shadow-2xs">
+                AI PRO
               </span>
             </h1>
           </div>
@@ -803,11 +803,22 @@ export default function JagaAIPage() {
                                 : "bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-300"
                             }`}
                           >
-                            {session.bot_status === "ACTIVE"
-                              ? "🟢 Aktif Melayani"
-                              : session.bot_status === "PAUSED"
-                              ? "⏸️ Dijeda Seller (60 mnt)"
-                              : "🚨 Eskalasi Manual"}
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className={`h-1.5 w-1.5 rounded-full ${
+                                session.bot_status === "ACTIVE"
+                                  ? "bg-emerald-500 animate-pulse"
+                                  : session.bot_status === "PAUSED"
+                                  ? "bg-amber-500"
+                                  : "bg-rose-500"
+                              }`} />
+                              <span>
+                                {session.bot_status === "ACTIVE"
+                                  ? "Aktif Melayani"
+                                  : session.bot_status === "PAUSED"
+                                  ? "Dijeda Seller (60 mnt)"
+                                  : "Eskalasi Manual"}
+                              </span>
+                            </span>
                           </span>
                           {session.bot_status !== "ACTIVE" && (
                             <button

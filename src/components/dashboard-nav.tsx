@@ -75,24 +75,18 @@ export function DashboardSidebar() {
       items: [
         { 
           href: "/dashboard/landing-pages", 
-          label: "Halaman Jualan (AI)", 
+          label: "Halaman Jualan", 
           icon: Sparkles, 
-          isAI: true 
         },
         { 
           href: "/dashboard/jaga-ai", 
           label: "Jaga AI (CS WhatsApp)", 
           icon: Bot, 
-          isAI: true,
-          badge: "24/7",
-          badgeColor: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
         },
         { 
           href: "/dashboard/custom-domain", 
           label: "Custom Domain", 
           icon: Globe, 
-          badge: "PRO",
-          badgeColor: "bg-amber-500/20 text-amber-800 dark:text-amber-400 border border-amber-400/30 font-bold"
         },
       ]
     },
@@ -110,8 +104,8 @@ export function DashboardSidebar() {
           href: "/dashboard/topup", 
           label: "Isi Kuota Transaksi", 
           icon: Zap,
-          badge: `${store.quotaBalance} Sisa`,
-          badgeColor: store.quotaBalance <= 5 ? "bg-rose-500 text-white" : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
+          badge: store.quotaBalance <= 5 ? `${store.quotaBalance} Sisa` : undefined,
+          badgeColor: "bg-rose-500 text-white"
         },
       ]
     }
@@ -191,59 +185,26 @@ export function DashboardSidebar() {
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <Icon className={`h-4 w-4 shrink-0 ${
+                    <Icon className={`h-4 w-4 shrink-0 transition-colors ${
                       isActive 
                         ? "text-emerald-600 dark:text-emerald-400" 
-                        : item.isAI ? "text-amber-500 dark:text-amber-400" : "text-slate-500 dark:text-slate-400"
+                        : "text-slate-400 dark:text-slate-500"
                     }`} />
                     <span className="truncate">{item.label}</span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {item.isAI && (
-                      <span className="rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-1.5 py-0.2 text-[8px] font-black text-slate-950 shadow-xs">
-                        AI ⚡
-                      </span>
-                    )}
-                    {item.badge !== undefined && (
+                  {item.badge !== undefined && (
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${item.badgeColor || "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"}`}>
                         {item.badge}
                       </span>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </Link>
               );
             })}
           </div>
         ))}
-      </div>
-
-      {/* Sidebar Footer: Active Store Profile & Link */}
-      <div className="p-3 border-t border-slate-200/80 dark:border-white/10 bg-slate-50/70 dark:bg-black/20">
-        <div className="flex items-center gap-2.5 p-2 rounded-xl bg-white dark:bg-[#151E2E] border border-slate-200/80 dark:border-white/10 shadow-xs">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-600/15 text-teal-700 dark:text-teal-400 border border-teal-500/20 font-bold text-xs uppercase">
-            {store.name.slice(0, 2)}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                {store.name}
-              </span>
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500 animate-pulse" title="Toko Online" />
-            </div>
-            <p className="text-[10.5px] font-mono text-slate-500 dark:text-slate-400 truncate">
-              koza.id/{store.slug}
-            </p>
-          </div>
-          <Link
-            href={`/toko/${store.slug}`}
-            target="_blank"
-            title="Lihat Halaman Toko"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-          >
-            <ExternalLink className="h-3.5 w-3.5" />
-          </Link>
-        </div>
       </div>
     </aside>
   );
@@ -328,19 +289,17 @@ export function DashboardTopbar() {
             )}
           </button>
 
-          {/* Quota Indicator Pill */}
-          <Link
-            href="/dashboard/topup"
-            className={`hidden md:flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition-all border ${
-              store.quotaBalance <= 5
-                ? "bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30 animate-pulse"
-                : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
-            }`}
-            title="Klik untuk isi ulang kuota transaksi"
-          >
-            <Zap className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400 fill-current" />
-            <span>{store.quotaBalance} Kuota</span>
-          </Link>
+          {/* Quota Warning Indicator Pill - Only shown when quota <= 5 */}
+          {store.quotaBalance <= 5 && (
+            <Link
+              href="/dashboard/topup"
+              className="hidden md:flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-bold transition-all border bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30 animate-pulse"
+              title="Kuota transaksi toko menipis, klik untuk isi ulang"
+            >
+              <Zap className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 fill-current" />
+              <span>Sisa {store.quotaBalance} Kuota</span>
+            </Link>
+          )}
 
           {/* Theme Switcher Toggle */}
           <ThemeToggle />
@@ -390,18 +349,8 @@ export function DashboardMobileNav() {
   const navItems = [
     { href: "/dashboard", label: "Beranda", icon: Home },
     { href: "/dashboard/produk", label: "Produk", icon: Package },
-    { 
-      href: "/dashboard/jaga-ai", 
-      label: "Jaga AI", 
-      icon: Bot, 
-      isAI: true 
-    },
-    { 
-      href: "/dashboard/landing-pages", 
-      label: "Jualan AI", 
-      icon: Sparkles, 
-      isAI: true 
-    },
+    { href: "/dashboard/jaga-ai", label: "Jaga AI", icon: Bot },
+    { href: "/dashboard/landing-pages", label: "Jualan", icon: Sparkles },
     { 
       href: "/dashboard/pesanan", 
       label: "Pesanan", 
@@ -430,37 +379,14 @@ export function DashboardMobileNav() {
             isActive = itemPath !== "/dashboard" && pathname.startsWith(itemPath);
           }
 
-          if (item.isAI) {
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex flex-col items-center justify-center -mt-3 group"
-              >
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl shadow-md transition-all active:scale-90 ${
-                  isActive 
-                    ? "bg-gradient-to-tr from-amber-500 to-orange-400 text-slate-950 ring-2 ring-amber-400/50 shadow-amber-500/30" 
-                    : "bg-slate-100 dark:bg-slate-800 border border-amber-500/40 text-amber-600 dark:text-amber-400"
-                }`}>
-                  <Sparkles className="h-5 w-5" />
-                </div>
-                <span className={`mt-1 text-[10px] font-bold tracking-tight ${
-                  isActive ? "text-amber-600 dark:text-amber-400" : "text-slate-700 dark:text-slate-300"
-                }`}>
-                  {item.label}
-                </span>
-              </Link>
-            );
-          }
-
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center py-1.5 text-[10px] font-medium transition-colors relative ${
+              className={`flex flex-col items-center justify-center py-2 text-[10px] font-medium transition-colors relative ${
                 isActive 
                   ? "text-emerald-700 dark:text-emerald-400 font-bold" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
               }`}
             >
               <div className="relative">

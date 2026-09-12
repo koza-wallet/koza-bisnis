@@ -113,25 +113,25 @@ export default function EkspedisiSettingsPage() {
       )}
 
       {/* Origin City Info Card */}
-      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-xs space-y-3">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 sm:p-6 shadow-xs space-y-3">
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
           <Package className="h-4 w-4 text-emerald-600" />
           <span>Lokasi Asal Gudang Pengirim Toko</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs pt-1">
-          <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-3.5 space-y-1">
+          <div className="rounded-xl border border-slate-200/60 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 space-y-1">
             <span className="text-slate-400 text-[11px] block">Kota / Kabupaten:</span>
             <span className="font-bold text-slate-900 dark:text-white text-sm">
               {store.originCity || "Kota Bandung"}
             </span>
           </div>
-          <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 p-3.5 space-y-1">
+          <div className="rounded-xl border border-slate-200/60 dark:border-white/10 bg-slate-50 dark:bg-white/5 p-3.5 space-y-1">
             <span className="text-slate-400 text-[11px] block">Kecamatan Asal:</span>
             <span className="font-bold text-slate-900 dark:text-white text-sm">
               {store.originDistrict || "Coblong"}
             </span>
           </div>
-          <div className="rounded-2xl border border-emerald-100 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 space-y-1">
+          <div className="rounded-xl border border-emerald-200/60 dark:border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/20 p-3.5 space-y-1">
             <span className="text-emerald-700 dark:text-emerald-400 text-[11px] font-semibold block">Sistem Auto-AWB:</span>
             <span className="font-bold text-emerald-800 dark:text-emerald-300 text-sm flex items-center gap-1.5">
               <Check className="h-4 w-4 text-emerald-600" />
@@ -145,7 +145,7 @@ export default function EkspedisiSettingsPage() {
       </div>
 
       {/* Master Courier Checkboxes Grid */}
-      <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 sm:p-7 shadow-xs space-y-5">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-6 sm:p-7 shadow-xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
           <div>
             <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">

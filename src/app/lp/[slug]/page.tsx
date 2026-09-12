@@ -381,13 +381,13 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
       if (paymentMethod === "WHATSAPP") {
         const text = encodeURIComponent(
           `Halo Kak Admin ${store.name}! Saya mau konfirmasi pesanan dari website:\n\n` +
-          `📦 *No. Order*: ${completedOrder.orderNumber}\n` +
-          `🏷️ *Produk*: ${lp.title} (x${quantity})\n` +
-          `💰 *Total Bayar*: Rp ${grandTotal.toLocaleString("id-ID")}\n\n` +
-          `👤 *Nama*: ${customerName}\n` +
-          `📞 *WA*: ${customerPhone}\n` +
-          `📍 *Alamat*: ${customerAddress}, ${selectedDestination.district}, ${selectedDestination.city}\n` +
-          `🚚 *Ekspedisi*: ${selectedCourier}\n\n` +
+          `*No. Order*: #${completedOrder.orderNumber}\n` +
+          `*Produk*: ${lp.title} (x${quantity})\n` +
+          `*Total Bayar*: Rp ${grandTotal.toLocaleString("id-ID")}\n\n` +
+          `*Nama*: ${customerName}\n` +
+          `*WhatsApp*: ${customerPhone}\n` +
+          `*Alamat*: ${customerAddress}, ${selectedDestination.district}, ${selectedDestination.city}\n` +
+          `*Ekspedisi*: ${selectedCourier}\n\n` +
           `Mohon segera diproses ya kak, terima kasih!`
         );
         const waUrl = `https://wa.me/${store.whatsappNumber}?text=${text}`;
@@ -782,7 +782,7 @@ export default function PublicLandingPage({ params }: { params: Promise<{ slug: 
                 {productMeta?.wholesaleTiers && productMeta.wholesaleTiers.length > 0 && (
                   <div className="rounded-xl bg-indigo-950/40 border border-indigo-500/30 p-3 space-y-1.5">
                     <div className="flex items-center justify-between text-[11px] font-bold text-indigo-300">
-                      <span>⚡ Diskon Pembelian Grosir / Partai Besar:</span>
+                      <span>Diskon Pembelian Grosir / Partai Besar:</span>
                     </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[10px]">
                       {productMeta.wholesaleTiers.map((t, idx) => {

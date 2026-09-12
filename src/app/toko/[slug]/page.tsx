@@ -382,7 +382,7 @@ export default function StorefrontPage({ params }: { params: Promise<{ slug: str
       `*Subtotal Barang:* ${formatRupiah(completedOrder.itemsTotal)}\n` +
       `*Ongkir (${completedOrder.courierName}):* ${formatRupiah(completedOrder.shippingCost)}\n` +
       `*TOTAL BAYAR:* *${formatRupiah(completedOrder.grandTotal)}*\n\n` +
-      `Mohon info rekening pembayaran dan proses pengirimannya ya kak 🙏`;
+      `Mohon info rekening pembayaran dan proses pengirimannya ya kak, terima kasih.`;
 
     const cleanPhone = store.whatsappNumber.startsWith("0") 
       ? "62" + store.whatsappNumber.slice(1) 

@@ -581,8 +581,9 @@ export default function LandingPage() {
           {/* Impact Callout Strip */}
           <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/60 dark:bg-emerald-950/20 p-4 text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-3">
             <div className="space-y-0.5">
-              <div className="text-xs font-bold text-slate-900 dark:text-white">
-                💡 Bayangkan jika toko Anda mengirim 300 paket setiap bulan:
+              <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>Simulasi jika toko Anda mengirim 300 paket setiap bulan:</span>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-400">
                 Di marketplace, Anda membakar <strong className="text-rose-600 dark:text-rose-400 whitespace-nowrap">Rp 7.500.000/bulan</strong> hanya untuk potongan komisi & program. Di KoZa, uang itu 100% jadi laba bersih tabungan Anda.
@@ -911,7 +912,7 @@ export default function LandingPage() {
               <div className="rounded-2xl border-2 border-emerald-500 bg-gradient-to-b from-emerald-50/70 via-white to-white dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 p-5 text-center space-y-1.5 relative shadow-xs dark:shadow-xl dark:shadow-emerald-500/10">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
                   <span className="rounded-full bg-emerald-600 px-3 py-0.5 text-[10px] font-black text-white uppercase tracking-wider shadow-xs">
-                    ★ AUTONOMOUS AI
+                    FLAGSHIP AI
                   </span>
                 </div>
                 <div className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">KoZa Pro AI</div>
@@ -1100,7 +1101,7 @@ export default function LandingPage() {
           <div className="rounded-3xl border-2 border-emerald-500 bg-gradient-to-b from-emerald-50/70 via-white to-white dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 p-7 flex flex-col justify-between space-y-6 shadow-md dark:shadow-2xl relative md:-translate-y-3">
             <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
               <span className="rounded-full bg-emerald-600 px-4 py-1.5 text-[11px] font-black text-white shadow-md uppercase tracking-wider">
-                {billingCycle === "monthly" ? "★ Flagship & Autonomous AI" : "★ Paling Populer & Hemat Maksimal"}
+                {billingCycle === "monthly" ? "Flagship AI Otonom" : "Paling Populer & Hemat Maksimal"}
               </span>
             </div>
 

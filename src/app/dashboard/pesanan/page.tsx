@@ -58,7 +58,7 @@ export default function OrderManagementPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (data.notificationSent) {
-        setResiSuccessMsg({ id: orderId, msg: "Resi tersimpan & notifikasi WhatsApp terkirim ke pembeli! 🚀" });
+        setResiSuccessMsg({ id: orderId, msg: "Resi tersimpan & notifikasi WhatsApp terkirim ke pembeli." });
       } else {
         setResiSuccessMsg({ id: orderId, msg: "Nomor resi berhasil disimpan." });
       }
@@ -97,12 +97,12 @@ export default function OrderManagementPage() {
       ? `${window.location.origin}/lacak/${order.orderNumber}` 
       : `https://www.kozabisnis.com/lacak/${order.orderNumber}`;
 
-    let message = `Halo Kak ${order.customerName}, terima kasih sudah berbelanja di toko kami! Pesanan #${order.orderNumber} sedang kami siapkan ya kak 🙏`;
+    let message = `Halo Kak ${order.customerName}, terima kasih sudah berbelanja di toko kami! Pesanan #${order.orderNumber} sedang kami siapkan ya kak.`;
 
     if (order.status === "DIKIRIM" && order.trackingNumber) {
-      message = `Halo Kak ${order.customerName}! Paket pesanan #${order.orderNumber} telah kami kirimkan via ${order.courierName} dengan No. Resi: *${order.trackingNumber}*.\n\nPantau pergerakan paket secara langsung di:\n${trackingUrl}\n\nTerima kasih banyak sudah berbelanja di toko kami! 🙏`;
+      message = `Halo Kak ${order.customerName}! Paket pesanan #${order.orderNumber} telah kami kirimkan via ${order.courierName} dengan No. Resi: *${order.trackingNumber}*.\n\nPantau pergerakan paket secara langsung di:\n${trackingUrl}\n\nTerima kasih banyak sudah berbelanja di toko kami!`;
     } else if (order.status === "SELESAI") {
-      message = `Halo Kak ${order.customerName}, paket pesanan #${order.orderNumber} tercatat sudah tiba dengan aman 📦✨!\n\nBantu kami dengan memberikan rating & ulasan di:\n${trackingUrl}?review=true\n\nTerima kasih banyak ya kak 🙏`;
+      message = `Halo Kak ${order.customerName}, paket pesanan #${order.orderNumber} tercatat sudah tiba dengan aman.\n\nBantu kami dengan memberikan rating & ulasan di:\n${trackingUrl}?review=true\n\nTerima kasih banyak ya kak!`;
     }
 
     window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, "_blank");

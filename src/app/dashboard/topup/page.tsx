@@ -645,7 +645,7 @@ function QuotaTopupContent() {
               {pkg.popular && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap z-10">
                   <span className="rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 px-4 py-1.5 text-[11px] font-black text-white shadow-md uppercase tracking-wider">
-                    ★ PALING LARIS & HEMAT
+                    PALING LARIS & HEMAT
                   </span>
                 </div>
               )}

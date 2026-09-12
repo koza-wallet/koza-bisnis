@@ -19,12 +19,12 @@ import {
   Printer,
   ShieldCheck,
   Zap,
-  RotateCcw,
   Clock,
   CheckCircle2,
   Truck,
   MessageSquare,
   Bot,
+  Package,
   X
 } from "lucide-react";
 
@@ -33,6 +33,8 @@ interface ThermalData {
   customerName: string;
   customerPhone?: string;
   destinationAddress?: string;
+  destinationCity?: string;
+  destinationDistrict?: string;
   productInfo: string;
   courierName: string;
   awbNumber: string;
@@ -47,7 +49,6 @@ export default function DashboardOverviewPage() {
   const [copied, setCopied] = useState(false);
   const [storeUrl, setStoreUrl] = useState(`https://www.kozabisnis.com/toko/${store.slug}`);
   const [activeChartTab, setActiveChartTab] = useState<"7d" | "30d" | "year">("30d");
-  const [syncToast, setSyncToast] = useState(false);
 
   // Thermal Modal State
   const [isThermalOpen, setIsThermalOpen] = useState(false);
@@ -65,11 +66,6 @@ export default function DashboardOverviewPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  };
-
-  const handleSyncData = () => {
-    setSyncToast(true);
-    setTimeout(() => setSyncToast(false), 2500);
   };
 
   const openThermalModal = (order: typeof orders[0]) => {
@@ -136,20 +132,12 @@ export default function DashboardOverviewPage() {
 
   return (
     <div className="space-y-6">
-      {/* Toast Notifikasi Sinkronisasi */}
-      {syncToast && (
-        <div className="fixed top-18 right-6 z-50 flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-950 px-4 py-2.5 text-xs font-bold shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
-          <CheckCircle2 className="h-4 w-4 text-emerald-400 dark:text-emerald-600" />
-          <span>Data transaksi toko & ekspedisi berhasil disinkronkan!</span>
-        </div>
-      )}
-
       {/* 1. View Header Banner: Ringkasan Bisnis & Arus Laba */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#0E1420] border border-slate-200/80 dark:border-white/10 rounded-2xl p-5 sm:p-6 shadow-xs transition-colors">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              Ringkasan Bisnis & Arus Laba 📊
+              Ringkasan Bisnis & Arus Laba
             </h1>
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 px-2 py-0.5 text-[10.5px] font-bold text-emerald-800 dark:text-emerald-300 border border-emerald-500/20">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
@@ -161,72 +149,55 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleSyncData}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-white/5 hover:bg-slate-200/70 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 transition-all cursor-pointer"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            <span>Sinkron Data</span>
-          </button>
-
+        {/* Action Button: Hanya aksi esensial Salin Link Toko */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleCopyLink}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-white/5 hover:bg-slate-200/70 dark:hover:bg-white/10 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 transition-all cursor-pointer"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-            <span>{copied ? "Tersalin!" : "Salin Bio Link"}</span>
+            <span>{copied ? "Link Tersalin!" : "Salin Bio Link"}</span>
           </button>
-
-          <Link
-            href="/dashboard/topup"
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 to-teal-500 hover:brightness-105 text-white shadow-xs transition-all"
-          >
-            <Zap className="h-3.5 w-3.5 fill-current" />
-            <span>Top-up Saldo Resi</span>
-          </Link>
         </div>
       </div>
 
-      {/* 2. 4 Bento Grid Cards Finansial (Craft UI Aesthetics) */}
+      {/* 2. 4 Bento Grid Cards Finansial (Clean Porcelain & Slate) */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {/* Bento 1: Laba Bersih Riil (Net Margin) */}
-        <div className="relative overflow-hidden rounded-2xl border border-emerald-200/90 dark:border-emerald-500/30 bg-gradient-to-b from-emerald-50/40 via-white to-white dark:from-emerald-950/20 dark:via-[#0E1420] dark:to-[#080B11] p-5 shadow-xs transition-colors glow-emerald">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Laba Bersih Riil (Net Margin)
             </span>
-            <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300/60 dark:border-emerald-500/25">
+            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
               <TrendingUp className="h-4 w-4" />
             </div>
           </div>
 
           <div className="mt-3">
-            <div className="text-2xl font-mono font-extrabold tracking-tight text-emerald-600 dark:text-emerald-400 privacy-sensitive">
+            <div className="text-2xl font-mono font-bold tracking-tight text-emerald-600 dark:text-emerald-400 privacy-sensitive">
               {formatRupiah(financialMetrics.labaBersih)}
             </div>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-800 dark:text-emerald-300">
-              <span className="font-mono font-bold bg-emerald-100/90 dark:bg-emerald-500/15 px-1.5 py-0.5 rounded border border-emerald-300/80 dark:border-emerald-500/25 text-[11px]">
+            <div className="mt-2 flex items-center gap-1.5 text-xs">
+              <span className="font-mono font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-500/20 text-[11px]">
                 +{financialMetrics.marginPercent.toFixed(1)}% Margin
               </span>
-              <span className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                100% bebas potongan 20%
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                Bebas potongan 20%
               </span>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-400 block">Omset Kotor:</span>
+              <span className="text-[10.5px] text-slate-400 block">Omset Kotor:</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200 privacy-sensitive text-[11.5px]">
                 {formatRupiah(financialMetrics.totalOmset)}
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-400 block">Total HPP Modal:</span>
+              <span className="text-[10.5px] text-slate-400 block">Total HPP Modal:</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200 privacy-sensitive text-[11.5px]">
                 {formatRupiah(financialMetrics.totalHPP)}
               </span>
@@ -235,18 +206,18 @@ export default function DashboardOverviewPage() {
         </div>
 
         {/* Bento 2: Total Pesanan Selesai */}
-        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-colors">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Total Pesanan Selesai
             </span>
-            <div className="p-1.5 rounded-lg bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/20">
+            <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10">
               <ShoppingBag className="h-4 w-4" />
             </div>
           </div>
 
           <div className="mt-3">
-            <div className="text-2xl font-mono font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <div className="text-2xl font-mono font-bold tracking-tight text-slate-900 dark:text-white">
               {completedCount} <span className="text-xs font-normal text-slate-400">Paket</span>
             </div>
             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -264,13 +235,13 @@ export default function DashboardOverviewPage() {
 
           <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-400 block">Dalam Pengiriman:</span>
+              <span className="text-[10.5px] text-slate-400 block">Dalam Pengiriman:</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
                 {inDeliveryCount} Paket
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-400 block">Tuntas Sukses:</span>
+              <span className="text-[10.5px] text-slate-400 block">Tuntas Sukses:</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
                 {completedCount} Paket
               </span>
@@ -278,28 +249,28 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
 
-        {/* Bento 3: Jaga AI Closing Rate (Tautan Langsung ke Pengaturan & Saklar AI) */}
+        {/* Bento 3: Jaga AI Closing Rate */}
         <Link
           href="/dashboard/jaga-ai"
-          className="group rounded-2xl border border-teal-200/80 dark:border-teal-500/20 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-all hover:border-teal-400 dark:hover:border-teal-500/40 hover:shadow-md cursor-pointer block"
+          className="group rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-all hover:border-slate-300 dark:hover:border-white/20 hover:shadow-sm cursor-pointer block"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-teal-800 dark:text-teal-300">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 Jaga AI Closing Rate
               </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-300 group-hover:bg-teal-600 group-hover:text-white transition-colors">
-                Atur Saklar ↗
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                Kelola ↗
               </span>
             </div>
-            <div className="p-1.5 rounded-lg bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/20 group-hover:scale-110 transition-transform">
+            <div className="p-2 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-white/10 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
               <Bot className="h-4 w-4" />
             </div>
           </div>
 
           <div className="mt-3">
-            <div className="text-2xl font-mono font-extrabold tracking-tight text-teal-600 dark:text-teal-400">
-              34.2% <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Closing</span>
+            <div className="text-2xl font-mono font-bold tracking-tight text-slate-900 dark:text-white">
+              34.2% <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Closing</span>
             </div>
             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               Dijawab otomatis dalam hitungan detik
@@ -308,13 +279,13 @@ export default function DashboardOverviewPage() {
 
           <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-400 block">Respon Speed:</span>
+              <span className="text-[10.5px] text-slate-400 block">Respon Speed:</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
                 1.4 Detik
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-400 block">Eskalasi Manual:</span>
+              <span className="text-[10.5px] text-slate-400 block">Eskalasi Manual:</span>
               <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-[11.5px]">
                 0.6%
               </span>
@@ -323,18 +294,18 @@ export default function DashboardOverviewPage() {
         </Link>
 
         {/* Bento 4: Cuan Diselamatkan (ROI) */}
-        <div className="rounded-2xl border border-purple-200/80 dark:border-purple-500/20 bg-white dark:bg-[#0E1420] p-5 shadow-xs transition-colors">
+        <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs hover:border-slate-300 dark:hover:border-white/20 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-purple-800 dark:text-purple-300">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
               Cuan Diselamatkan (ROI)
             </span>
-            <div className="p-1.5 rounded-lg bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20">
+            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
               <ShieldCheck className="h-4 w-4" />
             </div>
           </div>
 
           <div className="mt-3">
-            <div className="text-2xl font-mono font-extrabold tracking-tight text-purple-600 dark:text-purple-400 privacy-sensitive">
+            <div className="text-2xl font-mono font-bold tracking-tight text-slate-900 dark:text-white privacy-sensitive">
               {formatRupiah(feeSaved > 0 ? feeSaved : 14960000)}
             </div>
             <div className="mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -344,13 +315,13 @@ export default function DashboardOverviewPage() {
 
           <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/10 grid grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-400 block">Biaya Komisi:</span>
+              <span className="text-[10.5px] text-slate-400 block">Biaya Komisi:</span>
               <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[11.5px]">
                 Rp 0 (0%)
               </span>
             </div>
             <div className="text-right">
-              <span className="text-[10.5px] text-slate-400 dark:text-slate-400 block">ROI Investasi:</span>
+              <span className="text-[10.5px] text-slate-400 block">ROI Investasi:</span>
               <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-[11.5px]">
                 Maksimal 100%
               </span>
@@ -493,8 +464,8 @@ export default function DashboardOverviewPage() {
             <div className="mt-3.5 space-y-3">
               {/* Item 1 */}
               <div className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-xs">
-                  📦
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+                  <Package className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
@@ -517,8 +488,8 @@ export default function DashboardOverviewPage() {
                 href="/dashboard/jaga-ai"
                 className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5 hover:border-teal-400/50 hover:bg-teal-50/20 dark:hover:bg-teal-950/10 transition-colors group cursor-pointer"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-400 text-xs">
-                  🤖
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-500/15 text-teal-700 dark:text-teal-400">
+                  <Bot className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
@@ -539,8 +510,8 @@ export default function DashboardOverviewPage() {
 
               {/* Item 3 */}
               <div className="flex items-start gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400 text-xs">
-                  🚚
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-500/15 text-purple-700 dark:text-purple-400">
+                  <Truck className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
@@ -574,15 +545,15 @@ export default function DashboardOverviewPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         <Link
           href="/dashboard/jaga-ai"
-          className="flex items-center gap-3 p-3.5 rounded-xl border border-teal-300/80 dark:border-teal-500/30 bg-white dark:bg-[#0E1420] hover:border-teal-500 hover:shadow-xs transition-all group"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-slate-300 dark:hover:border-white/20 hover:shadow-xs transition-all group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-600 group-hover:text-white transition-colors">
-            <Bot className="h-5 w-5" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:border-emerald-500/30 transition-colors">
+            <Bot className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <div className="text-xs font-bold text-slate-900 dark:text-white truncate flex items-center gap-1.5">
               <span>Jaga AI CS</span>
-              <span className="text-[8px] px-1 py-0.2 rounded bg-teal-100 dark:bg-teal-500/20 text-teal-800 dark:text-teal-300 font-bold">24/7</span>
+              <span className="text-[9px] px-1 py-0.2 rounded bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400 font-semibold">24/7</span>
             </div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">Saklar & chat bot</div>
           </div>
@@ -590,10 +561,10 @@ export default function DashboardOverviewPage() {
 
         <Link
           href="/dashboard/produk"
-          className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-emerald-500/40 hover:shadow-xs transition-all group"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-slate-300 dark:hover:border-white/20 hover:shadow-xs transition-all group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-            <Plus className="h-5 w-5" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:border-emerald-500/30 transition-colors">
+            <Plus className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <div className="text-xs font-bold text-slate-900 dark:text-white truncate">Tambah Produk</div>
@@ -603,23 +574,23 @@ export default function DashboardOverviewPage() {
 
         <Link
           href="/dashboard/landing-pages/create"
-          className="flex items-center gap-3 p-3.5 rounded-xl border border-amber-300/60 dark:border-amber-500/20 bg-white dark:bg-[#0E1420] hover:border-amber-500/40 hover:shadow-xs transition-all group"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-slate-300 dark:hover:border-white/20 hover:shadow-xs transition-all group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors">
-            <Sparkles className="h-5 w-5" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:border-emerald-500/30 transition-colors">
+            <Sparkles className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <div className="text-xs font-bold text-slate-900 dark:text-white truncate">Bikin Halaman AI</div>
-            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">Pro AI • 25x/bulan (350x/thn)</div>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">Generator landing page</div>
           </div>
         </Link>
 
         <Link
           href="/dashboard/pesanan"
-          className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-cyan-500/40 hover:shadow-xs transition-all group"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-slate-300 dark:hover:border-white/20 hover:shadow-xs transition-all group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 group-hover:bg-cyan-600 group-hover:text-white transition-colors">
-            <Truck className="h-5 w-5" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:border-emerald-500/30 transition-colors">
+            <Truck className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <div className="text-xs font-bold text-slate-900 dark:text-white truncate">Kelola Pesanan</div>
@@ -629,10 +600,10 @@ export default function DashboardOverviewPage() {
 
         <Link
           href="/dashboard/keuangan"
-          className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-emerald-500/40 hover:shadow-xs transition-all group"
+          className="flex items-center gap-3 p-3.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] hover:border-slate-300 dark:hover:border-white/20 hover:shadow-xs transition-all group"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-            <TrendingUp className="h-5 w-5" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 text-slate-700 dark:text-slate-300 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 group-hover:border-emerald-500/30 transition-colors">
+            <TrendingUp className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <div className="text-xs font-bold text-slate-900 dark:text-white truncate">Kalkulator HPP</div>

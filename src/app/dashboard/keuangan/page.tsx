@@ -94,11 +94,11 @@ export default function FinanceBookkeepingPage() {
       </div>
 
       {/* Main P&L Income Statement Card */}
-      <div className="rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-gradient-to-b from-emerald-50/50 via-white to-white dark:from-emerald-950/30 dark:via-[#161E2E] dark:to-[#0B0F17] p-6 shadow-sm space-y-6 transition-colors">
-        <div className="flex items-center justify-between border-b border-emerald-100 dark:border-slate-800 pb-4">
+      <div className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-6 shadow-xs space-y-6 transition-colors">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-white/10 pb-4">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-xs font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
               Laporan Keuangan Realtime Toko
             </span>
           </div>
@@ -158,10 +158,10 @@ export default function FinanceBookkeepingPage() {
       {/* Two Column Section: Catat Pengeluaran & Riwayat Pengeluaran */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Form Catat Pengeluaran Operasional (2 Cols) */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161E2E] p-5 shadow-xs space-y-4">
+        <div className="lg:col-span-2 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs space-y-4">
           <div className="space-y-1">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Plus className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+              <Plus className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span>Catat Biaya Operasional</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -177,13 +177,13 @@ export default function FinanceBookkeepingPage() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as any)}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-emerald-500 focus:outline-none"
               >
-                <option value="PACKING">📦 Packing (Plastik, Lakban, Bubble Wrap)</option>
-                <option value="BENSIN">🛵 Bensin & Transportasi Drop Paket</option>
-                <option value="IKLAN">📢 Iklan & Promosi (Meta Ads, Endorse)</option>
-                <option value="ADMIN">👤 Gaji / Makan Admin</option>
-                <option value="LAINNYA">⚙️ Pengeluaran Lainnya</option>
+                <option value="PACKING">Packing (Plastik, Lakban, Bubble Wrap)</option>
+                <option value="BENSIN">Bensin & Transportasi Drop Paket</option>
+                <option value="IKLAN">Iklan & Promosi (Meta Ads, Endorse)</option>
+                <option value="ADMIN">Gaji & Konsumsi Operasional Admin</option>
+                <option value="LAINNYA">Pengeluaran Operasional Lainnya</option>
               </select>
             </div>
 
@@ -197,7 +197,7 @@ export default function FinanceBookkeepingPage() {
                 placeholder="Contoh: Lakban 2 rol + Plastik polymailer"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none"
               />
             </div>
 
@@ -211,7 +211,7 @@ export default function FinanceBookkeepingPage() {
                 placeholder="25000"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none font-mono"
+                className="w-full rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-950 px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:border-emerald-500 focus:outline-none font-mono"
               />
             </div>
 
@@ -225,10 +225,10 @@ export default function FinanceBookkeepingPage() {
         </div>
 
         {/* List of Operational Expenses (3 Cols) */}
-        <div className="lg:col-span-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#161E2E] p-5 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+        <div className="lg:col-span-3 rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#0E1420] p-5 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Receipt className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+              <Receipt className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               <span>Riwayat Biaya Operasional ({expenses.length})</span>
             </h2>
             <span className="text-xs font-semibold text-rose-600 dark:text-rose-400">

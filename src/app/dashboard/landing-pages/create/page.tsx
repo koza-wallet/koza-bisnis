@@ -239,7 +239,7 @@ export default function CreateLandingPage() {
         badge: "PROMO HARI INI",
         headline: manualTitle,
         subheadline: "Pesan sekarang dapatkan diskon spesial dan gratis ongkir!",
-        ctaText: "Pesan Sekarang ➔",
+        ctaText: "Pesan Sekarang",
         heroImageUrl: "",
         countdownHours: 3,
       },
@@ -406,7 +406,7 @@ export default function CreateLandingPage() {
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">⚡ AI Generator</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">AI Generator</span>
               {hasAiLandingPageAccess ? (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
                   15 Detik Jadi
@@ -439,7 +439,7 @@ export default function CreateLandingPage() {
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">🎨 Kanvas Kosong</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">Kanvas Kosong</span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
                 Modular
               </span>
@@ -465,7 +465,7 @@ export default function CreateLandingPage() {
           </div>
           <div className="flex-1">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-bold text-slate-900 dark:text-white">📚 Pustaka Template</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-white">Pustaka Template</span>
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
                 10 Template
               </span>
@@ -859,7 +859,7 @@ export default function CreateLandingPage() {
               {/* Default included sections info */}
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 space-y-2">
                 <span className="text-xs font-bold text-slate-800 dark:text-slate-300 block">
-                  📦 Blok Permulaan yang Otomatis Disiapkan:
+                  Blok Permulaan yang Otomatis Disiapkan:
                 </span>
                 <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400">
                   <div className="flex items-center gap-1.5">
@@ -916,13 +916,13 @@ export default function CreateLandingPage() {
             <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto scrollbar-none">
               {[
                 { id: "ALL", label: "Semua Template" },
-                { id: "FASHION", label: "👗 Fashion" },
-                { id: "BEAUTY", label: "🌸 Skincare & Beauty" },
-                { id: "FOOD", label: "🍲 Kuliner & Makanan" },
-                { id: "GADGET", label: "⌚ Gadget & Elektronik" },
-                { id: "SERVICES", label: "💼 Jasa & Portofolio" },
-                { id: "HERBAL", label: "🌿 Herbal & Suplemen" },
-                { id: "VIRAL_TIKTOK", label: "🔥 Viral TikTok Ads" },
+                { id: "FASHION", label: "Fashion" },
+                { id: "BEAUTY", label: "Skincare & Beauty" },
+                { id: "FOOD", label: "Kuliner & Makanan" },
+                { id: "GADGET", label: "Gadget & Elektronik" },
+                { id: "SERVICES", label: "Jasa & Portofolio" },
+                { id: "HERBAL", label: "Herbal & Suplemen" },
+                { id: "VIRAL_TIKTOK", label: "Viral TikTok Ads" },
               ].map((cat) => (
                 <button
                   key={cat.id}
@@ -1099,7 +1099,7 @@ export default function CreateLandingPage() {
                 className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 shadow-lg shadow-amber-500/30 hover:brightness-105 active:scale-95 transition-all cursor-pointer"
               >
                 <Crown className="h-4 w-4" />
-                <span>Upgrade ke KoZa PRO Sekarang ➔</span>
+                <span>Upgrade ke KoZa PRO Sekarang</span>
               </button>
               <button
                 onClick={() => setShowProModal(false)}
@@ -1137,7 +1137,7 @@ export default function CreateLandingPage() {
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white">{previewTemplate.name}</h3>
                   {previewTemplate.isPro ? (
                     <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30">
-                      👑 PRO
+                      PRO
                     </span>
                   ) : (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
@@ -1147,8 +1147,8 @@ export default function CreateLandingPage() {
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">{previewTemplate.description}</p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-slate-600 dark:text-slate-300">
-                  <span>🎨 Tema: <strong>{previewTemplate.design.themePreset}</strong></span>
-                  <span>✍️ Font: <strong>{previewTemplate.design.fontFamily}</strong></span>
+                  <span>Tema: <strong>{previewTemplate.design.themePreset}</strong></span>
+                  <span>Font: <strong>{previewTemplate.design.fontFamily}</strong></span>
                 </div>
               </div>
             </div>
@@ -1206,7 +1206,7 @@ export default function CreateLandingPage() {
                 ) : (
                   <>
                     <Zap className="h-4 w-4" />
-                    <span>Gunakan Template Ini ➔</span>
+                    <span>Gunakan Template Ini</span>
                   </>
                 )}
               </button>

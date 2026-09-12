@@ -30,11 +30,11 @@ import {
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const REVIEW_PRESET_TAGS = [
-  "⚡ Pengiriman Cepat",
-  "📦 Packing Rapi & Aman",
-  "👍 Produk Sesuai Deskripsi",
-  "😊 Pelayanan Ramah",
-  "⭐ Kualitas Memuaskan",
+  "Pengiriman Cepat",
+  "Packing Rapi & Aman",
+  "Produk Sesuai Deskripsi",
+  "Pelayanan Ramah",
+  "Kualitas Memuaskan",
 ];
 
 export default function PublicOrderTrackingPage() {
@@ -52,7 +52,7 @@ export default function PublicOrderTrackingPage() {
   const [rating, setRating] = useState<number>(5);
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [reviewText, setReviewText] = useState<string>("");
-  const [selectedTags, setSelectedTags] = useState<string[]>(["⚡ Pengiriman Cepat", "👍 Produk Sesuai Deskripsi"]);
+  const [selectedTags, setSelectedTags] = useState<string[]>(["Pengiriman Cepat", "Produk Sesuai Deskripsi"]);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSuccess, setReviewSuccess] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
@@ -474,9 +474,9 @@ export default function PublicOrderTrackingPage() {
                     })}
                     <span className="text-xs font-bold text-amber-600 dark:text-amber-400 ml-1.5 min-w-[70px]">
                       {rating === 5
-                        ? "Sangat Puas ⭐"
+                        ? "Sangat Puas"
                         : rating === 4
-                        ? "Puas 👍"
+                        ? "Puas"
                         : rating === 3
                         ? "Cukup Baik"
                         : rating === 2
