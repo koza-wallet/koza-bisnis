@@ -8,6 +8,7 @@ import {
   isCircuitBreakerOpen,
 } from "@/lib/ai-cost-guard";
 import { BotChatStatus } from "@/types";
+import { generateJagaAIReply } from "@/lib/jaga-ai-llm";
 
 // ==============================================================================
 // KOZA BISNIS — AI CHAT & HUMAN HANDOFF API ROUTE
@@ -83,15 +84,28 @@ export async function POST(req: NextRequest) {
 
     let isProStore = true; // Default true jika dev mode / db bypass
     let supabase = null;
+    let storeData: {
+      id: string;
+      name: string;
+      slug: string;
+      origin_district?: string;
+      origin_city?: string;
+      plan?: string;
+      plan_expiry_date?: string;
+      whatsapp_bot_settings?: any;
+    } | null = null;
+
     if (supabaseUrl && serviceRoleKey) {
       supabase = createClient(supabaseUrl, serviceRoleKey);
 
       // Verifikasi status keanggotaan PRO toko
-      const { data: storeData } = await supabase
+      const { data: fetchedStore } = await supabase
         .from("stores")
-        .select("id, name, plan, plan_expiry_date")
+        .select("id, name, slug, origin_district, origin_city, plan, plan_expiry_date, whatsapp_bot_settings")
         .eq("id", storeId)
         .maybeSingle();
+
+      storeData = fetchedStore;
 
       if (storeData) {
         const isPlanPro =
@@ -118,15 +132,15 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const { data } = await supabase
+      const { data: sessionData } = await supabase
         .from("chat_sessions")
         .select("bot_status, paused_until, turn_count")
         .eq("store_id", storeId)
         .eq("buyer_phone", senderPhone)
         .maybeSingle();
 
-      if (data) {
-        existingSession = data as {
+      if (sessionData) {
+        existingSession = sessionData as {
           bot_status: BotChatStatus;
           paused_until: string | null;
           turn_count: number;
@@ -194,76 +208,39 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 3. Pesan Lolos Pengaman: Panggil LLM (Gemini API)
-    let botReply = "";
-    const apiKey = process.env.GEMINI_API_KEY || "";
+    // 3. Pesan Lolos Pengaman: Ambil Katalog & Panggil Dual-Engine LLM
+    let catalogContext = "Belum ada produk spesifik yang terdaftar di etalase saat ini.";
+    if (supabase) {
+      const { data: products } = await supabase
+        .from("products")
+        .select("name, selling_price, stock")
+        .eq("store_id", storeId)
+        .eq("is_active", true)
+        .limit(15);
 
-    if (apiKey) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 detik timeout
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            signal: controller.signal,
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: "user",
-                  parts: [
-                    {
-                      text: `Kamu adalah asisten toko WhatsApp penjual yang ramah, sopan, dan sigap membantu.
-Jawab pesan pembeli berikut dalam Bahasa Indonesia dengan santun, informatif, dan ringkas (maksimal 2-3 kalimat).
-Jangan gunakan format markdown tebal berlebihan.
-
-Pesan pembeli:
-"${evaluation.sanitizedMessage}"`,
-                    },
-                  ],
-                },
-              ],
-              generationConfig: {
-                maxOutputTokens: 200,
-                temperature: 0.7,
-              },
-            }),
-          }
-        );
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          throw new Error(`Gemini API error: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        const generatedText =
-          data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!generatedText) {
-          throw new Error("Respon LLM kosong.");
-        }
-
-        botReply = generatedText.trim();
-        recordLLMSuccess(storeId);
-      } catch (err: unknown) {
-        console.error("[AI-CHAT-ROUTE] Gagal memanggil LLM:", err);
-        recordLLMFailure();
-
-        // Fallback tanggapan aman (tanpa retry berulang)
-        botReply =
-          "Halo kak! Pesan kakak sudah diterima, mohon ditunggu sebentar ya kak admin kami akan segera merespons 🙏";
+      if (products && products.length > 0) {
+        catalogContext = products
+          .map(
+            (p, i) =>
+              `${i + 1}. ${p.name} — Rp ${Number(p.selling_price).toLocaleString("id-ID")} (Stok: ${p.stock > 0 ? "Tersedia" : "Habis"})`
+          )
+          .join("\n");
       }
-    } else {
-      // Mock Fallback cerdas untuk lingkungan pengujian/tanpa API Key
-      botReply = `Halo kak! Terima kasih sudah menghubungi kami. Pesan kakak ("${evaluation.sanitizedMessage}") sudah kami terima. Ada yang bisa kami bantu lebih lanjut untuk produk atau pesanan kakak? 😊`;
-      recordLLMSuccess(storeId);
     }
+
+    const botSettings = storeData?.whatsapp_bot_settings || {};
+    const aiResult = await generateJagaAIReply({
+      storeId,
+      storeName: storeData?.name || "Toko KoZa",
+      storeSlug: storeData?.slug || storeId,
+      storeDistrict: storeData?.origin_district,
+      storeCity: storeData?.origin_city,
+      catalogContext,
+      userMessage: evaluation.sanitizedMessage,
+      preferredProvider: botSettings.aiModelProvider || "auto",
+    });
+
+    const botReply = aiResult.reply;
 
     // 4. Perbarui status sesi obrolan (naikkan turn_count)
     const nextTurnCount = (existingSession?.turn_count || 0) + 1;
@@ -286,7 +263,8 @@ Pesan pembeli:
 
     return NextResponse.json({
       success: true,
-      processedByLLM: true,
+      processedByLLM: aiResult.success,
+      providerUsed: aiResult.providerUsed,
       botStatus: "ACTIVE",
       reply: botReply,
       turnCount: nextTurnCount,

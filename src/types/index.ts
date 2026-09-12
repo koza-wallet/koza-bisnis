@@ -20,6 +20,7 @@ export interface WhatsAppBotSettings {
   connectedAt?: string;
   serverUrl?: string;
   webhookSecret?: string;
+  aiModelProvider?: 'auto' | 'openai' | 'gemini';
 }
 
 export interface Store {

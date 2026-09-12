@@ -11,6 +11,7 @@ import {
   recordLLMSuccess,
 } from '@/lib/ai-cost-guard';
 import { BotChatStatus } from '@/types';
+import { generateJagaAIReply } from '@/lib/jaga-ai-llm';
 
 export const dynamic = 'force-dynamic';
 
@@ -216,68 +217,19 @@ export async function POST(req: NextRequest) {
         ? catalogLines.join('\n')
         : 'Belum ada produk spesifik yang terdaftar di etalase saat ini.';
 
-    // 3. Panggil Gemini LLM
-    let botReply = '';
-    const geminiKey = process.env.GEMINI_API_KEY || '';
+    // 3. Panggil Dual-Engine LLM (OpenAI gpt-4o-mini / Gemini 1.5 Flash)
+    const aiResult = await generateJagaAIReply({
+      storeId: store.id,
+      storeName: store.name,
+      storeSlug: store.slug,
+      storeDistrict: store.origin_district,
+      storeCity: store.origin_city,
+      catalogContext,
+      userMessage: evaluation.sanitizedMessage,
+      preferredProvider: botSettings.aiModelProvider || 'auto',
+    });
 
-    if (geminiKey) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000);
-
-        const prompt = `Kamu adalah Jaga AI, asisten customer service WhatsApp toko online "${store.name}".
-Tugasmu menjawab pesan calon pembeli dengan ramah, santun, dan sigap membantu.
-
-Informasi Toko:
-- Nama Toko: ${store.name}
-- Lokasi: ${store.origin_district}, ${store.origin_city}
-- Link Etalase Toko: https://www.kozabisnis.com/toko/${store.slug}
-
-Daftar Produk Toko:
-${catalogContext}
-
-Aturan Menjawab:
-1. Gunakan Bahasa Indonesia yang sopan dan akrab (panggil "kak").
-2. Jawab secara ringkas, jelas, dan santun (maksimal 2-3 kalimat).
-3. Jika pembeli menanyakan produk yang ada di katalog, informasikan harga dan ketersediaan stoknya, lalu persilakan checkout di link toko: https://www.kozabisnis.com/toko/${store.slug}
-4. Jika produk yang ditanyakan tidak ada di katalog, sampaikan dengan sopan bahwa produk belum tersedia.
-5. Jangan gunakan format markdown tebal (bold) berlebihan.
-
-Pesan dari pembeli:
-"${evaluation.sanitizedMessage}"`;
-
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            signal: controller.signal,
-            body: JSON.stringify({
-              contents: [{ role: 'user', parts: [{ text: prompt }] }],
-              generationConfig: { maxOutputTokens: 250, temperature: 0.7 },
-            }),
-          }
-        );
-
-        clearTimeout(timeoutId);
-
-        if (response.ok) {
-          const data = await response.json();
-          botReply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-          recordLLMSuccess(store.id);
-        } else {
-          throw new Error(`Gemini API error: ${response.statusText}`);
-        }
-      } catch (llmErr) {
-        console.error('[WHATSAPP-WEBHOOK] Gemini LLM Error:', llmErr);
-        recordLLMFailure();
-        botReply = `Halo kak! Pesan kakak sudah kami terima. Mohon ditunggu sebentar ya kak, admin ${store.name} akan segera membalas 🙏`;
-      }
-    } else {
-      // Fallback Pintar jika API Key Gemini belum di-set
-      botReply = `Halo kak! Terima kasih sudah menghubungi ${store.name}. Produk kami bisa dilihat dan dipesan langsung melalui etalase resmi kami di: https://www.kozabisnis.com/toko/${store.slug} 😊`;
-      recordLLMSuccess(store.id);
-    }
+    const botReply = aiResult.reply;
 
     // 4. Kirim Balasan ke WhatsApp Pembeli via Gateway
     if (botReply && botSettings.deviceToken) {
@@ -308,7 +260,8 @@ Pesan dari pembeli:
 
     return NextResponse.json({
       success: true,
-      processedByLLM: true,
+      processedByLLM: aiResult.success,
+      providerUsed: aiResult.providerUsed,
       botReply,
       turnCount: nextTurnCount,
     });
