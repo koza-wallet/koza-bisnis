@@ -25,6 +25,23 @@ function withTeamQuery(url: string, teamId?: string): string {
   return `${url}${url.includes("?") ? "&" : "?"}teamId=${teamId}`;
 }
 
+// Timeout WAJIB di setiap panggilan keluar ke api.vercel.com -- serverless function
+// di Vercel punya batas waktu eksekusi sendiri (10 detik di plan Hobby). Kalau fetch
+// ini menggantung tanpa timeout, function-nya di-kill paksa oleh platform dan
+// mengembalikan 502 dengan body BUKAN JSON (bukan error kita, tidak bisa ditangkap
+// oleh try/catch kita sendiri) -- jadi timeout di sini harus lebih pendek dari itu.
+const VERCEL_API_TIMEOUT_MS = 8000;
+
+async function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), VERCEL_API_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export interface AddDomainResult {
   success: boolean;
   verified: boolean;
@@ -45,7 +62,7 @@ export async function addVercelDomain(domain: string): Promise<AddDomainResult> 
   const url = withTeamQuery(`https://api.vercel.com/v10/projects/${config.projectId}/domains`, config.teamId);
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${config.token}`,
@@ -95,7 +112,7 @@ export async function removeVercelDomain(domain: string): Promise<void> {
   );
 
   try {
-    await fetch(url, {
+    await fetchWithTimeout(url, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${config.token}` },
     });
@@ -123,7 +140,7 @@ export async function getVercelDomainStatus(domain: string): Promise<VercelDomai
   );
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchWithTimeout(url, {
       headers: { Authorization: `Bearer ${config.token}` },
     });
     if (!res.ok) return { found: false, verified: false };

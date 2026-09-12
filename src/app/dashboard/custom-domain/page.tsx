@@ -89,13 +89,17 @@ export default function CustomDomainPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ domain: cleaned, previousDomain }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        const suffix = data.errorRef ? ` (Kode Referensi: ${data.errorRef})` : "";
-        setRegisterError((data.error || "Gagal mendaftarkan domain ke Vercel.") + suffix);
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        if (data?.error) {
+          const suffix = data.errorRef ? ` (Kode Referensi: ${data.errorRef})` : "";
+          setRegisterError(data.error + suffix);
+        } else {
+          setRegisterError(`Gagal mendaftarkan domain ke Vercel (HTTP ${res.status}). Coba lagi sebentar lagi.`);
+        }
       }
     } catch {
-      setRegisterError("Gagal terhubung ke server saat mendaftarkan domain.");
+      setRegisterError("Gagal terhubung ke server saat mendaftarkan domain. Periksa koneksi internet Anda.");
     } finally {
       setIsRegisteringDomain(false);
     }
