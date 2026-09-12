@@ -3,6 +3,7 @@ import dns from "node:dns/promises";
 import { createClient } from "@/lib/supabase/server";
 import { getClientIp, isRateLimited } from "@/lib/rate-limit";
 import { serverError } from "@/lib/api-error";
+import { getVercelDomainStatus } from "@/lib/vercel-domains";
 
 const RATE_LIMIT_WINDOW_MS = 60 * 1000;
 const MAX_REQUESTS_PER_WINDOW = 10; // maksimal 10 cek DNS per menit per seller
@@ -110,28 +111,13 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 3. Opsional: Cek status via Vercel Domains API bila kredensial tersedia
-    let vercelStatus: any = null;
-    if (process.env.VERCEL_AUTH_TOKEN && process.env.VERCEL_PROJECT_ID) {
-      try {
-        const vRes = await fetch(
-          `https://api.vercel.com/v9/projects/${process.env.VERCEL_PROJECT_ID}/domains/${cleanDomain}`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.VERCEL_AUTH_TOKEN}`,
-            },
-          }
-        );
-        if (vRes.ok) {
-          vercelStatus = await vRes.json();
-          if (vercelStatus.verified) {
-            isConfigured = true;
-            detailMessage = "Domain terverifikasi dan aktif di jaringan edge KoZa.";
-          }
-        }
-      } catch {
-        // Abaikan kegagalan panggilan external API
-      }
+    // 3. Cek status pendaftaran & SSL di Vercel Domains API
+    const vercelStatus = await getVercelDomainStatus(cleanDomain);
+    if (vercelStatus?.verified) {
+      isConfigured = true;
+      detailMessage = "Domain terverifikasi dan SSL aktif di jaringan edge Vercel.";
+    } else if (vercelStatus?.found && !vercelStatus.verified) {
+      detailMessage = "Domain sudah terdaftar, menunggu Vercel menyelesaikan verifikasi DNS & penerbitan SSL (biasanya beberapa menit).";
     }
 
     if (!isConfigured) {
@@ -147,7 +133,8 @@ export async function GET(request: NextRequest) {
       targetCname: TARGET_CNAME,
       targetA: VERCEL_A_IP,
       message: detailMessage,
-      sslReady: isConfigured,
+      sslReady: Boolean(vercelStatus?.verified),
+      registeredWithVercel: Boolean(vercelStatus?.found),
       checkedAt: new Date().toISOString(),
     });
   } catch (err: unknown) {

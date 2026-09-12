@@ -31,6 +31,8 @@ export default function CustomDomainPage() {
   const [customDomainInput, setCustomDomainInput] = useState(store.customDomain || "");
   const [isDomainSaved, setIsDomainSaved] = useState(false);
   const [isCheckingDns, setIsCheckingDns] = useState(false);
+  const [isRegisteringDomain, setIsRegisteringDomain] = useState(false);
+  const [registerError, setRegisterError] = useState("");
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [dnsStatus, setDnsStatus] = useState<{
     configured: boolean;
@@ -39,6 +41,8 @@ export default function CustomDomainPage() {
     targetA?: string;
     checkedAt?: string;
     errorRef?: string;
+    sslReady?: boolean;
+    registeredWithVercel?: boolean;
   } | null>(null);
 
   const handleCopyText = (text: string, fieldId: string) => {
@@ -66,15 +70,37 @@ export default function CustomDomainPage() {
     }
   };
 
-  const handleSaveDomain = () => {
+  const handleSaveDomain = async () => {
     const cleaned = customDomainInput.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
+    const previousDomain = store.customDomain || "";
     setCustomDomainInput(cleaned);
     updateStore({ customDomain: cleaned });
     setIsDomainSaved(true);
     setTimeout(() => setIsDomainSaved(false), 4000);
-    if (cleaned) {
-      handleVerifyDomain(cleaned);
+
+    if (!cleaned) return;
+
+    // Daftarkan domain ke Vercel supaya SSL diterbitkan otomatis (menggantikan domain lama kalau berbeda).
+    setIsRegisteringDomain(true);
+    setRegisterError("");
+    try {
+      const res = await fetch("/api/domain/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain: cleaned, previousDomain }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        const suffix = data.errorRef ? ` (Kode Referensi: ${data.errorRef})` : "";
+        setRegisterError((data.error || "Gagal mendaftarkan domain ke Vercel.") + suffix);
+      }
+    } catch {
+      setRegisterError("Gagal terhubung ke server saat mendaftarkan domain.");
+    } finally {
+      setIsRegisteringDomain(false);
     }
+
+    handleVerifyDomain(cleaned);
   };
 
   return (
@@ -248,6 +274,20 @@ export default function CustomDomainPage() {
               </div>
             </div>
 
+            {/* Status Registrasi Vercel */}
+            {registerError && (
+              <div className="rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 p-3 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{registerError}</span>
+              </div>
+            )}
+            {isRegisteringDomain && (
+              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>Mendaftarkan domain ke Vercel untuk penerbitan SSL otomatis...</span>
+              </div>
+            )}
+
             {/* DNS Diagnostic Result */}
             {dnsStatus && (
               <div
@@ -287,6 +327,21 @@ export default function CustomDomainPage() {
                   {dnsStatus.message}
                   {dnsStatus.errorRef && ` (Kode Referensi: ${dnsStatus.errorRef})`}
                 </p>
+                {dnsStatus.registeredWithVercel && (
+                  <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                    {dnsStatus.sslReady ? (
+                      <>
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                        <span className="text-emerald-700 dark:text-emerald-300">SSL Aktif — HTTPS siap dipakai</span>
+                      </>
+                    ) : (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600 dark:text-amber-400" />
+                        <span className="text-amber-700 dark:text-amber-300">Menunggu Vercel menerbitkan sertifikat SSL...</span>
+                      </>
+                    )}
+                  </div>
+                )}
                 {dnsStatus.checkedAt && (
                   <p className="text-[10px] text-slate-400">
                     Dicek terakhir: {new Date(dnsStatus.checkedAt).toLocaleTimeString("id-ID")} WIB
