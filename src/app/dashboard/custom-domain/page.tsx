@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useStore } from "@/lib/store-context";
 import { 
@@ -70,6 +70,21 @@ export default function CustomDomainPage() {
     }
   };
 
+  // Sinkronkan input begitu data toko (store.customDomain) selesai di-fetch async --
+  // tanpa ini, input tampil kosong sesaat setelah refresh meski domain sudah tersimpan,
+  // sehingga seller mengira koneksinya hilang padahal cuma belum ter-render.
+  const hasAutoCheckedRef = useRef(false);
+  useEffect(() => {
+    if (store.customDomain && !customDomainInput) {
+      setCustomDomainInput(store.customDomain);
+    }
+    if (store.customDomain && !hasAutoCheckedRef.current) {
+      hasAutoCheckedRef.current = true;
+      handleVerifyDomain(store.customDomain);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.customDomain]);
+
   const handleSaveDomain = async () => {
     const cleaned = customDomainInput.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/$/, "");
     const previousDomain = store.customDomain || "";
@@ -125,7 +140,7 @@ export default function CustomDomainPage() {
             </div>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Gunakan alamat domain sendiri (misal: <strong>namatoko.com</strong>) dan hilangkan seluruh watermark KoZa dari etalase toko Anda.
+            Gunakan alamat domain sendiri (misal: <strong>namatoko.com</strong>) sebagai <strong>Bio Link</strong> toko Anda, dan hilangkan seluruh watermark KoZa dari etalase toko Anda.
           </p>
         </div>
 
@@ -316,15 +331,25 @@ export default function CustomDomainPage() {
                     )}
                   </div>
                   {dnsStatus.configured && (
-                    <a
-                      href={`https://${customDomainInput.trim().toLowerCase()}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors shadow-xs shrink-0 cursor-pointer"
-                    >
-                      <span>Buka Toko</span>
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyText(`https://${customDomainInput.trim().toLowerCase()}`, "bio-link")}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-white/20 transition-colors shadow-xs cursor-pointer"
+                      >
+                        {copiedField === "bio-link" ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                        <span>{copiedField === "bio-link" ? "Tersalin!" : "Salin Bio Link"}</span>
+                      </button>
+                      <a
+                        href={`https://${customDomainInput.trim().toLowerCase()}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 transition-colors shadow-xs cursor-pointer"
+                      >
+                        <span>Buka Bio Link</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
                   )}
                 </div>
                 <p className="text-xs leading-relaxed opacity-90">
@@ -336,7 +361,7 @@ export default function CustomDomainPage() {
                     {dnsStatus.sslReady ? (
                       <>
                         <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                        <span className="text-emerald-700 dark:text-emerald-300">SSL Aktif — HTTPS siap dipakai</span>
+                        <span className="text-emerald-700 dark:text-emerald-300">SSL Aktif — domain ini sekarang otomatis menjadi Bio Link toko Anda</span>
                       </>
                     ) : (
                       <>

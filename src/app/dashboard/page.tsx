@@ -55,10 +55,15 @@ export default function DashboardOverviewPage() {
   const [thermalData, setThermalData] = useState<ThermalData | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window === "undefined") return;
+    // Bio Link pakai domain custom kalau sudah terhubung (lihat /dashboard/custom-domain),
+    // fallback ke link etalase platform kalau belum ada domain custom.
+    if (store.customDomain) {
+      setStoreUrl(`https://${store.customDomain}`);
+    } else {
       setStoreUrl(`${window.location.origin}/toko/${store.slug}`);
     }
-  }, [store.slug]);
+  }, [store.slug, store.customDomain]);
 
   const handleCopyLink = () => {
     if (typeof navigator !== "undefined" && navigator.clipboard) {
