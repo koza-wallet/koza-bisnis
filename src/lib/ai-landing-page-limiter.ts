@@ -2,6 +2,8 @@
 // Fitur ini eksklusif member Pro AI (bulanan/tahunan) — Basic & Free/Trial
 // tidak dapat kuota sama sekali (0), digabung dengan cek plan di route.ts.
 
+import { createClient as createServiceClient } from "@supabase/supabase-js";
+
 interface RateLimitEntry {
   count: number;
   resetTime: number;
@@ -10,6 +12,8 @@ interface RateLimitEntry {
 const SLIDING_WINDOW_MS = 60 * 1000; // 1 menit
 const MAX_REQUESTS_PER_WINDOW = 3; // Maksimal 3 generate per menit per toko (anti spam-klik)
 
+// Sengaja tetap in-memory: jendela anti-spam-klik 1 menit tidak perlu presisi
+// lintas-instance, beda dengan kuota bulanan/tahunan di bawah yang WAJIB persisten.
 const slidingWindowMap = new Map<string, RateLimitEntry>();
 
 export function isSlidingWindowLimited(storeId: string): boolean {
@@ -34,36 +38,82 @@ export const MONTHLY_QUOTA_PRO = 25;
 // Kuota tahunan Pro Annual: 25 x 12 bulan + bonus 50 = 350
 export const ANNUAL_QUOTA_PRO = 350;
 
-const usageMap = new Map<string, number>();
-
-function monthKey(storeId: string): string {
-  const ym = new Date().toISOString().slice(0, 7); // YYYY-MM
-  return `${storeId}_month_${ym}`;
+function periodKey(planTier: "MONTHLY" | "ANNUAL"): string {
+  if (planTier === "ANNUAL") {
+    return String(new Date().getFullYear());
+  }
+  return new Date().toISOString().slice(0, 7); // YYYY-MM
 }
 
-function yearKey(storeId: string): string {
-  const y = new Date().getFullYear();
-  return `${storeId}_year_${y}`;
+function getServiceClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error("[AI-LANDING-PAGE-LIMITER] SUPABASE_SERVICE_ROLE_KEY tidak dikonfigurasi.");
+    return null;
+  }
+  return createServiceClient(supabaseUrl, serviceRoleKey);
 }
 
 /**
  * Cek apakah kuota generate AI sudah habis untuk toko ini bulan/tahun ini.
- * planTier "ANNUAL" pakai kuota tahunan (350), selain itu pakai kuota bulanan (25).
- * Pemanggil WAJIB memastikan toko benar-benar berlangganan Pro AI sebelum
- * memanggil fungsi ini — fungsi ini murni soal kuota, bukan soal akses fitur.
+ * Disimpan persisten di Supabase (bukan lagi in-memory) supaya tidak reset
+ * kalau instance serverless Vercel di-recycle.
+ *
+ * Kalau service role tidak terkonfigurasi atau query gagal, FAIL-CLOSED
+ * (anggap kuota habis) -- lebih aman menahan 1 generate ketimbang membiarkan
+ * kuota tak terbatas diam-diam kalau ada masalah infrastruktur.
  */
-export function isUsageQuotaExceeded(storeId: string, planTier: "MONTHLY" | "ANNUAL"): boolean {
-  if (planTier === "ANNUAL") {
-    const key = yearKey(storeId);
-    const used = usageMap.get(key) || 0;
-    return used >= ANNUAL_QUOTA_PRO;
+export async function isUsageQuotaExceeded(
+  storeId: string,
+  planTier: "MONTHLY" | "ANNUAL"
+): Promise<boolean> {
+  const supabase = getServiceClient();
+  if (!supabase) return true;
+
+  const key = periodKey(planTier);
+  const quota = planTier === "ANNUAL" ? ANNUAL_QUOTA_PRO : MONTHLY_QUOTA_PRO;
+
+  const { data, error } = await supabase
+    .from("ai_landing_page_usage")
+    .select("used_count")
+    .eq("store_id", storeId)
+    .eq("period_key", key)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[AI-LANDING-PAGE-LIMITER] Gagal cek kuota:", error.message);
+    return true;
   }
-  const key = monthKey(storeId);
-  const used = usageMap.get(key) || 0;
-  return used >= MONTHLY_QUOTA_PRO;
+
+  const used = data?.used_count || 0;
+  return used >= quota;
 }
 
-export function recordUsage(storeId: string, planTier: "MONTHLY" | "ANNUAL"): void {
-  const key = planTier === "ANNUAL" ? yearKey(storeId) : monthKey(storeId);
-  usageMap.set(key, (usageMap.get(key) || 0) + 1);
+export async function recordUsage(storeId: string, planTier: "MONTHLY" | "ANNUAL"): Promise<void> {
+  const supabase = getServiceClient();
+  if (!supabase) return;
+
+  const key = periodKey(planTier);
+
+  const { data: existing } = await supabase
+    .from("ai_landing_page_usage")
+    .select("used_count")
+    .eq("store_id", storeId)
+    .eq("period_key", key)
+    .maybeSingle();
+
+  const { error } = await supabase.from("ai_landing_page_usage").upsert(
+    {
+      store_id: storeId,
+      period_key: key,
+      used_count: (existing?.used_count || 0) + 1,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "store_id,period_key" }
+  );
+
+  if (error) {
+    console.error("[AI-LANDING-PAGE-LIMITER] Gagal mencatat pemakaian:", error.message);
+  }
 }

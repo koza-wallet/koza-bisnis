@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     }
 
     const planTier = isProAnnual ? "ANNUAL" : "MONTHLY";
-    if (isUsageQuotaExceeded(store.id, planTier)) {
+    if (await isUsageQuotaExceeded(store.id, planTier)) {
       const quota = isProAnnual ? ANNUAL_QUOTA_PRO : MONTHLY_QUOTA_PRO;
       const periodLabel = isProAnnual ? "tahun ini" : "bulan ini";
       return NextResponse.json(
@@ -178,7 +178,7 @@ Info tambahan dari seller: ${input.otherInfo || "(tidak ada)"}`;
     });
 
     recordLLMSuccess(store.id);
-    recordUsage(store.id, planTier);
+    await recordUsage(store.id, planTier);
 
     return NextResponse.json({
       success: true,
