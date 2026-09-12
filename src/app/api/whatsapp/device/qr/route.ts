@@ -60,10 +60,13 @@ export async function GET() {
       );
     }
 
+    const currentSettings = store.whatsapp_bot_settings || {};
+
     // Minta QR Code dari Master Gateway Fonnte
     const qrResult = await requestFonnteDeviceQR({
       storeId: store.id,
       storeName: store.name,
+      webhookSecret: currentSettings.webhookSecret,
     });
 
     if (!qrResult.success) {
@@ -73,8 +76,7 @@ export async function GET() {
       );
     }
 
-    // Simpan status device ke database toko
-    const currentSettings = store.whatsapp_bot_settings || {};
+    // Simpan status device dan webhookSecret ke database toko
     await supabase
       .from('stores')
       .update({
@@ -83,6 +85,7 @@ export async function GET() {
           provider: 'fonnte',
           deviceToken: qrResult.deviceToken,
           deviceId: qrResult.deviceId,
+          webhookSecret: qrResult.webhookSecret || currentSettings.webhookSecret,
           status: 'CONNECTING',
           isActive: true,
           updatedAt: new Date().toISOString(),

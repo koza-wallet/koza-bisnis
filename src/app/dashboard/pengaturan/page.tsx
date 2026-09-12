@@ -132,7 +132,8 @@ export default function StoreSettingsPage() {
 
   const handleCopyWebhook = () => {
     const origin = typeof window !== "undefined" ? window.location.origin : "https://www.kozabisnis.com";
-    const webhookUrl = `${origin}/api/webhooks/whatsapp?store_id=${store.id}`;
+    const secretParam = botSettings.webhookSecret ? `&secret=${botSettings.webhookSecret}` : "";
+    const webhookUrl = `${origin}/api/webhooks/whatsapp?store_id=${store.id}${secretParam}`;
     navigator.clipboard.writeText(webhookUrl);
     setIsCopiedWebhook(true);
     setTimeout(() => setIsCopiedWebhook(false), 3000);
@@ -671,7 +672,7 @@ export default function StoreSettingsPage() {
                     </button>
                   </div>
                   <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 font-mono text-[11px] text-slate-700 dark:text-slate-400 select-all break-all">
-                    {typeof window !== "undefined" ? window.location.origin : "https://www.kozabisnis.com"}/api/webhooks/whatsapp?store_id={store.id}
+                    {typeof window !== "undefined" ? window.location.origin : "https://www.kozabisnis.com"}/api/webhooks/whatsapp?store_id={store.id}{botSettings.webhookSecret ? `&secret=${botSettings.webhookSecret}` : ""}
                   </div>
                   <p className="text-[10px] text-slate-500">
                     URL ini otomatis dikonfigurasi saat Anda menautkan WhatsApp melalui sistem KoZa Bisnis.

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { timingSafeEqual } from 'node:crypto';
 import {
   sendWhatsAppMessage,
   normalizeIndonesianPhone,
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
     const queryStoreId = searchParams.get('storeId') || searchParams.get('store_id');
+    const querySecret = searchParams.get('secret') || req.headers.get('x-webhook-secret') || '';
 
     let body: InboundWebhookBody = {};
     try {
@@ -93,6 +95,29 @@ export async function POST(req: NextRequest) {
     }
 
     const botSettings = store.whatsapp_bot_settings || {};
+
+    // Verifikasi Keamanan: Webhook Secret Token (Anti-Spoofing & Denial-of-Wallet)
+    const expectedSecret = botSettings.webhookSecret;
+    if (!expectedSecret || !querySecret) {
+      console.warn(`[WHATSAPP-WEBHOOK] Request ditolak untuk toko ${store.id}: Webhook secret tidak ditemukan atau tidak disertakan.`);
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized: Missing webhook secret token.' },
+        { status: 401 }
+      );
+    }
+
+    const expectedBuf = Buffer.from(expectedSecret);
+    const queryBuf = Buffer.from(querySecret);
+    const isValidSecret =
+      expectedBuf.length === queryBuf.length && timingSafeEqual(expectedBuf, queryBuf);
+
+    if (!isValidSecret) {
+      console.warn(`[WHATSAPP-WEBHOOK] Request ditolak untuk toko ${store.id}: Secret token tidak valid.`);
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized: Invalid webhook secret token.' },
+        { status: 401 }
+      );
+    }
 
     // Periksa status keaktifan bot di toko
     if (!botSettings.isActive || botSettings.status === 'DISCONNECTED') {

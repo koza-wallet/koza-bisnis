@@ -19,6 +19,7 @@ export interface WhatsAppBotSettings {
   connectedNumber?: string;
   connectedAt?: string;
   serverUrl?: string;
+  webhookSecret?: string;
 }
 
 export interface Store {

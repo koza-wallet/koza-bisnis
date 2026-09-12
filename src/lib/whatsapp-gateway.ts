@@ -3,6 +3,8 @@
 // Mendukung Fonnte, Wablas, dan Custom Gateway Provider
 // ==============================================================================
 
+import { randomBytes } from 'node:crypto';
+
 export interface SendWhatsAppMessageParams {
   provider?: 'fonnte' | 'wablas' | 'custom';
   token: string;
@@ -23,6 +25,7 @@ export interface QRRequestResult {
   qrString?: string;
   deviceToken?: string;
   deviceId?: string;
+  webhookSecret?: string;
   error?: string;
 }
 
@@ -143,12 +146,15 @@ export async function requestFonnteDeviceQR({
   masterToken,
   storeId,
   storeName,
+  webhookSecret,
 }: {
   masterToken?: string;
   storeId: string;
   storeName: string;
+  webhookSecret?: string;
 }): Promise<QRRequestResult> {
   const token = masterToken || process.env.FONNTE_MASTER_TOKEN;
+  const activeSecret = webhookSecret || randomBytes(24).toString('hex');
 
   if (token) {
     try {
@@ -198,7 +204,7 @@ export async function requestFonnteDeviceQR({
             : `data:image/png;base64,${qrData.url}`;
         }
 
-        // 3. Daftarkan webhook URL toko dan aktifkan autoread secara otomatis ke Fonnte
+        // 3. Daftarkan webhook URL toko dan aktifkan autoread secara otomatis ke Fonnte dengan Secret Token
         const origin = process.env.NEXT_PUBLIC_APP_URL || 'https://www.kozabisnis.com';
         fetch('https://api.fonnte.com/update-device', {
           method: 'POST',
@@ -209,7 +215,7 @@ export async function requestFonnteDeviceQR({
           body: JSON.stringify({
             name: safeDeviceName,
             device: cleanDeviceNum,
-            webhook: `${origin}/api/webhooks/whatsapp?store_id=${storeId}`,
+            webhook: `${origin}/api/webhooks/whatsapp?store_id=${storeId}&secret=${activeSecret}`,
             autoread: 'true',
             personal: 'true',
           }),
@@ -221,6 +227,7 @@ export async function requestFonnteDeviceQR({
           qrString: qrData.qr || undefined,
           deviceToken,
           deviceId: String(deviceId || storeId),
+          webhookSecret: activeSecret,
         };
       }
     } catch (err) {
@@ -236,6 +243,7 @@ export async function requestFonnteDeviceQR({
     qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=koza-whatsapp-connect-${storeId}`,
     deviceToken: mockToken,
     deviceId: storeId,
+    webhookSecret: activeSecret,
   };
 }
 
